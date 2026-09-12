@@ -9367,6 +9367,17 @@
       "border_filepath": "data/layouts/Wasteland_Brightwell/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_Brightwell/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ESTATE_HOUSE",
+      "name": "Wasteland_EstateHouse_Layout",
+      "width": 13,
+      "height": 8,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_GenericBuilding",
+      "border_filepath": "data/layouts/Wasteland_EstateHouse/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_EstateHouse/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

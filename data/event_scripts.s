@@ -1054,6 +1054,7 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_Grayford/scripts.inc"
 	.include "data/maps/Wasteland_EstateGrounds/scripts.inc"
 	.include "data/maps/Wasteland_Brightwell/scripts.inc"
+	.include "data/maps/Wasteland_EstateHouse/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"
