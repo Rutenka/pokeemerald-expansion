@@ -7546,6 +7546,157 @@ const struct SpeciesInfo gSpeciesInfoGen2[] =
         .formChangeTable = sHoundoomFormChangeTable,
     },
 #endif //P_MEGA_EVOLUTIONS
+
+    // Wasteland: starter-exclusive enhanced line. Reuses Houndour/Houndoom's
+    // name, artwork and Pokedex identity; only this lineage uses these stats
+    // and evolves at level 32 instead of 24. See docs/wasteland/houndour_alder.md.
+    [SPECIES_HOUNDOUR_ALDER] =
+    {
+        .baseHP        = 50,
+        .baseAttack    = 60,
+        .baseDefense   = 40,
+        .baseSpeed     = 70,
+        .baseSpAttack  = 85,
+        .baseSpDefense = 55,
+        .types = MON_TYPES(TYPE_DARK, TYPE_FIRE),
+        .catchRate = 120,
+        .expYield = (P_UPDATED_EXP_YIELDS >= GEN_5) ? 66 : 114,
+        .evYield_SpAttack = 1,
+        .genderRatio = PERCENT_FEMALE(50),
+        .eggCycles = 20,
+        .friendship = 35,
+        .growthRate = GROWTH_SLOW,
+        .eggGroups = MON_EGG_GROUPS(EGG_GROUP_NO_EGGS_DISCOVERED),
+        .abilities = { ABILITY_FLASH_FIRE },
+        .bodyColor = BODY_COLOR_BLACK,
+        .speciesName = _("Houndour"),
+        .cryId = CRY_HOUNDOUR,
+        .natDexNum = NATIONAL_DEX_HOUNDOUR,
+        .categoryName = _("Dark"),
+        .height = 6,
+        .weight = 108,
+        .description = COMPOUND_STRING(
+            "Houndour communicate with each other\n"
+            "using a variety of cries to corner their\n"
+            "prey. This Pokémon's remarkable teamwork\n"
+            "is simply unparalleled."),
+        .pokemonScale = 393,
+        .pokemonOffset = 16,
+        .trainerScale = 256,
+        .trainerOffset = 0,
+        .frontPic = gMonFrontPic_Houndour,
+        .frontPicSize = MON_COORDS_SIZE(40, 48),
+        .frontPicYOffset = P_GBA_STYLE_SPECIES_GFX ? 11 : 9,
+        .frontAnimFrames = ANIM_FRAMES(
+            ANIMCMD_FRAME(1, 40),
+            ANIMCMD_FRAME(0, 20),
+        ),
+        .frontAnimId = ANIM_V_STRETCH,
+        .backPic = gMonBackPic_Houndour,
+        .backPicSize = P_GBA_STYLE_SPECIES_GFX ? MON_COORDS_SIZE(40, 40) : MON_COORDS_SIZE(40, 48),
+        .backPicYOffset = P_GBA_STYLE_SPECIES_GFX ? 12 : 10,
+        .backAnimId = BACK_ANIM_V_SHAKE,
+        .palette = gMonPalette_Houndour,
+        .shinyPalette = gMonShinyPalette_Houndour,
+        .iconSprite = gMonIcon_Houndour,
+        .iconPalIndex = 0,
+        .pokemonJumpType = PKMN_JUMP_TYPE_FAST,
+        SHADOW(0, 4, SHADOW_SIZE_M)
+        FOOTPRINT(Houndour)
+        OVERWORLD(
+            sPicTable_Houndour,
+            SIZE_32x32,
+            SHADOW_SIZE_M,
+            TRACKS_FOOT,
+            sAnimTable_Following,
+            gOverworldPalette_Houndour,
+            gShinyOverworldPalette_Houndour
+        )
+        .levelUpLearnset = sHoundourLevelUpLearnset,
+        .teachableLearnset = sHoundourTeachableLearnset,
+        .eggMoveLearnset = sHoundourEggMoveLearnset,
+        .evolutions = EVOLUTION({EVO_LEVEL, 32, SPECIES_HOUNDOOM_ALDER}),
+    },
+
+    [SPECIES_HOUNDOOM_ALDER] =
+    {
+        .baseHP        = 90,
+        .baseAttack    = 90,
+        .baseDefense   = 75,
+        .baseSpeed     = 110,
+        .baseSpAttack  = 125,
+        .baseSpDefense = 85,
+        .types = MON_TYPES(TYPE_DARK, TYPE_FIRE),
+        .catchRate = 45,
+        .expYield = (P_UPDATED_EXP_YIELDS >= GEN_5) ? 175 : 204,
+        .evYield_SpAttack = 2,
+        .genderRatio = PERCENT_FEMALE(50),
+        .eggCycles = 20,
+        .friendship = 35,
+        .growthRate = GROWTH_SLOW,
+        .eggGroups = MON_EGG_GROUPS(EGG_GROUP_NO_EGGS_DISCOVERED),
+        .abilities = { ABILITY_FLASH_FIRE },
+        .bodyColor = BODY_COLOR_BLACK,
+        .speciesName = _("Houndoom"),
+        .cryId = CRY_HOUNDOOM,
+        .natDexNum = NATIONAL_DEX_HOUNDOOM,
+        .categoryName = _("Dark"),
+        .height = 14,
+        .weight = 350,
+        .description = COMPOUND_STRING(
+            "In a Houndoom pack, the one with its horns\n"
+            "raked sharply back serves a leadership\n"
+            "role. They choose their leader by fighting\n"
+            "among themselves."),
+        .pokemonScale = 256,
+        .pokemonOffset = 4,
+        .trainerScale = 256,
+        .trainerOffset = 0,
+        .frontPic = gMonFrontPic_Houndoom,
+        .frontPicSize = P_GBA_STYLE_SPECIES_GFX ? MON_COORDS_SIZE(56, 56) : MON_COORDS_SIZE(64, 64),
+        .frontPicYOffset = P_GBA_STYLE_SPECIES_GFX ? 5 : 0,
+        .frontAnimFrames = ANIM_FRAMES(
+            ANIMCMD_FRAME(1, 40),
+            ANIMCMD_FRAME(0, 30),
+        ),
+        .frontAnimId = ANIM_V_SHAKE,
+        .backPic = gMonBackPic_Houndoom,
+        .backPicSize = MON_COORDS_SIZE(64, 56),
+        .backPicYOffset = P_GBA_STYLE_SPECIES_GFX ? 7 : 6,
+        .backAnimId = BACK_ANIM_V_SHAKE,
+        .palette = gMonPalette_Houndoom,
+        .shinyPalette = gMonShinyPalette_Houndoom,
+        .iconSprite = gMonIcon_Houndoom,
+        .iconPalIndex = 0,
+#if P_GENDER_DIFFERENCES && !P_GBA_STYLE_SPECIES_GFX
+        .frontPicFemale = gMonFrontPic_HoundoomF,
+        .frontPicSizeFemale = MON_COORDS_SIZE(64, 64),
+        .backPicFemale = gMonBackPic_HoundoomF,
+        .backPicSizeFemale = MON_COORDS_SIZE(64, 56),
+#endif //P_GENDER_DIFFERENCES && !P_GBA_STYLE_SPECIES_GFX
+        .pokemonJumpType = PKMN_JUMP_TYPE_NONE,
+        SHADOW(-5, 13, SHADOW_SIZE_L)
+        FOOTPRINT(Houndoom)
+        OVERWORLD(
+            sPicTable_Houndoom,
+            SIZE_32x32,
+            SHADOW_SIZE_M,
+            TRACKS_FOOT,
+            sAnimTable_Following,
+            gOverworldPalette_Houndoom,
+            gShinyOverworldPalette_Houndoom
+        )
+        OVERWORLD_FEMALE(
+            sPicTable_HoundoomF,
+            SIZE_32x32,
+            SHADOW_SIZE_M,
+            TRACKS_FOOT,
+            sAnimTable_Following
+        )
+        .levelUpLearnset = sHoundoomLevelUpLearnset,
+        .teachableLearnset = sHoundoomTeachableLearnset,
+    },
+
 #endif //P_FAMILY_HOUNDOUR
 
 #if P_FAMILY_PHANPY

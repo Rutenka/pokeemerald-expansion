@@ -214,3 +214,36 @@ TEST("Every species has a description")
 
     EXPECT_NE(StringCompare(GetSpeciesPokedexDescription(species), gFallbackPokedexText), 0);
 }
+
+TEST("Houndour (Alder) has its enhanced stat block")
+{
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseHP, 50);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseAttack, 60);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseDefense, 40);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseSpAttack, 85);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseSpDefense, 55);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOUR_ALDER].baseSpeed, 70);
+}
+
+TEST("Houndoom (Alder) has its enhanced stat block")
+{
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseHP, 90);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseAttack, 90);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseDefense, 75);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseSpAttack, 125);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseSpDefense, 85);
+    EXPECT_EQ(gSpeciesInfo[SPECIES_HOUNDOOM_ALDER].baseSpeed, 110);
+}
+
+TEST("Houndour (Alder) evolves into Houndoom (Alder) at level 32, not before")
+{
+    struct Pokemon mon;
+    u32 personality = GetMonPersonality(SPECIES_HOUNDOUR_ALDER, MON_GENDER_RANDOM, 0, RANDOM_UNOWN_LETTER);
+    bool32 canStopEvo = FALSE;
+
+    CreateMon(&mon, SPECIES_HOUNDOUR_ALDER, 31, personality, OTID_STRUCT_PLAYER_ID);
+    EXPECT_EQ(GetEvolutionTargetSpecies(&mon, EVO_MODE_NORMAL, ITEM_NONE, NULL, &canStopEvo, CHECK_EVO), SPECIES_NONE);
+
+    CreateMon(&mon, SPECIES_HOUNDOUR_ALDER, 32, personality, OTID_STRUCT_PLAYER_ID);
+    EXPECT_EQ(GetEvolutionTargetSpecies(&mon, EVO_MODE_NORMAL, ITEM_NONE, NULL, &canStopEvo, CHECK_EVO), SPECIES_HOUNDOOM_ALDER);
+}

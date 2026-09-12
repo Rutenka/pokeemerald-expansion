@@ -1692,6 +1692,8 @@ enum __attribute__((packed)) Species
 
     SPECIES_CUSTOM_START = SPECIES_GLIMMORA_MEGA,
     // Add any custom species between here and SPECIES_CUSTOM_END
+    SPECIES_HOUNDOUR_ALDER, // Wasteland: starter-exclusive enhanced Houndour line
+    SPECIES_HOUNDOOM_ALDER,
     SPECIES_CUSTOM_END,
 
     SPECIES_EGG = SPECIES_CUSTOM_END,
