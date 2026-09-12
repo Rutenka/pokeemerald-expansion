@@ -51,10 +51,10 @@
 
 #else
 
-#define FLAG_UNUSED_0x020    0x20 // Unused Flag
-#define FLAG_UNUSED_0x021    0x21 // Unused Flag
-#define FLAG_UNUSED_0x022    0x22 // Unused Flag
-#define FLAG_UNUSED_0x023    0x23 // Unused Flag
+#define FLAG_RECEIVED_WASTELAND_STARTER 0x20 // Wasteland: set once Dad hands over the starter Houndour in the safe room
+#define FLAG_SEEN_ESTATE_GROUNDS_AFTERMATH 0x21 // Wasteland: gates the one-time aftermath narration on the estate grounds map
+#define FLAG_SEEN_BRIGHTWELL_AFTERMATH 0x22 // Wasteland: gates the one-time raid-aftermath narration in Brightwell
+#define FLAG_WASTELAND_UNCONDITIONAL_TRIGGER 0x23 // Wasteland: never actually set - used as the gate on coord_event-driven scripted warps placed on plain (non-door-tagged) ground, where "flag not set" always evaluates true. Reusable across every custom map that needs a scripted exit where no real door tile exists to reuse.
 #define FLAG_UNUSED_0x024    0x24 // Unused Flag
 #define FLAG_UNUSED_0x025    0x25 // Unused Flag
 #define FLAG_UNUSED_0x026    0x26 // Unused Flag
