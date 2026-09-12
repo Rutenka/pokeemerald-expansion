@@ -9378,6 +9378,17 @@
       "border_filepath": "data/layouts/Wasteland_EstateHouse/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_EstateHouse/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ROAD",
+      "name": "Wasteland_Road_Layout",
+      "width": 40,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/Wasteland_Road/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Road/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
