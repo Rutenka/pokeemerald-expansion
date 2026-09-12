@@ -1,0 +1,36 @@
+{
+  "id": "MAP_WASTELAND_ESTATE_TUNNEL",
+  "name": "Wasteland_EstateTunnel",
+  "layout": "LAYOUT_WASTELAND_ESTATE_TUNNEL",
+  "music": "MUS_PETALBURG_WOODS",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_NONE",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [],
+  "warp_events": [
+    {
+      "x": 4,
+      "y": 10,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_ESTATE_GROUNDS",
+      "dest_warp_id": "1"
+    },
+    {
+      "x": 29,
+      "y": 16,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_ROAD",
+      "dest_warp_id": "0"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": []
+}
