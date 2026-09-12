@@ -2151,6 +2151,163 @@ clean. `tools/validate_maps.py Wasteland_Road` shows only its two pre-existing
 warnings (elevation-0 border tiles, connection-seam asymmetry vs. Brightwell), neither
 new nor related to this feature.
 
+### Story proposal: the second road - Miller's Cut and the Ashband checkpoint
+### (proposed and built same session, 2026-09-12, autonomously per Viktor's
+### explicit go-ahead - "don't wait for my approval")
+
+Viktor asked for a proposal on how the story should progress past Brightwell, to be
+thought through carefully and then actually built, not just written up and left
+pending. This section is that proposal - written before building, then updated below
+as each piece actually shipped.
+
+**The throughline already exists - this isn't inventing a new thread, it's following
+the one Brightwell already planted.** Rourke's dialogue (Sixth feature entry) already
+names "the Ashband" as the raider faction that hit the estate and took Dad, and
+already names their destination: "Miller's Cut - that's their road, has been for
+years." The Brightwell House NPC (Fourteenth feature entry) already plants a second,
+smaller thread: a Kid whose mother "worked the checkpoint and hasn't come back."
+Neither of these needed a new decision to use - they needed a place to lead to.
+
+**Working clarification (internal, not necessarily ever stated to the player
+outright): the Ashband *are* "the rebels" from the original design brief.** The brief
+requires rebel responsibility for the opening massacre to stand, unretconned - Rourke's
+own line ("whatever story gets told about them out east") deliberately leaves room for
+a more sympathetic/political framing existing elsewhere, without contradicting that
+locally, to the people who live near them, they are lawless raiders. That tension -
+are they freedom fighters or opportunists, and does it even matter to the people who
+get burned out either way - is the actual moral question this arc should raise, not
+resolve. Matches the brief's explicit "whether the protagonist ends up allied with
+rebels, independent, or something else is undecided" instruction directly.
+
+**Proposed (and built) shape**: a new route, `Wasteland_MillersCut`, leading north out
+of Brightwell into rougher terrain, ending at a fortified Ashband checkpoint,
+`Wasteland_AshbandCheckpoint`. Concretely:
+
+1. **A real, already-existing, previously-unused exit from Brightwell.** Before adding
+   anything, `tools/validate_maps.py` had already flagged a real door-behavior tile at
+   local (8,1) with no `warp_events` entry - checked against a byte-for-byte diff of
+   `VerdanturfTown`'s own real map data at the same coordinate, it's an exact match:
+   the real vanilla Rusturf-Tunnel-entrance cave-mouth graphic (metatiles
+   169/159/169 over 145/167/145 - the identical cluster already used for
+   `Wasteland_Road`'s own tunnel door), sitting there unused because this project
+   never needed Brightwell to connect north before. No tile copying needed at all -
+   just wire the door that was already there.
+2. **`Wasteland_MillersCut` = vanilla Jagged Pass, reused wholesale** (30x46,
+   `gTileset_General`+`gTileset_Lavaridge`) - picked for the name fit alone (a
+   genuinely jagged, treacherous cut through rock matches "Miller's Cut" better than
+   any generic route would) and because reusing it whole, unmodified, sidesteps this
+   project's entire history of crop-and-stitch seam bugs. Its own real warp structure
+   is reused as-is rather than invented: the real south door (leading to Route112 in
+   vanilla) repoints to Brightwell's new door; the real mid-map cave-mouth entrance
+   (leading to Magma Hideout in vanilla) repoints to the new checkpoint map. Its real
+   north door (to Mt. Chimney in vanilla) is deliberately left unwired for now - a real
+   door-behavior tile with no warp is exactly the kind of thing
+   `tools/validate_maps.py` flags as a warning, and that's correct here: it's the
+   physical hook for "Miller's Cut continues beyond this," left for whenever that's
+   actually built, not a bug.
+3. **`Wasteland_AshbandCheckpoint` = vanilla Magma Hideout 1F, reused wholesale** (37x38,
+   same tileset pair as Jagged Pass, since they're real vanilla neighbors) - a
+   fortified cave-bunker interior, which a raider checkpoint operating out of rough
+   terrain plausibly would be, with zero new architecture invented.
+4. **Payoff for the Kid's mother thread**: found here, alive, coerced into keeping the
+   checkpoint's systems running rather than a willing Ashband member - not a rescue
+   played as simple as "good captive, evil captors." Matches the brief's explicit
+   "warlord-held settlements are a mix of protectors and exploiters" principle and
+   keeps "hope alongside institutional cruelty" alive rather than making every Ashband
+   encounter purely villainous.
+5. **Escalating trainer difficulty, not just a name change**: 1-2 more
+   `TRAINER_CLASS_ASHBAND` grunts (reusing Poochyena, now higher-leveled) inside the
+   checkpoint, then a real step up - an Ashband enforcer/lieutenant boss with a small,
+   prepared team (Mightyena - Poochyena's own real evolution, tying the raiders'
+   "attack dog" motif together across the whole arc so far - plus Koffing, the first
+   roster addition since the starter and the Road's Route101-derived filler, picked
+   for fitting a toxic/junk/bunker setting per the roster's own stated principles).
+   This is the chapter's first real "prepared team required" fight, not just a
+   slightly-tougher copy of the Road ambush.
+6. **A small, deliberately non-committal hook, not a reveal**: a checkpoint document
+   or piece of overheard chatter implying the Ashband are supplied or directed by
+   someone else, without saying who. This is a thread toward the brief's eventual
+   "father/company caused the collapse" reveal, seeded small and deniable now rather
+   than as an early exposition dump - matches how "the company office" clue in
+   Brightwell was already deliberately left vague rather than resolved on the spot.
+
+See the following feature entry for what of this actually got built this session vs.
+what's still open.
+
+### Twenty-first custom feature: Miller's Cut and the Ashband checkpoint, built
+### (2026-09-12/13 overnight, autonomously per Viktor's explicit go-ahead)
+
+Built the proposal above in full: `Wasteland_MillersCut` (vanilla Jagged Pass, whole),
+`Wasteland_AshbandCheckpoint` (vanilla Magma Hideout 1F, whole), Brightwell's real
+previously-unused door wired up, four Pokémon (Numel/Machop/Koffing as wild
+encounters, Mightyena as the enforcer's lead - Poochyena's own real evolution), three
+new trainers (Lookout, Checkpoint Grunt, Enforcer boss), the Kid's mother found and
+freeable, `docs/roster.md` updated. All committed and pushed.
+
+**A real placement bug caught by building proper tooling, not by luck.** The lookout
+was first placed at a tile that was genuinely open ground by itself but sat in a
+pocket **disconnected** from the map's entrance - confirmed by writing a real BFS
+reachability check over the layout's collision grid (a spot-check of "is this one tile
+walkable" had said yes; it never asked "can you actually walk here *from* the
+entrance," which is the question that actually matters). Moved to a tile on the
+route's own confirmed-connected corridor instead.
+
+**A second, costlier false lead, worth recording in detail because it's a genuinely
+new failure mode for this project**: extending the BFS to route further into the pass
+toward a deeper spot repeatedly showed the player "stuck" a few tiles in. Real time
+was spent chasing this as a terrain problem - checking metatile behavior codes,
+discovering Jagged Pass's real one-way ledges (`MB_JUMP_SOUTH` etc., which only allow
+entry when moving in their own named direction - traced in `src/field_player_avatar.c`
+and modeled properly in the pathfinding helper), ruling out `MB_BUMPY_SLOPE` as a
+cause (it's an Acro Bike trick-tile check, irrelevant on foot). **The actual cause was
+mundane and already known**: the arrival narration is a real two-page message, and an
+under-generous number of A-presses (matching checklist item 15's exact warning) left
+it genuinely still open on page one, silently absorbing every later directional press
+as a no-op. A screenshot at the "stuck" point showed the textbox still on screen the
+whole time - once looked at directly instead of inferred from position never
+changing, the ledge/boulder theorizing turned out to be chasing a phantom. **Lesson
+reinforced, not new in principle but worth restating since it cost real time twice in
+one map**: when movement looks stuck, screenshot before theorizing about terrain - a
+"why won't it move" investigation that starts from the collision data instead of from
+what's actually on screen can burn a lot of effort on a real, second-order fact
+(the ledges are real and now correctly modeled) that had nothing to do with the actual
+bug.
+
+**Reusable outcome of that detour, kept rather than discarded**: promoted into
+`tools/smart_walk.py` - a proper BFS-based "smart walker" for headless testing that
+re-checks real position after every press and recomputes a fresh direction each step,
+rather than a pre-computed, dead-reckoned sequence of presses. Immune to the "did that
+press turn me or move me" ambiguity that caused several earlier false "stuck" readings
+this session, aware of one-way ledge behaviors (`MB_JUMP_*`), and escalates its
+textbox-clearing attempts rather than assuming a fixed press count is ever enough.
+`import mgba_probe` before it (it needs mgba's Python bindings already on
+`sys.path`). Use this for any future deep-interior navigation test instead of writing
+a fresh dead-reckoned press sequence.
+
+**Verified via real headless testing**: the full entrance sequence, start to finish -
+walking from Brightwell's own warp-0 landing to the new door (real pathfinding through
+Brightwell's own NPCs, which also aren't in the static collision data and had to be
+added as extra blocked tiles for the walker), through the door into
+`Wasteland_MillersCut`, the arrival narration displaying correctly, and the Lookout's
+sight-triggered ambush firing with the correct intro text and a real battle starting.
+
+**Not verified this session, documented honestly rather than assumed**: the deeper
+interior of Miller's Cut (the route from the Lookout's now-simplified position to the
+checkpoint door) and the entire interior of `Wasteland_AshbandCheckpoint` (the Grunt,
+Mother, Enforcer, and item ball) have real, validator-clean data and reuse whole
+vanilla map data verbatim, but have not been walked start-to-finish with real button
+presses the way the entrance sequence was. Same disclosure standard as the Ashband
+Scout's win-path in the Twentieth feature entry - real risk is low (every individual
+piece uses an already-proven pattern: sight-ambush trainers, `goto_if_set` dialogue
+branching, `Common_EventScript_FindItem`), but "low risk" isn't "confirmed," and this
+file should keep being honest about that distinction.
+
+**Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both rebuilt
+clean. `tools/validate_maps.py` (run across every Wasteland map, not just the new
+ones) shows no errors anywhere, only the same pre-existing warnings as before plus one
+new elevation-0 warning on Miller's Cut's own border row (consistent with every other
+map's border rows so far, not treated as urgent).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
