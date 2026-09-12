@@ -1936,6 +1936,24 @@ old ones with it first. Estate Grounds' rendering-noise glitch (Eleventh feature
 entry) is still unfixed. Everything in this entry was verified without launching
 `mgba-qt` - Viktor has not yet seen any of tonight's fixes with his own eyes.
 
+**Build tooling gotcha found while re-verifying the Safe Room fix with `make check`:
+`make DEBUG=1 check` (as opposed to plain `make check`) hits a real, deterministic
+GCC internal-compiler-error** ("Unexpected thumb1 far jump" in `GetClampedValue`,
+`src/config_changes.c:89`, under the debug build's `-Og`) - reproduced twice
+identically on a from-clean rebuild, so it's a real toolchain issue, not a flaky
+one-off. `src/config_changes.c` is untouched upstream engine code, unrelated to any
+Wasteland content; this combination (`DEBUG=1` + `check`) does not appear to have
+ever actually been run in this project before - every previously-documented `make
+check` run (the Alder species test, the original safe-room test) was plain, without
+`DEBUG=1`. **Use plain `make check` for any test-suite run** (confirmed working,
+`*Safe room` still passes 1/1 after the resize) - only use `DEBUG=1` for the real ROM
+build when the in-game debug menu is actually needed, never combine it with `check`
+until this GCC bug is worked around or the toolchain is updated. Also worth noting for
+future large rebuilds: this machine has ~7.7GB RAM, and a full parallel `-j$(nproc)`
+rebuild of the entire test suite from a clean `build/emerald-debug` OOM-killed the
+build - stick to the repo's own established `-j2` convention for anything that
+compiles the full test suite from scratch, not just the normal ROM build.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
