@@ -12,7 +12,37 @@
 @ side into Wasteland_Road through its own matching real door. No coord_event
 @ is needed for either transition anymore.
 Wasteland_EstateGrounds_MapScripts::
+	map_script MAP_SCRIPT_ON_FRAME_TABLE, Wasteland_EstateGrounds_OnFrame
 	.byte 0
+
+Wasteland_EstateGrounds_OnFrame:
+	map_script_2 VAR_WASTELAND_ESTATE_GROUNDS_STATE, 0, Wasteland_EstateGrounds_EventScript_FixRenderGlitch
+	.2byte 0
+
+@ Real, reproducible bug, confirmed via a real headless frame-by-frame test
+@ (not assumed, and not the same as the Safe Room's "corruption" - that one
+@ turned out to be correct tile data at a bad size, this one is genuine
+@ runtime corruption: a static per-tile render of this map's own map.bin
+@ shows no glitch at all, so the map data itself is fine). On arrival, a
+@ garbled noise patch reliably appears in the screen's top-left corner
+@ roughly 50 frames after the map loads - with zero player input - and is
+@ fully cleared by any single subsequent real player movement. Root cause
+@ not fully understood even after a dedicated investigation (see the
+@ Eleventh feature entry in CLAUDE.md - connection border-fill, tileset
+@ mismatch, and several warp/fade variants were all ruled out as the sole
+@ mechanism), but the fix doesn't need the root cause: force exactly the
+@ kind of harmless movement already proven to clear it, automatically,
+@ timed to land after the glitch's observed onset window (confirmed still
+@ present at frame 59, absent at 47) so the player is never meant to
+@ actually see it.
+Wasteland_EstateGrounds_EventScript_FixRenderGlitch::
+	setvar VAR_WASTELAND_ESTATE_GROUNDS_STATE, 1
+	delay 75
+	lockall
+	applymovement LOCALID_PLAYER, Common_Movement_WalkInPlaceFasterDown
+	waitmovement 0
+	releaseall
+	end
 
 Wasteland_EstateGrounds_EventScript_Aftermath::
 	setflag FLAG_SEEN_ESTATE_GROUNDS_AFTERMATH

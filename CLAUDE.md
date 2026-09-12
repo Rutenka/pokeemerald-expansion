@@ -1954,6 +1954,74 @@ rebuild of the entire test suite from a clean `build/emerald-debug` OOM-killed t
 build - stick to the repo's own established `-j2` convention for anything that
 compiles the full test suite from scratch, not just the normal ROM build.
 
+### Eighteenth custom feature: the Estate Grounds rendering glitch, actually fixed
+### (2026-09-12, same day)
+
+Picked up the one item explicitly left open at the end of the Seventeenth feature
+entry - the transient top-left rendering-noise glitch, first documented in the
+Eleventh feature entry against an earlier, now-retired version of this map, still
+present (per today's audit) on the current one. This time it got root-caused enough
+to fix, via the same discipline the Safe Room investigation used: reproduce with real
+frame-by-frame headless screenshots, cross-check against a static per-tile render
+before assuming anything is a bug, and isolate variables one at a time.
+
+**First, the static-render check that the Safe Room investigation established as
+standard practice**: rendering `Wasteland_EstateGrounds/map.bin` directly with
+`tools/tileset_preview.py` (no emulator) produces a completely clean image - unlike
+the Safe Room case, this is **not** a tile-data/proportions problem. The map's own
+data is correct; the glitch is genuine runtime corruption.
+
+**Reproduced via a real walk-through**, not a debug-menu shortcut: from a fresh boot,
+warped into `Wasteland_EstateHouse`, then used real D-pad movement through its actual
+door into `Wasteland_EstateGrounds` (matching exactly what a real player experiences,
+since `TryDoorWarp` and a debug-menu warp both ultimately call the same `DoWarp()` per
+`src/scrcmd.c`/`src/debug.c`, but a real walk-through avoids any doubt about that).
+With **zero player input** after landing, frame-by-frame screenshots showed the room
+rendering cleanly through frame 47, then a garbled multicolor noise patch reliably
+appearing in the top-left corner by frame 49 and persisting through at least frame 59
+(and, per the Eleventh entry's original finding, indefinitely after that too) - with
+no script even attempting to run in that window (the arrival narration is a
+step-based coord_event one tile past the landing spot, and zero steps were taken).
+**A single real directional key press instantly and completely cleared it** -
+confirmed by screenshot immediately before and after the press - matching and
+reconfirming the Eleventh entry's old "clears after one input" finding, now proven on
+the current, structurally different (warp-based, not connection-based) version of
+this map. This rules out the Eleventh entry's original "connection border-fill"
+theory as the mechanism here (this map has no `connections` at all, `connections:
+null` in its map.json), while confirming the actual symptom is identical - whatever
+the underlying engine mechanism is, it's evidently not specific to connections, and
+still not fully understood at the level the rest of this file's fixes are.
+
+**The fix doesn't require the root cause - it only requires reliably reproducing the
+thing already proven to clear it, automatically, before a player would see it.** Added
+`Wasteland_EstateGrounds_MapScripts` (`MAP_SCRIPT_ON_FRAME_TABLE`, the same one-shot
+pattern the Safe Room's cutscene uses, gated on a newly-reserved
+`VAR_WASTELAND_ESTATE_GROUNDS_STATE`, repurposing the previously-unused
+`VAR_UNUSED_0x4083`): 75 frames after the map loads (safely past the observed
+frame-49 onset, with real margin), it does a brief `lockall` +
+`applymovement LOCALID_PLAYER, Common_Movement_WalkInPlaceFasterDown` + `waitmovement
+0` + `releaseall` - a movement animation that doesn't actually relocate the player,
+just exercises the same movement/camera-processing pipeline a real key press does.
+**Confirmed working**: re-ran the identical real door-walkthrough with the fix built
+in, screenshotting at 11 checkpoints from frame 47 (still mid-fade, black) through
+frame 150 - every checkpoint from the room first becoming visible onward is clean, no
+glitch at any point, versus the unfixed version's reliable appearance by a similar
+point in its own timeline.
+
+**Still not fully understood, flagged honestly rather than papered over**: why this
+specific transition (a native door warp into this specific 40x20 map) triggers
+whatever the underlying rendering race actually is, while every other real door
+transition in this project (the mansion's own doors, Brightwell's mart/center/house
+doors, both Estate Tunnel doors) has never shown it. If this exact symptom - a
+transient noise patch that clears on input - ever shows up on a *future* new map,
+don't re-investigate from scratch: start from "a scripted `Common_Movement_
+WalkInPlace*` pulse timed ~75+ frames after `MAP_SCRIPT_ON_FRAME_TABLE` fires is a
+proven, reusable fix," and consider whether it's worth generalizing into a small
+shared script macro rather than copy-pasting the block above into each affected map.
+
+**Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both rebuilt
+clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
