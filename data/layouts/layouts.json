@@ -9323,6 +9323,17 @@
       "border_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/border.bin",
       "blockdata_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/map.bin",
       "layout_version": "frlg"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_SAFE_ROOM",
+      "name": "Wasteland_SafeRoom_Layout",
+      "width": 6,
+      "height": 6,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_Lab",
+      "border_filepath": "data/layouts/Wasteland_SafeRoom/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_SafeRoom/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

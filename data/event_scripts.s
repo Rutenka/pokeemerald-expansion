@@ -1049,6 +1049,9 @@ gStdScripts_End::
 
 .endif
 
+	@ Wasteland: custom maps
+	.include "data/maps/Wasteland_SafeRoom/scripts.inc"
+
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"
 	.include "data/scripts/new_game.inc"
