@@ -1,0 +1,1956 @@
+# Pokémon Wasteland — project brief & status
+
+Working title, not final. A Gen 3-based Pokémon GBA ROM hack (RHH pokeemerald-expansion
+engine) with an original Fallout-inspired story. This file is the handoff between
+sessions — read it fully before doing anything.
+
+## Working relationship
+
+Viktor (the user) is non-technical. He sets creative preferences and makes the key
+experience/story choices. The assistant leads planning, technical choices,
+implementation, documentation, and verification. Bring creative decisions to him one at
+a time with a concrete recommendation. Clearly distinguish accepted requirements from
+open proposals. Keep this file current as decisions are made — it's the single source
+of truth across sessions (Viktor also runs a separate long-running design conversation
+with another AI in his browser, "Astra"; when he pastes notes from there, treat them as
+authoritative creative decisions and fold them into this file).
+
+## Repo / environment status (as of 2026-09-06)
+
+- Cloned from `https://github.com/rh-hideout/pokeemerald-expansion.git`, tag
+  `expansion/1.17.0`, into `~/Projects/pokemon-wasteland`, working branch `wasteland/main`.
+- Toolchain installed via apt (build-essential, arm-none-eabi-*, libnewlib-arm-none-eabi,
+  git, libpng-dev, python3). mGBA installed via snap (`mgba-qt`).
+- Unchanged base game compiles and runs (`make -j2` → `pokeemerald.gba`, confirmed
+  launching in mGBA).
+- A debug build also works (`make DEBUG=1 -j2`) — this enables the in-game overworld
+  debug menu (hold R + press START) for giving Pokémon, changing flags/vars, etc. Useful
+  for manually testing without full story scripting.
+  - Had to fix a pre-existing upstream false-positive `-Werror=maybe-uninitialized`
+    warning in `src/daycare.c` (`InheritIVs`) that only shows up under the debug build's
+    `-Og` optimization level — initialized `slot`/`powerStat` at declaration. Unrelated
+    to our custom content, safe, already applied.
+- No GUI automation available in this environment (Wayland session, no xdotool) — the
+  assistant cannot press buttons in the *graphical* emulator (`mgba-qt`) itself.
+  **Superseded for most purposes by the headless mGBA Python scripting set up
+  2026-09-11 — see below and "Working process".** Viktor manually driving `mgba-qt`
+  under instruction is now reserved for things that need his actual eyes/judgment
+  (does it look right, does the dialogue read well), not for checking whether logic
+  fired correctly.
+- **Headless mGBA scripting via Python bindings (`libmgba-py`), set up 2026-09-11** —
+  lets the assistant itself load the ROM, press buttons, step frames, and read/write
+  real game memory (save-block flags/vars, player position, party, current map),
+  without any GUI. No prebuilt package ships this; built from source at
+  `~/Projects/mgba` (`git clone https://github.com/mgba-emu/mgba.git`), in a venv at
+  `~/Projects/mgba/.venv-py` (needs `cmake`, `swig`, `python3-dev`, `python3-venv` via
+  apt — required a real terminal for the `sudo apt-get install`, since this
+  environment's Bash tool can't supply an interactive sudo password prompt; and
+  `cffi`/`setuptools`/etc. via `pip install` inside the venv). Built via:
+  `cmake -DBUILD_PYTHON=ON -DBUILD_QT=OFF -DBUILD_SDL=OFF -DBUILD_LIBRETRO=OFF
+  -DBUILD_HEADLESS=ON -DUSE_DISCORD_RPC=OFF ..` then `make -j$(nproc)` from
+  `~/Projects/mgba/build`.
+  - **Had to patch a real upstream mGBA build bug** to get this working at all:
+    `src/platform/python/CMakeLists.txt` compiles the cffi extension (which parses
+    `struct mCore` and friends via the C preprocessor) using only `-I` include-path
+    flags, never the `-D` feature-define flags (`ENABLE_VFS`, `ENABLE_DEBUGGERS`,
+    `USE_ELF`, etc.) that the main `libmgba.so` target itself is compiled with. Since
+    several core structs have fields conditionally compiled in behind exactly those
+    macros, the Python binding's view of struct layout silently diverged from the
+    real compiled layout — every field after the first conditional one read from the
+    wrong offset (symptom: `core.init` — the second field in `struct mCore` —
+    read back as a null pointer, "cannot call null pointer... `_Bool(*)(struct
+    mCore*)`"). Fixed locally by appending `${OS_DEFINES}`, `${FEATURE_DEFINES}`, and
+    `${FUNCTION_DEFINES}` (the same list already used for the main library target) as
+    `-D` flags into that file's `INCLUDE_FLAGS`/`INCLUDE_FLAGS_STR`. This is a private
+    fix in the `~/Projects/mgba` clone (not part of this repo), not yet reported
+    upstream.
+  - The library and Python module import correctly with the fix, load our actual
+    `pokeemerald.gba` + `pokeemerald.sav`, and read back sane values matching the real
+    save (player position, current map group/num/warp, `FLAG_SYS_POKEMON_GET`) — the
+    game needs ~300 emulated frames (~5s) after `core.reset()` before
+    `gSaveBlock1Ptr` (fixed IWRAM address `0x030051C4`) becomes valid; reading it
+    earlier returns `0x0`, and reading save-block fields before that gives nonsense.
+  - Save-block field offsets (`pos` at `+0x00`, `location`/current warp at `+0x04`,
+    `flags[]` at `+0x1270`, `vars[]` at `+0x139C`, from `struct SaveBlock1` in
+    `include/global.h`) are hardcoded in the helper script below by offset, not looked
+    up by name — **these will silently go stale if `SaveBlock1`'s layout changes**
+    (a field added/removed/reordered before them). Re-derive from `include/global.h`
+    and `pokeemerald.map` (search `gSaveBlock1Ptr`) if save-block reads ever look wrong
+    after a rebuild.
+  - Reusable helper at `tools/mgba_probe.py` (in this repo — distinct from the
+    existing `tools/mgba/` folder, which is just prebuilt `mgba-rom-test` binaries the
+    engine's own `make check` harness uses) — wraps ROM loading, log silencing,
+    save-block reads, flag get/set, button presses, and raw savestate save/load into a
+    small `MgbaSession` class. Run it directly (`python3 tools/mgba_probe.py`, with
+    `~/Projects/mgba/.venv-py` activated first, or point `PYTHONPATH` at
+    `~/Projects/mgba/build/python/lib.linux-x86_64-cpython-312`) for a smoke test, or
+    import `MgbaSession` from it for real checks.
+  - **`boot_to_overworld()` confirmed working end-to-end (2026-09-11)**: drives an
+    existing save from cold boot all the way to actual overworld player control, no
+    manual timing guesses — traced from `src/title_screen.c`/`src/main_menu.c` instead
+    of trial-and-error (per the "read source before guessing" rule above). Key facts
+    that made this reliable: the title screen's Phase1/Phase2 auto-advance on their
+    own frame-count timers with zero input needed; Phase3 only auto-advances into an
+    idle copyright-screen demo loop if left alone, so it needs one real A/START press
+    to reach the main menu; with an existing save, the main menu's cursor always
+    starts on CONTINUE (index 0), so a bare A press there is always "Continue", never
+    "New Game"; `CB2_ContinueSavedGame` drops straight into the overworld with no
+    further confirmation screen. So repeatedly pressing A (with the 120-frame initial
+    boot wait already established) is safe at every stage and self-terminates by
+    polling `gMain.callback2` (fixed IWRAM address `gMain` + `0x04`, per `struct Main`
+    in `include/main.h`) against `CB2_Overworld`'s address from `pokeemerald.map`
+    (masking the Thumb low bit off both sides first). Verified test: reached the
+    overworld in 14 presses (~9.5 emulated seconds) from an existing save, then
+    confirmed real control by pressing UP and seeing `pos` actually change
+    ((5,9)→(5,8)) — not just "a callback matched," genuine movement.
+  - **Update 2026-09-11: symbol addresses are now resolved dynamically from
+    `pokeemerald.map` at import time**, not hardcoded — this stopped being a
+    theoretical caveat and became a real bug the same day: a `DEBUG=1` build (needed
+    for the debug-menu work below) links extra code in and shifts everything after
+    it, so the normal build's hardcoded `CB2_Overworld`/etc. addresses silently
+    pointed at the wrong functions under `DEBUG=1` (`boot_to_overworld()` failed to
+    terminate). Fixed by having `tools/mgba_probe.py` grep `pokeemerald.map` itself
+    for `gSaveBlock1Ptr`, `gSaveBlock2Ptr`, `gMain`, `CB2_Overworld`,
+    `CB2_ContinueSavedGame`, `CB2_InitMainMenu` on import, so it self-adjusts to
+    whatever the current build's map file says. Re-run whenever the ROM is rebuilt.
+  - **Screenshot capability added and debugged 2026-09-11** (`MgbaSession.screenshot()`,
+    via `mgba.image.Image` + `core.set_video_buffer`) — two real bugs fixed getting
+    this working, both worth remembering for any future mgba-python work:
+    1. `Pillow` isn't installed in `~/Projects/mgba/.venv-py` by default, so
+       `mgba.image.Image.to_pil()` doesn't even exist (the binding defines it
+       conditionally on `import PIL` succeeding) — installed via `pip install
+       Pillow` in that venv. Failed silently as "no attribute to_pil" with no hint
+       why.
+    2. **`set_video_buffer()` must be called *before* `core.reset()`, not after** —
+       the reverse order (which seemed more natural, and is what an early draft of
+       this tool did) leaves the buffer permanently all-zero with no error at all;
+       confirmed correct order against mGBA's own
+       `src/platform/python/cinema/movie.py`. Every screenshot was silently solid
+       black until this was fixed.
+  - **Found and fixed a real bug in `MgbaSession.press()` itself, 2026-09-11**: it
+    pre-combined multiple keys with Python `|` before calling `core.set_keys()`.
+    The GBA key constants (`GBA.KEY_A`, `GBA.KEY_START`, `GBA.KEY_R`, ...) are plain
+    bit-*position* numbers (0, 3, 8, ...), not pre-shifted bitmask values —
+    `core.set_keys(*keys)` takes each key as a **separate positional argument** and
+    does `1 << key` per argument internally (see `mgba/core.py`'s `_keys_to_int`).
+    OR-ing two of these together first (e.g. `KEY_R | KEY_START` = `8 | 3` = `11`)
+    produces a nonsense value with the wrong bits set, silently pressing neither
+    intended key. This went unnoticed through all of `boot_to_overworld()` because
+    every press there used exactly one key at a time (OR of a single value is a
+    no-op) — it only surfaced on the first real multi-key combo (R+START, below).
+    Fixed by passing keys through as `*args` all the way down: `press(*keys, ...)`
+    now calls `self.core.set_keys(*keys)`/`clear_keys(*keys)` directly.
+  - **The DEBUG build's overworld debug menu (hold R + press START) is now fully
+    scriptable, confirmed 2026-09-11.** Traced the actual trigger condition in
+    `src/field_control_avatar.c` (`DEBUG_OVERWORLD_HELD_KEYS`/`DEBUG_OVERWORLD_TRIGGER_EVENT`
+    in `include/config/debug.h`) rather than guessing the timing — worth noting this
+    is gated on **not** building with `RELEASE=1`, not on `DEBUG=1` specifically
+    (`include/constants/global.h`'s `DISABLED_ON_RELEASE`); `DEBUG=1` was still used
+    here anyway since that's this project's established convention for this menu.
+    Menu structure (from `src/debug.c`, `sDebugMenu_Actions_Main` /
+    `sDebugMenu_Actions_Utilities` / `sWarpSelection`): main menu opens with
+    "Utilities…" pre-highlighted (press A); Utilities' 2nd item is "Warp to map
+    warp…"; its group/map/warp digit-entry UI always starts at 0 on a fresh
+    invocation (**not** "remembers the last value per digit" as a previous session's
+    manual testing suggested — that must have been an artifact of not reopening the
+    tool fresh) and is driven by `DPAD_UP`/`DOWN` (±10^digit on the currently
+    selected digit) and `DPAD_LEFT`/`RIGHT` (move which digit is selected, 0 = ones
+    place) — e.g. entering 75 is `RIGHT, UP×7, LEFT, UP×5`. `A` confirms each of the
+    3 steps (group → map → warp) in turn; the third confirmation immediately performs
+    the real warp. Full sequence confirmed to actually land in and correctly play
+    the safe room's opening cutscene end-to-end, entirely via scripted button
+    presses with **no Viktor involvement**: opened the menu, entered group 75 / map
+    0 (Safe Room) / warp 0, warped in, watched the forced cutscene fire immediately
+    with no input, mashed A through all the dialogue/movement/fade beats, and
+    confirmed via memory reads afterward that `FLAG_RECEIVED_WASTELAND_STARTER` and
+    `FLAG_SYS_POKEMON_GET` were both set, `playerPartyCount == 1`, and — proving the
+    player was actually released rather than just checking a flag — that `pos`
+    changed after pressing UP once the cutscene ended. This is the first time
+    something built this session actually caught/confirmed real story content
+    end-to-end rather than just a generic smoke test.
+  - Savestate save/load API (`save_raw_state`/`load_raw_state`) still hasn't been
+    exercised — worth doing next so repeat test runs can start from a saved
+    mid-scene state instead of reboot-and-navigate-the-debug-menu every time.
+- **Porymap installed** (2026-09-07), built from source at `~/Projects/porymap` (no
+  prebuilt Linux binary is officially distributed, only Windows/macOS — had to build via
+  `qmake6 && make`, after `sudo apt-get install qt6-base-dev qt6-base-dev-tools
+  qt6-declarative-dev qt6-charts-dev qt6-svg-dev qt6-5compat-dev qt6-multimedia-dev`).
+  Binary is at `~/Projects/porymap/porymap`; project config `porymap.project.cfg` now
+  exists at the repo root (Porymap-generated, safe to leave). See "Working process" below
+  for how this changes the workflow — this is now a required verification step before
+  any new map ever gets tested in mGBA.
+
+### Working process (established 2026-09-07, after a slow morning of guess-and-check)
+
+Building the first few custom maps (safe room → estate grounds → Brightwell) this
+session took far more mGBA round-trips than it should have — every bug (wrong elevation,
+unreliable trigger variable, unsafe script hook) was something that could have been
+caught by reading engine source or looking at the actual map, not by guessing and having
+Viktor test a black screen. Two concrete changes going forward:
+
+1. **Porymap first, mGBA second.** Before any new map is considered ready to test in the
+   emulator, open it in Porymap's Events tab and check: every warp/trigger sits on
+   sensible ground (Porymap flags warps not on a warp-behavior metatile — red warning —
+   though a landing-only one-way warp legitimately triggers this and can be ignored, see
+   its own tooltip text), every object event is on open, unobstructed ground, and
+   coordinates look sane at a glance. This is fast, free, and doesn't need a full
+   rebuild — it should catch most of what mGBA testing caught the hard way today
+   (misplaced NPCs, warps on the wrong tile). **Confirmed working 2026-09-07**: Viktor
+   used it to verify `Wasteland_SafeRoom`, `Wasteland_EstateGrounds`, and
+   `Wasteland_Brightwell`'s events — all clean (one expected false-positive warning on
+   the safe room's landing-only warp, explained above).
+2. **Read source before guessing, not after.** When unsure how an engine mechanism
+   behaves (a map script hook's timing, how a trigger's condition is evaluated, etc.),
+   check the actual C source in `src/` first. This session eventually did this
+   successfully for the coord_event bug (traced `ShouldTriggerScriptRun` in
+   `src/field_control_avatar.c` to find the real cause) — should be the first move next
+   time, not the third.
+
+Batching also matters: prefer finishing and self-verifying (build + Porymap check) a
+whole coherent piece of work before asking Viktor to test it in mGBA, rather than
+round-tripping on every individual change.
+
+3. **Headless mGBA scripting third, Viktor's manual test last** (added 2026-09-11, per
+   Viktor's request for a less repetitive fix→ask-Viktor-to-test→repeat loop). See the
+   "Headless mGBA scripting" entry above for the setup. The intended verification
+   ladder, from cheapest to most expensive, is now: (1) compile + `make check`
+   automated tests, (2) Porymap for placement, (3) drive `tools/mgba_probe.py` myself
+   to check the actual logic a change is supposed to produce — a flag getting set, a
+   warp landing on the right map/coords, a var changing — without needing Viktor at
+   all, (4) only then ask Viktor to playtest in `mgba-qt`, and only for things that
+   genuinely need his judgment (does it look right, does the dialogue read well, does
+   the pacing feel good) rather than things a memory read can already confirm. Step 3's
+   mechanism (boot an existing save to real overworld control, then read/write memory
+   or press buttons) is confirmed working end-to-end as of 2026-09-11 — see
+   `boot_to_overworld()` above. **Also now proven on real story content, same day**:
+   the debug menu's "Warp to map warp…" tool (see the detailed entry above) is fully
+   scriptable, so the whole safe-room opening cutscene rewrite (below) was verified
+   by warping straight into it and mashing through the dialogue/movement/fade beats
+   with no Viktor involvement at all — the first real payoff of this whole
+   verification-ladder investment, not just a smoke test.
+
+### World-building checklist (established 2026-09-12, after repeated "no door / can't
+### exit" bugs made it into builds Viktor tested)
+
+Viktor's explicit standing instruction, after finding several real exit/logic bugs by
+hand across multiple rounds: **getting doors, exits, and overall map logic right the
+first time matters more than how any individual room looks.** The bugs that kept
+recurring were never about tile art — they were about the invisible mechanics
+underneath it (warps, collision, connections). This checklist exists so those specific
+mistakes stop recurring; read it before building or editing any map, not after
+something breaks.
+
+1. **Never assemble a tile/furniture arrangement by picking metatile IDs off the raw
+   tile sheet.** Only place an arrangement (a bed, a bookshelf, a door, a staircase)
+   copied verbatim — same metatile IDs, same relative positions — from a real, already-
+   shipped map using the same tileset. If the exact arrangement you want doesn't exist
+   in any real map, that's a sign to change what you're building, not to hand-assemble
+   it anyway. (Established after the safe room's bed and floating bookshelf both failed
+   for exactly this reason — see the Second/Eighth feature entries below.)
+
+2. **A map edge that looks open is not the same as a map edge that's walkable.**
+   Cropping a chunk out of a real vanilla map only guarantees that *that map's own*
+   interior logic is intact — it guarantees nothing about the crop's outer edges, which
+   were never designed to be a border at all. Concretely:
+   - Dump the full collision byte (not just metatile ID) for every tile along the
+     *specific* edge/column/row a player is meant to cross, on **both** sides of the
+     transition, before wiring anything up. A single Porymap glance or a rendered
+     screenshot is not enough — decorative-looking tiles (hedges, low fences, arches)
+     are frequently collision-blocked, and plain-looking grass is sometimes not.
+   - Do this with a quick Python dump of the `.bin` (2 bytes/cell,
+     `metatile = raw & 0x3FF`, `collision = (raw>>10)&3`, `elevation = (raw>>12)&0xF`)
+     rather than eyeballing a render — collision is invisible in a plain tile render.
+   - This bit Wasteland_EstateGrounds/Road twice in the same session: once as multiple
+     *unintended* open gaps at a cropped edge (see checklist item 3), and once — after
+     switching to map connections specifically to avoid that class of bug — as the
+     *intended* exit column landing on a solid hedge/fence tree-line on the other map's
+     side, which a visual-only check had missed because the render looked like open
+     grass at a glance. Fixed each time by tracing full collision continuity from the
+     interior walkable area all the way to the seam, on both maps, not just checking
+     the seam tile in isolation.
+
+3. **A cropped source map can have more than one incidental opening at what you intend
+   to be a single exit.** When you crop a chunk out of a larger real map, any door,
+   path, or gap that existed in the *original, larger* map at that boundary comes along
+   for free — including ones you didn't intend to expose. Dump the *entire* edge (not
+   just your intended exit tile) and check for every open (collision 0) tile along it,
+   not just the one you meant to wire up. Either wire up every real opening you keep, or
+   deliberately close the ones you don't want (reusing a real blocked/collision-1 tile
+   from elsewhere in the same map for the art, not inventing one).
+
+4. **For any route-to-route or route-to-town transition, use a real map `connection`
+   (`data/maps/<map>/map.json`'s `connections` array), not a coord_event- or
+   warp-triggered scripted transition.** A connection seamlessly stitches two maps at a
+   shared edge with no scripted trigger to misfire, mistime, or leave an accidental gap
+   around — this is how vanilla itself always does it for this situation (confirmed via
+   Route117/Verdanturf/Mauville's real connection data). Reserve coord_event/warp-based
+   transitions for cases connections genuinely can't express (arrival narration,
+   interior-to-interior doors, anything needing a specific landing coordinate rather
+   than a seamless edge).
+   - **Connections still require the collision-continuity check in item 2.** A
+     connection guarantees the *camera and map data* stitch together; it guarantees
+     nothing about whether the terrain on either side of the seam is actually walkable.
+     Verify the intended crossing column/row is open on both maps before considering a
+     connection "done."
+   - The `offset` field shifts alignment between the two maps' coordinate spaces
+     (verified in `src/fieldmap.c`'s `FillSouthConnection`/`FillNorthConnection`: for a
+     map's own `down` connection, `offset` maps the connected map's column
+     `x2 = localColumn - offset`, i.e. `offset=0` means column 0 lines up with column 0;
+     a real vanilla reciprocal pair typically uses `offset` on one side and `-offset` on
+     the other, e.g. Route110↔Route103 use 60/-60). Use this to align a specific exit
+     column with a specific real opening on the other map, rather than only ever using
+     `offset=0` and hoping the two maps' widths happen to match up.
+
+5. **`elevation: 0` on a `warp_events` or `coord_events` entry is a wildcard
+   (`ELEVATION_TRANSITION`, `include/global.fieldmap.h`), not "the tile's elevation must
+   literally be zero."** Per `GetCoordEventScriptAtPosition`/`GetWarpEventAtPosition`
+   (`src/field_control_avatar.c`), an elevation of 0 on the *event* matches the player's
+   *actual* elevation unconditionally. Don't "fix" a working elevation-0 trigger by
+   changing it to match a tile's real elevation value (e.g. 3) — that makes it *more*
+   restrictive, not more correct, and was a real false lead this session before being
+   reverted.
+
+6. **A landing spot should look like it leads somewhere, not sit in the middle of open
+   floor.** When one indoor map warps into another (not through a real exterior door),
+   find a real, shipped example of an interior-to-interior connection in the same
+   tileset pair (an upstairs staircase alcove, a back-room door) and copy its exact tile
+   arrangement in, the same way item 1 requires for furniture. A plain floor tile
+   technically works as a warp destination (the engine only needs the `warp_events`
+   coordinate and elevation to match — no special metatile behavior tag is required for
+   a *landing* tile, only for tiles that must be walked *into* to trigger a warp, e.g.
+   `TryDoorWarp`'s `DIR_NORTH` + door-behavior check in `field_control_avatar.c`) but
+   reads as a bug to a player even when it's functioning correctly. (Fixed 2026-09-12 by
+   replacing the safe room's house-side landing spot, a bare floor tile, with a
+   staircase-alcove arrangement copied from `RustboroCity_Flat1_1F`.)
+
+7. **After arriving via warp, the player keeps whatever direction they were last
+   walking — nothing re-faces them automatically.** If the destination should read as
+   "coming out of" something (a door, a stairwell), explicitly `turnobject
+   LOCALID_PLAYER, DIR_x` to face them away from that wall/threshold. Pick the direction
+   from the actual geometry of the landing spot, not by default/habit — a facing fix
+   copied from a different room's layout will point the wrong way.
+
+8. **Before treating any of the above as "done," dump and re-check the full
+   collision/connection picture end-to-end, then render the map(s) with
+   `tools/tileset_preview.py --map` and look at the actual image** (not just trust the
+   data dump) — some things (does a collision-cleared tile still look like solid fence,
+   does a staircase alcove actually look like stairs) are only obvious visually. This
+   step doesn't require mGBA — it's static, source/data-level verification, safe to do
+   even when live emulator testing is off-limits (e.g. while Viktor is away and asked
+   for headless-only work). **But it is not sufficient by itself** — see item 10.
+
+9. **A real door is almost always 2 tiles wide, with *two* separate `warp_events`
+   pointing at the same destination.** When copying a door's coordinate from a real
+   shipped map, check whether the source has a second warp entry at the adjacent tile
+   before assuming a single coordinate is the whole door — copying only the first one
+   produces a door that looks right but only works on one (arbitrary) side, which reads
+   as a bug even though it's not one most players would think to test both halves of.
+   This applies to interior-to-interior doors you place yourself too, not just ones
+   copied from vanilla — if the tile art you're using is itself a 2-tile-wide door/stair
+   graphic (check the source example you copied it from), wire both tiles.
+
+10. **A tile's own baked-in elevation (in the `.bin` data, not a warp/coord_event's
+    elevation field) should essentially always be `3` for ordinary outdoor ground and
+    otherwise match its real vanilla neighbors — never leave it at `0` when hand-patching
+    a path across a row/column, even though `0` seems like a natural default.** `0` is
+    `ELEVATION_TRANSITION`, a wildcard the movement-collision check
+    (`IsElevationMismatchAt`) treats as "matches the player's actual elevation
+    unconditionally" — set it on ordinary ground and the game's normal "can't walk onto
+    deep water without Surf" check (which relies on a real elevation mismatch, e.g. 3 vs
+    water's 1) silently stops applying anywhere that patched ground touches water. This
+    is a different, more dangerous mistake than item 5 (which is about the *event's*
+    elevation field in map.json) — after any hand-patch that sets tile elevation
+    directly, scan for elevation-0 runs the same way item 2 already calls for scanning
+    collision, and check what real vanilla neighbors use before picking a value rather
+    than defaulting to 0.
+
+11. **New standing process, agreed with Viktor 2026-09-12, after the garden/road seam
+    saga made clear that hand-cropping-and-stitching real maps is the single biggest
+    source of bugs in this whole project**: for any new outdoor area or town, do NOT
+    cut a piece out of one real map and stitch it to a piece of another. Instead:
+    (1) ask Viktor what *feeling* he wants for the area (describe it in his own words -
+    cozy, corporate-sterile, overgrown, whatever); (2) find a real, complete, whole
+    vanilla map that matches that feeling; (3) use it entirely unmodified in geometry -
+    reskin only (new NPCs, dialogue, wild encounters, warp targets, sign text). This is
+    exactly the pattern that already worked cleanly every time this session
+    (`Wasteland_EstateHouse` = `RustboroCity_House1`, `Wasteland_Brightwell` =
+    `VerdanturfTown`, the Pokémon Center and Mart = their real shared layouts) versus
+    every time it didn't (the original `Wasteland_EstateGrounds`/`Wasteland_Road`, both
+    crops-of-crops). A small custom-built room from simple, verified tiles (the safe
+    room) is the other safe option when nothing real fits the story beat. Never
+    anything in between.
+
+12. **When re-testing a fix by pressing a button, count the presses.** An NPC
+    conversation sitting right next to the player will happily re-trigger itself
+    forever if input keeps coming after it's actually finished - this can look exactly
+    like a permanent hang (can't move, can't open the menu) when the real state is
+    "a new, valid conversation just started because the last one's final press landed
+    while still facing the NPC." Confirmed via a real frame-by-frame test 2026-09-12
+    where "the player is frozen" turned out to be this, not a script bug. If a headless
+    test looks stuck, re-run it with exactly-counted presses (one screenshot per press)
+    before concluding anything is actually hung.
+
+13. **Static, per-map tile renders (`tools/tileset_preview.py --map`) cannot show you
+    a connection seam, a door's actual in-game feel, or whether a tile you cleared
+    still reads as solid fence — they render one map's own layout data in total
+    isolation, never the connected/stitched view a player actually sees.** Once a
+    working save exists (see `boot_to_overworld()` in `tools/mgba_probe.py`,
+    confirmed working 2026-09-12), a real screenshot of actual gameplay — walking up to
+    and through the thing you just fixed — is the only way to catch this class of
+    "mechanically correct but looks wrong" issue, and it's cheap enough to do for every
+    connection/door before calling it done, not just for a final check.
+
+14. **A native door warp does not land the player exactly on the `warp_events`
+    coordinate — `TryDoorWarp`'s exit animation walks them one further tile out past
+    the door first.** Confirmed 2026-09-12: a door at local `(5,8)` actually leaves the
+    player resting at `(5,9)`, verified via `get_pos()`, not assumed. Placing anything
+    step-based (narration, a return trigger) "one tile past the door" using the door's
+    *own* coordinate reproduces the exact checklist-item-6-adjacent bug of sitting on
+    the real landing tile and silently never firing — the fix is to always verify the
+    player's *actual* resting position after the warp before picking a nearby
+    coordinate for anything step-based, never compute it from the door's own
+    `warp_events` entry.
+
+15. **A multi-page `msgbox` needs to be confirmed *closed* (via a screenshot after
+    every press, not a guessed press count) before concluding that a lack of
+    subsequent movement means anything is broken.** Confirmed 2026-09-12: a headless
+    test mashed a 4-page narration box only 6-8 times and concluded the player was
+    completely frozen — it wasn't a hang, the box was still genuinely open and
+    mid-sentence. This is the under-mashing mirror of checklist item 12 (which covers
+    over-mashing re-triggering an NPC) — both directions of the same lesson: don't
+    infer a msgbox's state from a fixed press count, check it.
+
+16. **A coord_event-triggered warp on plain open ground is a standing risk, not a
+    one-time bug, no matter how carefully its coordinate is checked.** Confirmed
+    2026-09-12 after the *third* separate incident of this exact class (an invisible
+    field trigger, then a hedge gap, then another hedge gap) — a player has no visual
+    way to distinguish "empty ground" from "empty ground that warps you," so even a
+    mechanically correct, collision-verified, screenshot-confirmed trigger can still
+    read as broken or arbitrary. Once an outdoor exit has needed re-placing more than
+    once, stop re-placing it — replace the mechanism instead: build a small connective
+    map (reusing a real whole vanilla map's tile art for a pair of real, matching-
+    tileset cave-mouth/door tiles, same as any other door) so the transition is a
+    genuine `warp_events` entry on a visibly-a-doorway tile, with no coord_event at
+    all. This costs one extra map but permanently removes the whole failure class.
+
+### First custom feature: starter species (done, confirmed 2026-09-07)
+
+Adding the confirmed starter — enhanced Houndour → Houndoom line, exclusive to the
+player's starting companion (father's Pokémon). Implemented so far:
+
+- `include/constants/species.h`: added `SPECIES_HOUNDOUR_ALDER` and
+  `SPECIES_HOUNDOOM_ALDER` in the `SPECIES_CUSTOM_START`/`SPECIES_CUSTOM_END` range.
+- `src/data/pokemon/species_info/gen_2_families.h`: added full `gSpeciesInfo` entries
+  for both, inside the `#if P_FAMILY_HOUNDOUR` guard, reusing vanilla Houndour/Houndoom's
+  sprites, palettes, icons, cry, name, category, description and `natDexNum` (so it
+  displays identically and counts toward the normal Pokédex entry — nothing points at
+  new art). Stats/evolution changed per Viktor's confirmed decisions:
+  - Houndour (Alder): HP 50 / Atk 60 / Def 40 / SpA 85 / SpD 55 / Spe 70 (BST 360 vs
+    normal 330).
+  - Houndoom (Alder): HP 90 / Atk 90 / Def 75 / SpA 125 / SpD 85 / Spe 110 (BST 575 vs
+    normal 500).
+  - Evolves at **level 32** (not the normal 24) via `EVOLUTION({EVO_LEVEL, 32,
+    SPECIES_HOUNDOOM_ALDER})`.
+  - **Ability: locked to Flash Fire only** (Viktor's confirmed decision, 2026-09-06) —
+    ties into the fire/survival theme (immune to fire, boosts own fire moves) and gives
+    this specific starter a defined identity. Early Bird/Unnerve removed from its
+    ability slots (vanilla Houndour/Houndoom elsewhere are unaffected).
+  - **Not breedable** (Viktor's confirmed decision, 2026-09-06) — both species use
+    `.eggGroups = MON_EGG_GROUPS(EGG_GROUP_NO_EGGS_DISCOVERED)`, the same mechanism used
+    for legendaries, so `GetDaycareCompatibilityScore()` (`src/daycare.c`) always returns
+    `PARENTS_INCOMPATIBLE` for them. Matches the "one-of-a-kind gift, not a farmable
+    species" framing.
+  - Reused vanilla learnsets (`sHoundourLevelUpLearnset` etc.) unchanged so far.
+- Both normal and DEBUG builds compile clean with this change.
+- **Verified via automated test** (2026-09-06, `make check TESTS='*Alder'` — note
+  `TESTS` does a whole-string prefix/infix match, not per-word OR; use a single token or
+  a `*`-prefixed infix pattern):
+  - `test/species.c`: stat blocks for both species are correct; `GetEvolutionTargetSpecies()`
+    returns `SPECIES_NONE` for a level-31 `SPECIES_HOUNDOUR_ALDER` and
+    `SPECIES_HOUNDOOM_ALDER` for a level-32 one, via the engine's real evolution-check
+    path (`EVO_MODE_NORMAL`, `CHECK_EVO`).
+  - `test/daycare.c`'s existing engine-wide test "Pokémon can breed with Ditto if they
+    don't belong to the Ditto or No Eggs Discovered group" (parametrized over every
+    enabled species, run via `make check TESTS='*can breed with Ditto'`) passed with
+    both Alder species included, confirming they correctly refuse to breed via the real
+    daycare compatibility check.
+  - All tests pass; normal and DEBUG builds re-confirmed clean after these changes.
+  - **Not yet verified in an actual running game** (no emulator automation available in
+    this environment — would need Viktor to manually drive mGBA, e.g. via the debug
+    menu's "give Pokémon", to confirm it looks/evolves right on-screen).
+- Remaining open item: the actual gift-Pokémon script that hands `SPECIES_HOUNDOUR_ALDER`
+  to the player in the opening scene doesn't exist yet — no story content has been
+  scripted at all. This is blocked on a first map/event prototype (development sequence
+  step 6).
+
+### Second custom feature: first map/event prototype (confirmed working, 2026-09-07)
+
+Per dev sequence step 6 (prototype custom map, event, save/reload). This is a
+throwaway technical prototype to prove the map+event+starter-gift loop works — not the
+real, staged opening scene (father's dialogue, the rebel attack, staging described in
+the design brief below are all still unwritten). Implemented so far:
+
+- **New map**: `MAP_WASTELAND_SAFE_ROOM` (`data/maps/Wasteland_SafeRoom/map.json`), in a
+  new dedicated map group `gMapGroup_Wasteland` (`data/maps/map_groups.json`) so custom
+  content stays easy to find/separate from vanilla groups. Indoor, `MAPSEC_NONE` (no
+  custom region map exists yet), not connected to any other map (no warps in or out
+  yet) — reached only via direct map-select for now (e.g. the DEBUG build's warp-to-map
+  menu), not by walking there from an existing town.
+  - **Placeholder tile art**: reuses `LittlerootTown_BrendansHouse_2F`'s layout binary
+    verbatim (`data/layouts/Wasteland_SafeRoom/{map,border}.bin`, copied byte-for-byte;
+    registered as `LAYOUT_WASTELAND_SAFE_ROOM` in `data/layouts/layouts.json`, same
+    tileset pair so it renders correctly) — just an upstairs house room standing in for
+    the real safe-room art, which doesn't exist yet. Same philosophy as reusing
+    Houndour's sprites for the Alder line: placeholder now, real art later.
+  - One NPC object event, placeholder-cast as Dad using the vanilla `OBJ_EVENT_GFX_NORMAN`
+    sprite (again just a stand-in body, not implying this *is* Norman). Placed at (4, 3),
+    elevation 3 — **confirmed walkable/interactable in mGBA** (Viktor tested).
+  - One warp tile at (7, 1), elevation 0, out to `MAP_LITTLEROOT_TOWN` (landing at its
+    own warp 1, i.e. right outside Brendan's/May's house) — **confirmed working in mGBA**.
+    This coordinate isn't arbitrary: warps in this engine only fire on tiles whose
+    *metatile* is actually tagged as a door/staircase behavior, not on any floor tile a
+    `warp_events` entry happens to point at. (7, 1) is where the source layout
+    (`LittlerootTown_BrendansHouse_2F`) has its real stairwell tile, so reusing that exact
+    coordinate got a working warp tile "for free" along with the copied tile art. First
+    attempt used an arbitrary floor coordinate (4, 5) and silently never triggered —
+    caught by Viktor testing it, not by build/test tooling (this is exactly the kind of
+    thing the headless test framework can't catch, see below).
+- **New event script**: `Wasteland_SafeRoom_EventScript_Dad`
+  (`data/maps/Wasteland_SafeRoom/scripts.inc`) — talking to Dad gives the player
+  `SPECIES_HOUNDOUR_ALDER` at level 5 (handles party-full → PC and box-full cases the
+  same way vanilla one-time gift-mon scripts do), sets a new flag
+  `FLAG_RECEIVED_WASTELAND_STARTER` so re-talking shows a short "stay quiet" line
+  instead of re-gifting — **confirmed working in mGBA** (both first-gift and re-talk
+  paths). Dialogue is throwaway placeholder text, not final writing.
+  - New flag `FLAG_RECEIVED_WASTELAND_STARTER` (`include/constants/flags.h`) — this repo
+    has no reserved "custom flags" range like species does, so per normal ROM-hacking
+    practice it repurposes a genuinely-unused vanilla slot (`FLAG_UNUSED_0x020`).
+  - Also sets `FLAG_SYS_POKEMON_GET` (vanilla flag) on first gift — this is what unlocks
+    the "POKEMON" option in the Start menu (`src/start_menu.c`); without it the game
+    looks completely normal/unstarted from the player's perspective even after receiving
+    a Pokémon via `givemon`, since that command only touches party data, not this flag.
+    Missed on the first pass; caught by Viktor testing (couldn't open the party screen).
+  - Had to add `.include "data/maps/Wasteland_SafeRoom/scripts.inc"` to
+    `data/event_scripts.s` for the script to actually link in (map `scripts.inc` files
+    aren't auto-included — each has to be added to `data/event_scripts.s` by hand).
+    **Caught a real bug here**: the first attempt placed that `.include` inside an
+    `.if IS_FRLG ... .endif` block (it's easy to miscount which `.include` block you're
+    in near the FRLG map scripts, since that guarded region is ~450 lines), so the
+    script silently didn't exist in an Emerald-mode build — no compile error, just a
+    linker "undefined reference" once something tried to reference it. Fixed by moving
+    the include after the matching `.endif` (line ~1053).
+- **Verified via automated test** (`test/wasteland_safe_room.c`, run via
+  `make check TESTS='*Safe room'`): confirms the gift logic itself (`givemon
+  SPECIES_HOUNDOUR_ALDER, 5` + `setflag FLAG_RECEIVED_WASTELAND_STARTER`) correctly puts
+  the mon in the player's party and sets the flag. Note this **cannot** test the actual
+  map/NPC/dialogue/walking-up-and-talking flow — `include/test/overworld_script.h`
+  explicitly documents that its headless `RUN_OVERWORLD_SCRIPT` harness can't exercise
+  anything that touches the real overworld (`lock`, `faceplayer`, `msgbox`, `release`,
+  object events) — so the test only proves the state-changing logic is correct, not that
+  the scene plays out right on screen. All builds (normal, DEBUG, and this new test)
+  compile/pass.
+- **Confirmed working end-to-end in mGBA** (Viktor, 2026-09-07, via the DEBUG build's
+  "Warp to map warp…" tool under Utilities…, group 75 / map 0 / warp 0 — group 75 because
+  `gMapGroup_Wasteland` was appended last to `group_order` in `map_groups.json`; this
+  index will shift if more groups are added before it): room renders and is walkable,
+  Dad is reachable and gives Houndour (Alder) at level 5, re-talking shows the after-line
+  instead of re-gifting, the Pokémon menu unlocks, and the stairwell tile warps out to
+  Littleroot Town. Two bugs were only caught by this manual pass, not by build/tests
+  (both now fixed, see above): the missing `FLAG_SYS_POKEMON_GET`, and the warp on a
+  non-warp-tagged tile. This is a good illustration of why the brief's verification
+  priorities call for real playtesting, not just compile success — headless tests can't
+  see tile behavior or menu-visibility flags.
+- **Save/reload confirmed too** (Viktor, 2026-09-07): saved via the in-game Start menu
+  after receiving Houndour, closed and reopened mGBA, loaded the save — Houndour and the
+  unlocked Pokémon menu both persisted correctly. This is the last item from the brief's
+  verification priorities that applied to this prototype; nothing outstanding on the
+  technical side.
+- Not done yet: connecting this map into the real overworld (a warp from/to an existing
+  or future map, replacing the debug-only access) and the real staged safe-room scene
+  (rebel attack, hiding, father's actual written dialogue) — both depend on story/map
+  content that doesn't exist yet, not on anything technical.
+
+### Third custom feature: battle gimmick mechanics disabled (done, 2026-09-07)
+
+Start of dev sequence step 4 (battle rules). The engine defaults to modern ("Gen
+latest") battle mechanics already (physical/special split, updated type matchups,
+updated EXP formulas, etc.) — that's a sensible fit for the "tactical team-building"
+appeal from the brief and didn't need a decision.
+
+One thing did: Mega Evolution, Primal Reversion, Ultra Burst, Gigantamax, and
+Terastallization are all present in the engine and enabled by default at the species-data
+level (gated behind story items you'd have to introduce, like a Mega Ring or Tera Orb).
+These are stadium-battle/anime-tournament mechanics with no obvious fit in a gritty,
+Fallout-style collapse setting. **Viktor's decision: turn all of them off** — battles are
+decided by team-building, types, and preparation, no gimmick mechanic. Implemented by
+setting `P_MEGA_EVOLUTIONS`, `P_PRIMAL_REVERSIONS`, `P_ULTRA_BURST_FORMS`,
+`P_GIGANTAMAX_FORMS`, and `P_TERA_FORMS` to `FALSE` in
+`include/config/species_enabled.h`. (Primal Reversion/Ultra Burst weren't explicitly
+asked about but are the same category of temporary-battle-transformation gimmick, so
+disabled together for consistency — flagged here in case that scope call needs revisiting.)
+
+Verified: normal and DEBUG builds both compile clean (ROM usage actually dropped from
+~79.7% to ~74.3%, since a lot of unused gimmick data got stripped out), and the full
+test suite — including the engine's own mega/dynamax-specific tests — builds and the
+`*Alder`/safe-room tests still pass. Not yet re-verified in mGBA since this change
+doesn't affect anything visible in the current prototype (no mega/tera items exist
+in-game to test against anyway).
+
+**Roster target and principles agreed (2026-09-07):** target size ~180-220 species
+(Viktor: "~200 +-20", explicitly more concerned with the roster feeling dynamic and
+making sense than hitting an exact count). Selection principles agreed:
+1. Multi-gen, not just Gen 1-3 — avoid it feeling like reskinned vanilla RSE.
+2. Thematic fit first — favor survival/scrappy/industrial/feral/toxic/urban-decay-coded
+   species; deprioritize (not strictly ban) purely whimsical/storybook-cute species
+   unless a good in-fiction reframing exists.
+3. Mostly complete evolution lines — avoid orphaning a stage without a specific
+   in-fiction reason (mirrors what we already did with Houndour/Houndoom Alder).
+4. Tactical variety over stat-block padding — curate for distinct battle *roles* and
+   full type coverage, not just headcount.
+5. No near-duplicate niches — pick the strongest fit among very similar
+   species/regional variants rather than including both.
+6. Legendaries/mythicals as rare story beats, not standard catches.
+7. Nothing whose identity depends on the now-disabled gimmicks (Mega/Gmax/Tera) — fine
+   if a species happens to have one of those forms, as long as its base kit stands alone.
+8. Progressive reveal tied to exploration, not all-front-loaded.
+
+**Explicitly NOT doing right now:** curating the actual ~200-species list up front.
+Viktor asked whether the full roster needs to be locked in now — it doesn't, and the
+brief itself already says to use "a small roster subset" for the first playable chapter
+and expand incrementally (dev step 7). So the list gets built **chapter by chapter**:
+each new area/map only needs enough species decided to populate that area (wild
+encounters, that area's trainers, gift Pokémon), checked against the principles above as
+we go. Don't pre-declare the full list — revisit this note if that plan changes.
+
+Specific battle rules beyond the gimmick question (custom mechanics tied to the setting,
+double battle usage, EXP/difficulty tuning) are also still open — not urgent until closer
+to needing them for actual battles.
+
+### Fourth custom feature: first settlement scene — Grayford (implemented 2026-09-07,
+### deferred — see plot revision below)
+
+**Update, same day:** the story planning that follows this section moved Senna's scene
+out of "first settlement visited" — she now appears later, timing unspecified. Grayford
+as a map isn't wasted (it can be reused whenever/wherever she does appear), but it's
+currently **not connected to anything** (the safe room's exit now goes to the estate
+grounds instead, see the new section below). Grayford is still reachable directly via
+the debug warp tool (group 75 / map 1 / warp 0) for whenever it's needed.
+
+Viktor asked to write the first settlement scene next (per the brief's recommended
+staging: "a psychic NPC in the first settlement explains the delayed development from
+experience/observation"). Built as a second custom map, same pattern as the safe room:
+
+- **New map** `MAP_WASTELAND_GRAYFORD` (`data/maps/Wasteland_Grayford/map.json`), second
+  entry in `gMapGroup_Wasteland` (map num 1, so debug-menu access is group 75 / map 1 /
+  warp 0). Outdoor `MAP_TYPE_TOWN` this time (vs. the safe room's indoor type), name
+  popup enabled, cycling/running allowed — normal town conventions.
+  - **Placeholder art**: reuses Dewford Town's layout binary verbatim
+    (`data/layouts/Wasteland_Grayford/{map,border}.bin`, registered as
+    `LAYOUT_WASTELAND_GRAYFORD`) — a small isolated fishing-village layout, picked
+    deliberately as a reasonable stand-in for "small independent settlement" (not just
+    grabbed arbitrarily). Same "placeholder now, real art later" approach as everything
+    else so far.
+  - One NPC, **"Senna"**, placed at (7, 12) elevation 3 — reusing the exact coordinate
+    Dewford's own NPC stood at in the source map, so it's known-walkable (same trick
+    that worked for the safe room's warp tile). Uses `OBJ_EVENT_GFX_OLD_WOMAN` as a
+    placeholder sprite.
+  - One warp tile, reusing Dewford's real door-tagged tile at (2, 10) elevation 0 (same
+    "must reuse a tile the copied layout actually tagged as a warp" lesson from the
+    safe room). **Wired directly back to the safe room** (`MAP_WASTELAND_SAFE_ROOM`
+    warp 0) rather than to vanilla Littleroot Town — the two custom rooms now form a
+    closed, self-contained loop for testing, independent of vanilla map connectivity.
+    This is a testing convenience, not meant to represent final chapter geography.
+- **New event script** `Wasteland_Grayford_EventScript_Senna`
+  (`data/maps/Wasteland_Grayford/scripts.inc`) — a single dialogue-only interaction (no
+  state changes, so nothing to add a headless test for beyond compile success). Draft
+  dialogue text, Viktor's name/wording changes welcome:
+
+  > SENNA: You've got a late one there.
+  >
+  > I've seen dogs like yours pass through Grayford before – the quiet kind, the kind
+  > that takes its time. Some folks panic and sell them off cheap. Mistake, every time.
+  >
+  > It's not sickness, and it's not slow-witted either. I watched three of them grow up
+  > right here in town, years back. Nothing to see, nothing to see… and then one day
+  > they weren't pups anymore.
+  >
+  > I'm not reading anything off it, before you ask. I just watch. Same as anyone with
+  > eyes and enough years behind them.
+  >
+  > Feed it right, walk it hard, and don't rush it. It'll tell you when it's ready.
+
+  This was written to satisfy the brief's specific constraint that her explanation come
+  "from experience/observation (not literally reading the Pokémon's mind)" — she's
+  established as a "psychic NPC" per the brief, but the dialogue explicitly has her deny
+  using that on the dog. **"Grayford" and "Senna" are both placeholder names**, not
+  confirmed — easy to rename before this goes further.
+- **Verified**: normal and DEBUG builds compile clean with this map and the
+  safe-room/Grayford warp reconnection. **Not yet verified in mGBA** — Viktor had gone to
+  sleep before this was ready to test, so unlike the safe room, this hasn't had a real
+  playtest pass yet. Known risks worth checking first: whether (7,12) is actually open
+  ground and not a wall/prop in this specific copied layout (reasoned from the source
+  map's own data, not visually confirmed), and whether the dialogue text wraps/reads
+  correctly in-game.
+
+### Opening sequence plot revision (2026-09-07) — supersedes the original brief's
+### "mother killed in the attack" premise
+
+Worked through the opening beats with Viktor directly (not via the Astra conversation).
+This **changes a previously-confirmed brief detail**, so it's called out explicitly
+rather than silently folded in:
+
+- **The mother is not killed in this attack.** She has been missing, presumed dead,
+  from **before** the story starts. Her actual fate — and a later reveal that she's
+  somehow connected to the rebels — is deliberately deferred ("we can talk about later,"
+  Viktor's words). **No funeral/burial scene** — cut entirely, since there's no body
+  found here. This directly overrides the original Astra brief's "rebels kill the
+  household (mother, servants)" line below — treat this note as the current truth,
+  not that one.
+- **Father's safe-room line references the mother's earlier loss directly**
+  ("I can't lose you the same way I lost your mother") — this is now his stated reason
+  for hiding the player, and only implicitly explains his fear (no elaboration — no time
+  to explain, and it isn't the moment for it).
+- **The estate is not in a town.** Big house, large garden, some water, a wall around
+  the property, standing near — but outside — a small town. In this attack, everyone
+  at the estate (staff, guards) is dead or gone, both inside the house and outside on the
+  grounds. Father is taken alive (that part of the original brief stands).
+- **Next story beat (not yet built):** the nearby small town — corporate-run, previously
+  trusted as "the good guys" — turns out raided by rebels when the player arrives. First
+  real plot clues start there. Senna/the Houndour-explanation scene is deferred to
+  whenever makes sense later — not necessarily this town.
+
+Beat-by-beat, collaboratively drafted with Viktor (not a solo draft — each beat's
+wording was proposed and confirmed one at a time):
+
+1. **Safe-room staging** — implemented, see the safe-room section above (Dad's rewritten
+   urgent dialogue, the mother line, him vanishing after the handoff).
+2. **The wait** — agreed in concept (oblique sound-cue beats, no player input, e.g.
+   muffled shouting → something breaking → "a woman's voice, cut short" → silence) but
+   **not implemented** — this beat doesn't really apply anymore now that the mother isn't
+   the one dying in this scene; needs revisiting given the plot change, probably as
+   generic household-under-attack tension rather than specifically evoking her.
+3. **Emerging to the aftermath** — implemented as the new estate grounds map (see below),
+   narration text confirmed working in mGBA, no bodies depicted, no mother content (per
+   the revision above).
+4. ~~The burial~~ — **cut**, no funeral scene, per the plot revision.
+5. **Departure / the raided town** — not built. Natural next step: build the nearby town,
+   reachable from the estate grounds (which currently dead-ends), that the player finds
+   already raided on arrival.
+
+### Fifth custom feature: estate grounds — the aftermath (implemented and confirmed
+### working in mGBA, 2026-09-07)
+
+The area the player walks into after leaving the safe room, replacing the placeholder
+direct-to-Grayford warp.
+
+- **New map** `MAP_WASTELAND_ESTATE_GROUNDS` (`data/maps/Wasteland_EstateGrounds/map.json`),
+  third entry in `gMapGroup_Wasteland` (map num 2 → debug warp is group 75 / map 2 /
+  warp 0). `MAP_TYPE_ROUTE`, outdoor.
+  - **Placeholder art**: reuses **Route 104**'s layout binary (`gTileset_General` +
+    `gTileset_Rustboro`, 40×80) — picked as a normal, ordinary route layout (trees,
+    water, open ground) after a large debugging detour (see below) ruled out a fancier
+    first choice.
+  - The safe room's exit warp (7,1) now targets this map instead of Grayford;
+    `MAP_WASTELAND_SAFE_ROOM`'s own warp 0 stays valid as a return target, so Grayford's
+    existing "back to the safe room" warp is unaffected.
+  - No object events (everyone here is dead or gone, per the plot revision) and no
+    outbound warp yet — this map is currently a dead end, same as the safe room was
+    before Grayford existed. The next map to build (the raided town) will need its own
+    warp connection out of here.
+  - One-time arrival narration (see full text in the git history /
+    `data/maps/Wasteland_EstateGrounds/scripts.inc`) — oblique, no bodies described,
+    consistent with beat 2/3's restraint level. **Confirmed displaying correctly in
+    mGBA.**
+
+**This map took three real, distinct bugs to get working — worth remembering for the
+next new map, since none of them were guessable in advance and all were only caught by
+Viktor's actual playtesting, not by compiling:**
+
+1. **`MAP_SCRIPT_ON_LOAD` is unsafe for a blocking `msgbox`.** It runs during raw map
+   data init (`InitMap()`/`InitMapFromSavedGame()` in `src/fieldmap.c`), before the
+   screen fades in or the player object exists — locking/showing a message there hangs
+   forever (black screen, no error). `MAP_SCRIPT_ON_TRANSITION` looks like the obvious
+   fix (it's what vanilla uses for on-arrival dialogue, e.g.
+   `LittlerootTown_BrendansHouse_1F_OnTransition`) but **also hung here** — still not
+   fully understood why vanilla's version works and this didn't; possibly specific to
+   arriving via a custom warp into a map with no other content. **What actually worked**:
+   a `coord_event` trigger at the landing tile instead (see bug 3) — this is also the
+   actual vanilla-standard mechanism for "show text when the player arrives/steps
+   somewhere" (see `LittlerootTown_BrendansHouse_1F`'s `GoSeeRoom` trigger), so in
+   hindsight it should have been the first approach, not the third.
+2. **A large reused layout (Safari Zone) was a red herring, not the cause** — swapping
+   from `SafariZone_Northwest` to `Route104` didn't fix the black screen on its own (bug
+   1 was still present); don't assume "reuse a different layout" fixes a black screen
+   without first isolating whether the *script* or the *map data* is at fault (stripping
+   the map script to `.byte 0` and retesting is the fast way to tell).
+3. **A `coord_event` trigger's `var`/`var_value` must be something you fully control.**
+   First attempt checked `VAR_TEMP_1 == 0` reasoning it'd default to zero on a fresh
+   save — it didn't reliably (`VAR_TEMP_*` are scratch registers reused transiently by
+   many unrelated systems throughout the game, not owned by any one script). The trigger
+   silently never fired — no crash, just nothing happening, which is a much quieter
+   failure mode than the black screen and harder to notice. Fix: use a dedicated flag
+   (`FLAG_SEEN_ESTATE_GROUNDS_AFTERMATH`) as the trigger condition instead — per
+   `ShouldTriggerScriptRun` in `src/field_control_avatar.c`, a coord_event's "var" field
+   is checked as a real var if `GetVarPointer()` recognizes the ID, otherwise it falls
+   back to a flag check — so a flag constant works directly in that field. Also learned
+   along the way: coordinate/warp elevation for ordinary outdoor ground is conventionally
+   `0` in this engine (every vanilla outdoor warp/trigger example uses it), not `3`
+   (that's specifically what indoor floor tiles tend to use) — worth defaulting to `0`
+   for any future outdoor coordinate rather than copying whatever an NPC's placement
+   happened to use.
+
+Both normal and DEBUG builds compile clean with the final state. Not yet added as an
+automated test (nothing state-changing beyond the flag/narration, similar to Grayford —
+compile success is the only automated signal here; the actual trigger-firing behavior
+had to be caught by mGBA testing, as detailed above).
+
+### Sixth custom feature: Brightwell — the raided town (implemented and confirmed
+### working, 2026-09-07)
+
+The estate grounds' second warp now leads here — the nearby corporate-run town, found
+already raided by rebels (per the plot revision above). Built and verified using the new
+Porymap-first workflow (see "Working process"), which caught real placement errors
+before ever touching mGBA this time.
+
+- **New map** `MAP_WASTELAND_BRIGHTWELL` (`data/maps/Wasteland_Brightwell/map.json`),
+  fourth entry in `gMapGroup_Wasteland` (map num 3 → debug warp group 75 / map 3 /
+  warp 0 — note the debug menu's number entry remembers the last value used per digit,
+  so double-check the displayed number before confirming, don't assume it reset).
+  `MAP_TYPE_TOWN`. **"Brightwell" is a placeholder name**, not confirmed.
+  - **Placeholder art**: reuses Verdanturf Town's layout (`gTileset_General` +
+    `gTileset_Mauville`, 20×20) — picked for its more modern/orderly building style,
+    fitting a corporate-run town, vs. the fishing-village feel already used for Grayford.
+  - Warp tile at (12, 3), reusing Verdanturf's real Pokémart door — connects back to the
+    estate grounds (warp 1 there). Landing/exit both confirmed clean in Porymap and
+    working in mGBA.
+  - One NPC, a nameless survivor, placed at (4, 17) — reused Verdanturf's own NPC
+    coordinate (Man_2's spot), confirmed walkable via Porymap before ever building.
+    Dialogue plants the first real plot clue: rebels went straight for "the company
+    office," implying inside knowledge — deliberately vague, no specifics invented about
+    who/why, left open for a future story session.
+  - One sign (`MSGBOX_SIGN`, not `MSGBOX_DEFAULT` — signs don't need
+    `lock`/`faceplayer`/`release`), reusing Verdanturf's real town-sign coordinate
+    (14, 6): a torn corporate propaganda placard with a bureaucratic-disclaimer joke
+    ("Priority subject to quarterly review and available checkpoint staffing"),
+    matching the brief's "absurd humor from bureaucracy/corporate messaging" tone note.
+  - Arrival narration via the now-standard coord_event + dedicated-flag pattern
+    (`FLAG_SEEN_BRIGHTWELL_AFTERMATH`) — same mechanism proven on the estate grounds,
+    worked correctly on the first attempt this time.
+- **Caught two real mistakes before ever building**, both via Porymap: none this time
+  (placement was clean first try) — the actual catch here was in the *text*, not
+  placement: the sign dialogue originally used a straight double-quote `"` and a `#`/`*`,
+  neither of which exist in `charmap.txt` (checked before building, not discovered via a
+  broken build) — rewrote using the curly `“”` quote characters the charmap actually
+  supports (`'"'` = B1/B2) and dropped the unsupported symbols entirely.
+- **Confirmed working end-to-end in mGBA** (Viktor, 2026-09-07): map loads, warp
+  connection to/from the estate grounds works, survivor dialogue displays correctly, sign
+  text (including the curly quotes) renders cleanly.
+
+This was the first map built where Porymap caught placement issues for free before any
+mGBA round-trip was needed (see "Working process") — noticeably faster than the
+estate grounds' three-bug debugging session earlier the same day.
+
+### Seventh custom feature: safe room redesign + real opening cutscene (implemented
+### and confirmed working end-to-end, 2026-09-11)
+
+Two changes bundled together since the second depended on redesigning the room's
+layout anyway. Both supersede the "First map/event prototype" section above, which
+now only describes the throwaway art/logic that came before this.
+
+**Redesign, not reuse.** Viktor asked to stop shipping copy-pasted vanilla layouts as
+the "real" maps and instead have each one hand-designed to a brief, starting over from
+the very first room (safe room → estate grounds → the road → Brightwell, in play
+order). Built a new tool for this since there's no way to click around in Porymap
+directly in this environment:
+- `tools/tileset_preview.py` — renders any primary+secondary tileset pair into a
+  labeled grid of every metatile (parses `metatiles.bin`/`metatile_attributes.bin`/
+  `tiles.png`/JASC-PAL palettes directly, cross-checked against
+  `~/Projects/porymap/src/core/tileset.cpp` and `include/fieldmap.h` for the exact
+  bit layout and `NUM_TILES_IN_PRIMARY`/`NUM_PALS_IN_PRIMARY` constants) — lets a
+  layout be hand-picked by metatile ID the way a human would use Porymap's tile
+  picker. Also renders a full `map.bin` directly to a PNG (`--map` mode) for a fast
+  "does this layout look coherent" self-check with no build/emulator round-trip.
+- New safe room layout: 6×6 (small/cramped, per Viktor), secondary tileset swapped
+  from `gTileset_BrendansMaysHouse` to `gTileset_Lab` (Professor Birch's Lab, reused
+  for its institutional-but-furnished look) — Dad repositioned to (3,4), the exit
+  warp to (2,5). Final furniture: just a real bookshelf pair (see the rule below);
+  no bed — see why.
+- **Load-bearing rule discovered the hard way, 2026-09-11: never assemble a
+  furniture arrangement from the raw tile sheet, even after "verifying" it myself —
+  only ever place a metatile ID (or group of them) in the exact arrangement they
+  appear in some real, already-shipped map.** Shipped twice with a bed built from
+  metatiles 620+621, both times confirmed by my own `tileset_preview.py` render
+  looking correct to *me* — and both times Viktor saw it in mGBA and it looked
+  broken/disconnected ("half a bed"). Root cause: I'd cropped 620 and 621 from the
+  tile sheet, decided by eye that they belonged together, and confirmed that guess
+  by stitching them in my own tool — which just checks my assembly against itself,
+  not against anything real. Searched every real map that uses `gTileset_Lab` as
+  its secondary tileset (there are exactly 3: `LittlerootTown_ProfessorBirchsLab`,
+  `Route114_LanettesHouse`, `Route119_WeatherInstitute`) and **none of them contain
+  a bed anywhere** — 620+621 was never actually used this way by anyone, ever, so
+  there was no way my from-scratch assembly could be reliably correct no matter how
+  carefully I re-picked the tiles. Fixed by dropping the bed and using the 536+537
+  bookshelf pair instead, which — this is the part that actually matters — I
+  confirmed by finding it placed side by side *twice* in `Route114_LanettesHouse`'s
+  real, shipped map data, not by looking at it and deciding it looked right.
+  **Confirmed working, 2026-09-11**: this version rendered correctly both in my own
+  tool and in mGBA, and Viktor confirmed it looks right ("looks like an empty room
+  with a bookshelf in the middle").
+  **Practical process for every future custom map**: before placing any multi-tile
+  object (furniture, a fence run, a road junction, anything that's more than one
+  plain repeatable tile), grep `layouts.json` for every real map sharing the
+  relevant secondary tileset, render the strongest candidate(s) with
+  `tileset_preview.py --map`, and copy the *exact* tile IDs and their exact
+  relative positions from that real usage. Never invent an arrangement from the
+  tile sheet alone, and never trust my own re-assembly as "verification" — the bar
+  is "does a real shipped map place these tiles this way," not "does my render of
+  my own guess look plausible to me." This is also the direct answer to Viktor's
+  "how do we do a whole road/town" question: the same rule scales — a fence run, a
+  tree line, a road junction, a shopfront, each copied whole from a real map, then
+  arranged into a new custom overall layout/size. What doesn't scale is inventing
+  new multi-tile arrangements from raw tile IDs, which is exactly what failed here
+  twice.
+- **Real mistake made and fully recovered during this work**: attempted a Python
+  `json.dump()` rewrite of `data/layouts/layouts.json` to update the new dimensions/
+  tileset, which reformatted the *entire* ~9300-line file (different indent/key
+  order) into an 18,000-line diff. Reverted with `git checkout --`, which — since
+  this file already had real uncommitted work from earlier sessions (the other three
+  Wasteland layout registrations, not just this one) — briefly discarded those too.
+  Caught immediately, and fully reconstructed from what was still known (this
+  session's own record of Brightwell/EstateGrounds' tilesets+dimensions, and
+  Grayford's by reading the still-intact vanilla `LAYOUT_DEWFORD_TOWN` entry) via
+  small text `Edit`s instead of a full rewrite. Nothing was actually lost, but it's
+  the reason this file's JSON should always be hand-edited with a targeted `Edit`,
+  never rewritten wholesale with `json.dump` — and the reason to always run
+  `git status` before any `git checkout --` on a file, not just assume the working
+  copy matches HEAD.
+
+**Real forced opening cutscene, replacing the old walk-up-and-press-A prototype.**
+Viktor's spec: the scene should start with Dad already talking (no player action),
+then he leaves the room, then — while the player is still locked — a beat for
+offscreen sounds of the attack, then a time-passage beat, then Dad not coming back,
+then control finally passes to the player. This needed solving a real technical
+question the old prototype had punted on: how to run a `lock`+`msgbox` sequence
+**automatically the instant the map loads**, with no player movement to hook a
+coord_event off of.
+- **Traced (not guessed) the correct mechanism** by researching how vanilla itself
+  does this (e.g. `LittlerootTown_BrendansHouse_1F`'s truck-unloading intro,
+  `SSTidalCorridor`'s auto-departure scene): `MAP_SCRIPT_ON_LOAD` and
+  `MAP_SCRIPT_ON_TRANSITION` (both tried previously, both hung — see the old
+  prototype section) run through `RunScriptImmediately()` in `src/script.c`, a
+  tight blocking loop with **no per-frame yield** — `lock`/`msgbox`/
+  `applymovement`+`waitmovement` all need to be polled once per real game frame to
+  ever report "done," so they spin forever in that context. `MAP_SCRIPT_ON_FRAME_TABLE`
+  is the one hook that doesn't have this problem — `TryRunOnFrameMapScript()`
+  installs the script into the *normal* per-frame script context via
+  `ScriptContext_SetupScript()` instead, so it behaves exactly like any
+  player-triggered script. This is called from the very top of
+  `ProcessPlayerFieldInput()` in `src/field_control_avatar.c`, every frame, once the
+  map/player actually exist — which is also why it doesn't have `ON_LOAD`'s "runs
+  before the player object exists" problem.
+  Implemented as `Wasteland_SafeRoom_MapScripts` → `MAP_SCRIPT_ON_FRAME_TABLE` →
+  `map_script_2 VAR_WASTELAND_SAFE_ROOM_STATE, 0, ...` (repurposing the unused vanilla
+  slot `VAR_UNUSED_0x404E`, same reuse convention as the flags) — vars default to 0
+  on a fresh save, and the cutscene's first action sets it to 1, so it's a genuine
+  one-shot with no separate flag needed.
+- Scene content (`data/maps/Wasteland_SafeRoom/scripts.inc`): Dad's existing urgent
+  dialogue ("I can't lose you the same way I lost your mother...") plays immediately
+  under `lockall`, `givemon` runs the same as before, then Dad's second line implies
+  he's leaving, then `applymovement`+`removeobject` walks him out through the door
+  (`playse SE_DOOR`), then — still locked — a sequence of oblique sound-cue text beats
+  (a door slamming, shouting, **"A scream, cut short,"** then silence — directly
+  reusing the brief's original beat-2 concept, reworded per the plot revision since
+  it's not specifically the mother dying in this scene anymore), then a
+  `fadescreen FADE_TO_BLACK`/`delay`/`FADE_FROM_BLACK` for the time-passage beat,
+  then "DAD doesn't come back. Waiting any longer won't change that.", then
+  `releaseall`. All placeholder-tier draft wording, same caveat as everything else —
+  Viktor's rewording welcome.
+- **Confirmed working end-to-end via the emulator, not just reasoned about** — see
+  the "Headless mGBA scripting" entry earlier in this file for exactly how (the debug
+  menu's warp tool is now fully scriptable). Warped straight into the room, watched
+  the cutscene fire with zero input the instant the map loaded, mashed through every
+  dialogue/movement/fade beat, and confirmed afterward via memory reads that
+  `FLAG_RECEIVED_WASTELAND_STARTER`/`FLAG_SYS_POKEMON_GET` were set,
+  `playerPartyCount == 1`, and — the important one, since a flag alone doesn't prove
+  the player wasn't still stuck — that `pos` actually changed after pressing UP once
+  the cutscene finished. Automated `make check` test for the underlying
+  givemon+flag logic (`test/wasteland_safe_room.c`) still passes unchanged.
+  **Room visual confirmed by Viktor in mgba-qt, 2026-09-11** ("looks like an empty
+  room with a bookshelf in the middle") — took two failed rounds first (see the
+  load-bearing rule above); dialogue wording still open for his notes whenever he
+  gets to actually reading it rather than mashing through it.
+
+### Eighth custom feature: overnight session — bare room, real spawn position, house
+### interior, garden redesign, road (2026-09-11 night, autonomous — Viktor asleep,
+### unreviewed as of writing)
+
+Two more rounds of Viktor feedback on the bookshelf-room screenshot, then he asked for
+autonomous overnight work through safe room → house → garden → road (Brightwell too, if
+time allowed), explicitly asked for questions up front since he wouldn't be reachable,
+and asked not to launch the actual mGBA GUI until he's back (headless self-verification
+only). **None of what follows has been seen by Viktor yet.** Answers to the pre-sleep
+questions: (1) the house needs a real walkable interior beyond the safe room, not just
+an exterior — exiting the safe room lands you in a bigger house, and you exit *that* to
+reach the garden; (2) redo Brightwell too, after the rest; (3) garden size/feel is the
+assistant's call, aiming for "rich and nice."
+
+**Bookshelf removed entirely.** Viktor's actual objection wasn't the specific tile choice
+(536+537 was genuinely verified, per the rule above) but placement: furniture floating
+alone in the middle of an open floor doesn't read as furniture no matter how correct the
+tile is — real rooms put things against walls. Combined with "a panic room probably
+doesn't need anything in it," simplest fix: bare room, wall/floor/door only, no furniture
+at all. This is now the room's final state unless Viktor asks for something back in.
+
+**Player spawn + Dad facing, fixed properly instead of explained away.** Viktor pushed
+back on "that's just a debug-tool artifact" — fair, since the *real* spawn position
+matters for when this becomes the actual game opening, not just for today's testing.
+Fixed by adding a second warp_events entry to `Wasteland_SafeRoom` (index 1, at (2,3),
+landing-only — same "non-door-tagged tile so it can't misfire as a real warp" trick used
+throughout) as the canonical player start, with Dad's object event moved to (2,2) directly
+above it (facing down, i.e. at the player) and his exit-movement script extended from a
+1-tile hop to 3x `walk_down` to reach the door from his new position. Debug-menu testers:
+warp to **warp 1**, not warp 0, to land at the intended start rather than on the door.
+
+**New map: `Wasteland_EstateHouse`** — the "bigger house" the safe room now opens into
+(previously the safe room's exit warp went directly to the garden; it now goes here, and
+*this* map's own door leads to the garden). Reused **verbatim** from vanilla's
+`RustboroCity_House1` (13×8, `gTileset_Building`+`gTileset_GenericBuilding`) — a
+genuinely nice, well-furnished room (checkered gold-and-tan tile floor, topiary potted
+plants, blue-glass windows, an orange rug, TV/appliances, a couch) that reads as
+"wealthy" without any hand-assembly risk at all, since it's byte-for-byte a real,
+already-correct vanilla room. No NPCs, no scripted beat here — pure connective tissue.
+Warps: index 0 is a landing-only spot at (1,3) for arriving from the safe room; index 1
+is the house's own real front door at (5,7) (verified from the vanilla map's own
+warp data), now leading to the garden instead of Rustboro City.
+
+**Garden (`Wasteland_EstateGrounds`) completely rebuilt**, replacing the old 40×80
+Route 104 placeholder. Viktor left size/feel up to the assistant's judgment ("rich and
+nice... take your own decision what that would mean in a Pokémon game"): landed on a
+**40×20 excerpt of the real Ever Grande City map** (`gTileset_General`+
+`gTileset_EverGrande`) — specifically the top 20 rows, which is genuinely gorgeous for
+this purpose: neat flower beds, manicured round hedges, a covered bench/gazebo, a brick
+path, and natural cliff walls framing the whole space (which also incidentally serves as
+the brief's "wall around the property" for free). The existing arrival-narration text
+("Trampled beds. A shattered fountain. The gate in the outer wall hangs open...") already
+matched this aesthetic well by coincidence, so it was kept as-is (still placeholder
+wording either way). The real Ever Grande League-building door at (18,5) is reused as
+the mansion's back door (bidirectional, house ↔ garden). A new south exit toward the
+road at (19,19) isn't a real door (open ground at the edge of a reused layout, so it
+can't use passive warp behavior), so it's a **coord_event-driven scripted warp** instead
+— see the new load-bearing pattern below. A separate landing-only warp (index 1, at
+(19,18) — deliberately *not* the same tile as the exit trigger) is where the player
+lands when arriving back from the road.
+
+**New map: `Wasteland_Road`**, connecting the garden to Brightwell — didn't exist before
+tonight; the two were previously joined by an abrupt direct warp. Real 40×20 excerpt
+(the west 40 of 60 columns) of vanilla **Route 117**, chosen deliberately for tileset
+match with Brightwell (`gTileset_General`+`gTileset_Mauville` — Route 117 is the real
+route leading into Verdanturf Town, which Brightwell itself is modeled on). Genuinely
+varied real content: two ponds, fenced flower fields, tall grass borders, a rocky
+outcrop, a winding dirt path — fits the brief's "exploration has practical payoff / not
+a uniform world" principle better than a bare corridor would. Brightwell's real
+Pokémart-door warp (previously pointing straight at the garden) now points here instead.
+
+**New load-bearing pattern: coord_event-driven warps at non-door edges, and a real bug
+this caught before it shipped.** Several of tonight's new connections (garden→road,
+both ends of the road) sit on plain open ground with no real door-tagged tile to reuse,
+so they can't be passive `warp_events` triggers the way real doors are (per the
+established "warps only fire on tiles actually tagged with warp behavior" rule). Fixed
+using the engine's `warp` script command (`warp MAP_X, warpId` / `waitstate` / `end`)
+inside a coord_event, gated on a newly-repurposed always-false flag,
+**`FLAG_WASTELAND_UNCONDITIONAL_TRIGGER`** (`include/constants/flags.h`, was
+`FLAG_UNUSED_0x023`) — "not set" is always true, so it fires on every step, which is
+exactly what a plain walk-off-the-edge exit needs (no one-shot gating, unlike narration
+triggers). **Caught a real ping-pong bug while designing this, before ever building it**:
+if the *landing* coordinate (where `dest_warp_id` points arriving from the other map)
+is the *same* tile as the *trigger* coordinate (the coord_event that fires the return
+trip), then arriving via warp immediately re-triggers the coord_event and bounces the
+player straight back where they came from — coord_events fire on warp-arrival too, not
+just on player-directed movement onto the tile (this is the same mechanism that makes
+the arrival-narration pattern work, just unwanted here since narration triggers don't
+warp anywhere). Fixed by always placing the landing spot one tile away from the actual
+exit trigger in every direction (e.g. Road's west landing is (1,8), the actual
+"walk here to leave toward the garden" trigger is (0,8) — a different tile). Doesn't
+apply to real doors (Brightwell's mart door, the mansion's back door) — bidirectional
+real-door warps have never shown this problem, seemingly because arriving via warp
+doesn't count as "walking into" the tile the same way passive door-warp detection does.
+**Not yet verified this actually works** (no working emulator save tonight - see below);
+worth a specific look once real playtesting resumes, since it's new and reasoned through
+rather than proven.
+
+**A real, multi-hour dead end tonight, worth remembering**: with `pokeemerald.sav`
+deleted (per Viktor's own request, to get a clean playthrough) and never re-created with
+real save data, every headless verification approach that depends on `boot_to_overworld()`
+stopped working, since that requires an existing save to Continue from. Two different
+fixes were attempted and abandoned:
+1. **Automating the full vanilla intro** (Quickstart-skip-to-new-game → name entry →
+   truck scene → Littleroot) to generate a fresh save via real play. Made real progress
+   (worked out Quickstart's SELECT-at-title trigger, the naming screen's undocumented
+   START-then-A confirm sequence, and confirmed `MgbaSession.save_state()`/`load_state()`
+   work as real emulator-savestate checkpoints, independent of the game's own `.sav` —
+   both were broken/untested before tonight and are now fixed and reusable), but got
+   stuck at a point in `InsideOfTruck` where movement is inexplicably unresponsive (no
+   dialogue box, `is_in_overworld()` reports true, but no key press changes `pos`, even
+   after 1200 idle frames — ruled out both a savestate-loading artifact and simple
+   under-waiting). Root cause not found; abandoned once it became a bigger time sink
+   than the maps themselves.
+2. **Directly constructing a valid save file from scratch** (bypassing the intro
+   entirely) — traced the real format in `src/save.c`/`include/save.h`
+   (32 sectors of 0x1000 bytes; a sector's `id`/`checksum`/`signature`/`counter`
+   footer; `CalculateChecksum` is a simple summed-32-bit-words function, easy to
+   replicate) far enough to know it's tractable, but replicating `struct SaveBlock1`/
+   `SaveBlock2`'s exact C layout by hand in Python was judged too failure-prone to trust
+   blind overnight, so not attempted. Discovered along the way that the deleted save's
+   replacement was **never actually a valid save at all** — every one of its 32 sectors
+   is still erased-flash `0xFF`, meaning Viktor's post-deletion mGBA session never
+   reached an actual in-game Save (matches everything else observed: the game only ever
+   offered "New Game," never "Continue").
+
+**Practical result: everything built tonight past the safe room (house, garden, road,
+Brightwell's updated warp target) is verified only via the direct map-render tool
+(`tools/tileset_preview.py --map`), source-level tracing of the coord_event/warp
+mechanics, and compiling clean — not an actual in-game walkthrough.** This is a real gap
+consistent with the brief's own rule ("never describe a researched feature as locally
+tested") — everything above is described accordingly as reasoned-through, not confirmed
+in-game. Fixing the save-bootstrap problem (either root-causing the truck freeze or
+finishing the from-scratch save writer) would be a good first task whenever there's a
+dedicated block of time for it, since it blocks fully hands-off verification for
+everything going forward, not just tonight's maps.
+
+**Map group index note**: `gMapGroup_Wasteland` now has 6 entries — SafeRoom(0),
+Grayford(1), EstateGrounds(2), Brightwell(3), EstateHouse(4), Road(5) — new maps were
+appended at the end specifically to avoid shifting these indices (per the standing
+warning about the debug menu's numbering depending on array position).
+
+**Brightwell redesign deliberately not attempted tonight, despite Viktor's go-ahead to
+try it.** This was explicitly framed as a stretch goal ("once you're finished with the
+safe room, house, garden, road, you can start on Brightwell also"), and by the time the
+first four were done, done was judged more valuable than risking a fifth, larger, riskier
+piece with no way to course-correct (Viktor asleep, no working save for even the
+direct-render-only verification tier to be double-checked against real behavior). A real
+candidate was scoped: Rustboro City (40×60, `gTileset_General`+`gTileset_Rustboro`) fits
+"corporate-run town" thematically better than Verdanturf ever did — Rustboro is Devon
+Corporation's real home city in vanilla — but adapting it means carefully re-placing 4
+existing NPCs (Survivor, Witness, Rourke, Kid — more than this file previously
+documented; it undersold Brightwell's actual current content) plus a sign and 2 warps
+into unfamiliar, much larger, real layout data, which is meaningfully more surface area
+for a mistake than anything else built tonight. Left as a well-scoped next task rather
+than rushed: **if picking this up, start by rendering Rustboro City with
+`tools/tileset_preview.py --map` and finding safe verified spots for each existing NPC
+before changing anything**, same discipline as everything else in this session.
+
+**Build state at handoff**: normal (non-`DEBUG`) ROM is the current build
+(`pokeemerald.gba`), matching the project's standing convention of resting in that state
+between sessions. `make check TESTS='*Safe room'` was re-run after all of tonight's
+changes to confirm the givemon+flag logic test still passes unmodified (this doesn't
+touch anything tonight's map changes affect, but re-running costs nothing and rules out
+an unrelated regression). Everything described in this section compiles clean but, per
+the save-bootstrap dead end above, **has not been walked through in a running game** —
+that's the very first thing to do once a working save exists again, before treating any
+of tonight's warp wiring (especially the new coord_event-based edge warps) as trustworthy.
+
+### Ninth custom feature: real fixes for the two bugs Viktor actually found, plus the
+### connections rewrite that was in progress overnight (2026-09-12)
+
+Viktor tested the overnight build and found real, confirmed bugs: the safe room →
+house transition still didn't feel like exiting through a door, and there was no
+working way to exit the garden or the road at all. He asked for these to be fixed while
+he was away for a few hours, for road/first-town work to continue, and — explicitly the
+top priority, above any visual polish — for a systematic methodology to stop these
+mistakes recurring (see "World-building checklist" above, written this session).
+**Standing instruction respected throughout: mgba-qt (the GUI) was not launched at any
+point this session** — everything below was verified via source tracing, direct
+`.bin` collision dumps, and `tools/tileset_preview.py --map` renders only.
+
+**Garden ⇄ Road ⇄ Brightwell rewritten to use real map `connections`** (continuing work
+that was in progress when the overnight session's summary was written) — replacing the
+coord_event/warp-based edge transitions documented in the Eighth feature entry above,
+which were never actually verified working and are now superseded, not just
+supplemented. `Wasteland_EstateGrounds` connects `down` to `Wasteland_Road` (offset 0),
+which connects `up` back to it and `right` to `Wasteland_Brightwell` (offset 0), which
+connects `left` back. All the old coord_event-triggered scripted warps and their
+ping-pong-avoidance landing spots were removed entirely — see the dead
+`Wasteland_EstateGrounds_EventScript_ExitToRoad`/`FaceNorthOnArrival` and
+`Wasteland_Road`'s Face/Exit scripts, now gone, replaced with comments pointing at this
+section and the checklist.
+
+**Found and fixed the actual reason the garden exit didn't work**, per checklist item 2:
+the connection itself was correctly configured, but a full collision dump of both
+sides of the Garden↔Road seam (not just a visual check) showed the *only* two open
+columns at Garden's south edge (6 and 11) landed on solid hedge/fence tiles on Road's
+north edge at `offset=0` — the entire width Garden could reach was blocked. Root cause:
+Route117 (Road's source crop) only has a real vanilla `left`/`right` connection to
+Verdanturf/Mauville — its top and bottom edges were never designed to be a border at
+all, so cropping them left whatever decorative farm-plot/hedge content happened to be
+there. Considered re-cropping from a route with a real vanilla vertical connection
+(Route101, checked and rejected — Brightwell's own north edge (Verdanturf-based) is
+*also* fully solid, so switching Road's source alone wouldn't have removed the need for
+a manual fix). Fixed instead by tracing column 11 in the Garden (a real, mostly-open
+Rustboro path from the house courtyard down to the south wall, blocked only by two
+decorative arch tiles) down through Road (blocked only by two hedge/fence tiles at
+rows 0 and 3), and patching just those four tiles to the open metatile already used
+immediately adjacent to each in the same map (699 in the Garden, 13 in the Road) —
+never inventing a tile, per checklist item 1. Column 6 in the Garden (the *other*
+open-looking south-edge tile) was left alone rather than patched, since it's already
+unreachable from above (blocked at rows 9–12 by the second building) — confirmed via
+the same full-column collision trace, not assumed.
+
+**Found and fixed the actual reason the safe room → house transition didn't feel like a
+door**, per checklist items 1 and 6: `Wasteland_EstateHouse`'s landing spot from the
+safe room was a bare floor tile `(1,3)` in the middle of the room — functionally
+correct (the warp fires) but with nothing nearby suggesting a doorway, which is exactly
+what read as a bug to Viktor even though the mechanism worked. Rather than re-guess at
+scripting, found a real shipped example of an interior-to-interior connection in the
+*exact same* tileset pair (`gTileset_Building`+`gTileset_GenericBuilding`):
+`RustboroCity_Flat1_1F`'s real staircase alcove leading to its 2F, at local (2,1) in an
+identically-sized (14×8 vs our 13×8) room. Copied that exact 3×2 tile arrangement
+(metatile IDs 808/809/810 over 816/523/818) into `Wasteland_EstateHouse`, replacing the
+placeholder TV/dresser cluster against the same wall, and moved the warp + facing
+coord_event onto the new stair tile at (2,1). Also fixed the facing script itself,
+which was turning the player `DIR_EAST` (wrong for this geometry) instead of `DIR_SOUTH`
+(out of the wall alcove, into the room) — a leftover from an earlier, different landing
+position that was never updated when the position moved.
+
+**Both fixes rebuilt clean** (`make DEBUG=1`) and re-rendered with
+`tools/tileset_preview.py --map` to visually confirm: the Garden↔Road seam now shows a
+believable gap in the fence/hedge line at the exit column, and the house's north wall
+now shows a real staircase graphic where the player emerges. **Neither has been walked
+through in mGBA** (per the standing "don't launch the GUI" instruction) — this is the
+first thing to check once Viktor is back and testing resumes.
+
+**Not yet done from Viktor's instructions**: "the first town" — Brightwell's connection
+point was updated as part of the rewrite above, but no new town content was built this
+session; a full Brightwell redesign (Rustboro-based, scoped but deliberately deferred
+in the Eighth feature entry above) remains a well-scoped next task if a new/upgraded
+first town is wanted rather than Brightwell's existing content.
+
+### Tenth custom feature: real headless screenshot verification finally works, plus a
+### second round of real bugs Viktor found by hand (2026-09-12, same day as the Ninth)
+
+Viktor tested the Ninth feature's fixes and found more real bugs by hand: several
+2-tile-wide doors only worked on one side, the new staircase had an orphaned half of
+the old furniture left under it, the road had a spot where you could walk on water, and
+the garden/road gate looked messy. He asked directly for a systematic way to stop
+finding these one at a time — the concrete answer turned out to be: **the save-bootstrap
+problem from the Eighth feature entry is now solved**, which unblocks real, automated,
+screenshot-based verification instead of the static per-map tile renders this project
+had been relying on (which structurally can't show a connection seam, since they render
+one map in isolation).
+
+**Root-caused and fixed, all confirmed via real gameplay screenshots (not just data
+dumps) after the save-bootstrap fix below:**
+- **Half-wired double doors.** Real vanilla building doors are almost always 2 tiles
+  wide with *both* tiles registered as separate `warp_events` pointing at the same
+  destination. Twice this project copied a real door's coordinate from vanilla source
+  data but only took the first tile, not both: `Wasteland_EstateHouse`'s door to the
+  garden ((5,7) only, vanilla `RustboroCity_House1` has (5,7)+(6,7)) and the safe room's
+  own exit door ((2,5) only, its own layout's door graphic spans (2,5)+(3,5) — confirmed
+  against `LittlerootTown_ProfessorBirchsLab`'s real 2-tile door for the same tileset).
+  Both fixed by adding the missing second warp tile. **New checklist-worthy lesson**:
+  when copying a real door's warp coordinate, always check whether the source has a
+  *second* warp entry at an adjacent tile before assuming one tile is the whole door.
+- **Orphaned furniture under the new staircase.** The `RustboroCity_Flat1_1F` staircase
+  arrangement (Ninth feature) was pasted over the *top* half (row 0-1) of the old
+  placeholder TV/dresser cluster, but its *base* (row 2: the actual console/dresser
+  body) was a separate, untouched set of tiles one row down — left behind, orphaned,
+  reading as "furniture split in half." Fixed by clearing row 2's leftover tiles to
+  plain floor. **Lesson**: when replacing a multi-tile furniture item, find its full
+  footprint (it may extend further than the rows you're looking at) before assuming a
+  patch is complete — a re-render alone didn't catch this until looked at very closely;
+  it takes checking what's directly *below* wherever a patch's edge is.
+- **Walking on water on the road.** Root cause: earlier this session, extending a
+  walking path across the full width of `Wasteland_Road`'s row 10 used elevation `0`
+  for the path tiles — this is `ELEVATION_TRANSITION`, a wildcard the movement-collision
+  check (`IsElevationMismatchAt`, `src/event_object_movement.c`) treats as "matches the
+  player's actual elevation unconditionally." Right where that row touches the lower
+  pond's edge, this wildcard silently defeated the elevation mismatch (3 vs the water's
+  real elevation of 1) that's supposed to block walking onto deep water without Surf.
+  Fixed by setting those path tiles back to elevation `3` (the ordinary outdoor-ground
+  elevation used everywhere else on this map, confirmed by checking neighboring tiles,
+  not assumed). A broader scan (below) also caught the *identical* mistake in the safe
+  room's own floor (elevation `0` instead of the real vanilla Lab tileset's `3`,
+  confirmed against `LittlerootTown_ProfessorBirchsLab`'s own floor data) — fixed too,
+  even though nothing there was walkable-water-adjacent, purely for consistency and to
+  avoid the same failure mode surfacing later. **This is a distinct, more dangerous
+  category than checklist item 5's warp/coord_event elevation wildcard** — that one is
+  about the *event's own* elevation field (in map.json); this is about a *tile's own*
+  baked-in elevation (in the `.bin` data itself), which real vanilla maps use
+  consistently (`3` for ordinary outdoor ground, matching every non-water non-special
+  tile) and should never casually be set to `0` when hand-patching a path across a
+  row/column — grep/scan for elevation-0 runs of open ground after any such patch,
+  the same way checklist item 2 already calls for a full collision scan.
+- **Garden/road gate looks messy.** Root cause partially understood, not yet fully
+  fixed: the collision patch from the Ninth feature entry (replacing 2 real Rustboro
+  garden-arch tiles with an adjacent path tile) is mechanically correct — walked through
+  it in real gameplay via the debug menu and confirmed the connection works end-to-end,
+  Garden into Road, no dead end — but a real screenshot taken standing right at the seam
+  shows a visually rough transition (the two maps' art doesn't blend attractively at
+  that exact column). This is a legitimate remaining visual-polish item, not a logic
+  bug — left for a follow-up pass, deliberately, since Viktor's stated priority is
+  design/visual judgment calls should be *his* review time, and this now has a concrete
+  real screenshot to work from instead of another guess.
+
+**The actual, higher-leverage fix: real screenshot verification now works.**
+`tools/mgba_probe.py`'s `boot_to_overworld()` was quietly broken in a way that made it
+look like it worked: it started mashing A after only 120 frames, deep inside Emerald's
+~5400-frame non-interactive boot animation (copyright screen → PRET×RHH splash → GAME
+FREAK logo → landscape/Rayquaza title animation). This sometimes drove the title screen
+into its own idle attract-mode demo loop instead of the real menu — and that demo loop
+runs through the exact same `CB2_Overworld` callback as genuine play, so
+`is_in_overworld()` reported `True` and the smoke test looked like a pass while actually
+watching a canned, unresponsive replay. Root-caused this time by actually looking at a
+sequence of real screenshots frame-by-frame instead of trusting the callback-address
+check alone — exactly what the new checklist item 8 asks for.
+
+Fixed `boot_to_overworld()` to wait the real ~5400 frames before ever pressing anything,
+then a single A to reach the main menu and a single A to select CONTINUE (confirmed via
+screenshot that CONTINUE is always the pre-highlighted first item whenever a valid save
+exists). This is now honest: it either reaches genuine, input-responsive control
+(verified by pressing a direction and checking `pos` actually changes) or it doesn't.
+
+**Also solved the standing "no valid save exists" blocker** from the Eighth feature
+entry, via the *first* of its two abandoned approaches (automating the real New Game
+intro), succeeding this time by understanding the actual failure mode instead of
+retrying blindly:
+- **Quickstart (SELECT at the real interactive title screen, not the logo sequence)
+  skips name/gender/rival-naming entirely** — `Quickstart()` → `CB2_SkipToNewGame`
+  (`src/quickstart.c`) sets a random gender and a default name (BRENDAN/MAY) and jumps
+  straight to `CB2_NewGame`, landing directly in the truck scene. The earlier session's
+  note that "Quickstart still shows the naming screen" was wrong (or based on a
+  different config) — worth remembering that a prior session's finding here should
+  itself be re-verified with a screenshot before trusting it, not just cited.
+- **The real `InsideOfTruck` freeze, finally explained**: the room's `bg_events` cover
+  almost every open tile with `MSGBOX_SIGN` interactions ("The box is printed with a
+  POKéMON logo..."), and the previous session's approach of mashing the A button to
+  "push through" the intro was itself the bug — each A press was just re-triggering a
+  sign instead of ever moving. The room only actually requires **directional movement**
+  (walking right through two coord_event triggers at (3,1-3) that set intro flags, then
+  onto the real exit warps at (4,1-3)) — no A presses needed there at all. Fixed by
+  switching to pure D-pad movement through this specific room; confirmed working by
+  screenshot (arriving in Littleroot Town with Mom's dialogue on screen) on the first
+  real attempt once this was understood, not by more trial and error.
+- Got from there to a saveable, fully free-movement state by mashing A through Mom's
+  two dialogue beats (~170 total presses, verified with `pos` actually changing between
+  batches, using `save_state()`/`load_state()` checkpoints to avoid re-doing the whole
+  sequence while iterating), then did a real in-game Start-menu Save (confirmed via
+  screenshot at every step of the menu — the "Would you like to save the game?" prompt
+  specifically needs the text to finish printing before the Yes/No choice is even
+  selectable, so a same-frame double-A-press can silently do nothing).
+- **One real, still-open oddity, deliberately not chased further**: the resulting saved
+  game's `location` field (`SaveBlock1`, confirmed via the correct struct offsets from
+  `include/global.h`) reads back as group 75 / map 3 (`Wasteland_Brightwell`) rather
+  than the Littleroot-area map the player actually saved in — `pos` and real input
+  responsiveness are unaffected and confirmed correct (movement, the debug menu, and
+  warping all work perfectly from this state), so this doesn't block anything, but the
+  *why* isn't understood. Worth another look if it ever turns out to matter (e.g. if a
+  future test needs `location` specifically to be meaningful) — don't assume it's fixed
+  just because nothing depends on it yet.
+- **Practical result**: `pokeemerald.sav` now contains a real, valid, continuable save.
+  `boot_to_overworld()` reaches genuine overworld control from a cold boot in ~2 seconds
+  of emulated time, the debug menu opens and is fully navigable from there, and
+  `screenshot()` captures real, connected, camera-stitched gameplay — the actual view a
+  seam or a door looks like to a player, not a single map's data in isolation. This is
+  the tool this project has needed since the Eighth feature entry; use it *before*
+  claiming any future map/connection/door fix is done, not just the static
+  `tileset_preview.py` render.
+
+**Build state**: `make DEBUG=1` rebuilt clean after all of this round's `.bin`/`.json`
+fixes. Normal (non-`DEBUG`) resting build still needs a final rebuild after the visual
+polish pass on the garden/road gate is finished.
+
+### Eleventh custom feature: second real-bug round, and the Garden↔Road seam's real
+### fix (2026-09-12, same day as the Tenth)
+
+Viktor tested the Tenth feature's fixes and found more real bugs, all via his own eyes
+rather than logic alone: several 2-tile doors only worked on one side, the new
+staircase had orphaned furniture under it, water was walkable in one spot, and the
+garden/road gate looked messy. Asked directly for a systematic fix - see the two new
+checklist items above (9: two-tile doors, 10: tile elevation vs event elevation) written
+in response. This entry covers the rest, especially the gate, which took real
+back-and-forth to actually solve rather than just diagnose.
+
+**Two half-wired doors fixed** (`Wasteland_EstateHouse`'s door to the garden, the safe
+room's own exit door) - both real vanilla doors are 2 tiles wide with two separate
+`warp_events`, and both times only the first tile had been copied. Added the missing
+second warp tile to each, confirmed against the real source data (checklist item 9).
+
+**Orphaned staircase furniture fixed** - the `RustboroCity_Flat1_1F` stairwell
+(Tenth feature) replaced only the *top* half of the placeholder TV/dresser; its base
+(one row down) was untouched, orphaned debris. Cleared to plain floor.
+
+**Walk-on-water, real fix confirmed via source + data, not just reasoning**: a row-wide
+path patch made earlier this session used elevation `0` (`ELEVATION_TRANSITION`,
+a wildcard) instead of `3` (ordinary ground) on `Wasteland_Road`'s row 10, which
+silently defeated the "can't walk onto deep water without Surf" elevation-mismatch
+check right where that row meets the lower pond. Fixed by setting those tiles back to
+elevation 3. The identical mistake was also found and fixed in the safe room's own
+floor (checklist item 10 exists because of this).
+
+**The garden/road gate: real root cause found, real fix shipped, one real unsolved
+oddity honestly documented below.** This took several real attempts, each verified (not
+assumed) via `tools/mgba_probe.py` screenshots of actual connected gameplay - this
+alone is a good demonstration of why checklist item 11 (real screenshots, not static
+per-map renders) exists, since every step here needed seeing the actual rendered result
+to know if a theory was even right:
+
+1. First finding: `Wasteland_EstateGrounds` (`gTileset_Rustboro` secondary) and
+   `Wasteland_Road` (`gTileset_Mauville` secondary) use *different* secondary
+   tilesets. A map connection's border-fill (`FillConnection` in `src/fieldmap.c`) is a
+   raw `CpuCopy16` of metatile data with no tileset translation - so any
+   secondary-tileset tile (id ≥ 512) within the connection's `MAP_OFFSET` (7-tile) border
+   depth renders using whichever secondary tileset the *viewer's* map has loaded, not
+   the tile's own map, producing genuine visual noise (confirmed by zooming into a real
+   screenshot - not a stylistic clash, actual per-pixel garbage). Cross-checked against
+   the working `Wasteland_Road`↔`Wasteland_Brightwell` connection (both Mauville,
+   confirmed clean via screenshot) and a matching-tileset control case, which
+   confirmed the theory in principle.
+2. First fix attempt: scrub all secondary tiles from Garden's border-depth rows
+   (15-21) to plain primary grass. Real regression accepted knowingly (the fountain and
+   second building's fine Rustboro detail right at the map's south edge is gone,
+   replaced with plain grass) - **but the noise did not go away**, proving the
+   border-fill theory, while correctly identifying a real rendering hazard, was not the
+   (or not the only) mechanism actually causing what Viktor saw.
+3. Second finding, via elimination: the noise is specific to *leaving Garden*
+   specifically, not to connections in general, and not simply about which tiles sit at
+   a border - it reappeared after a plain `warp`, after `warpdoor` (the same function a
+   real, already-working door warp uses), after adding `special DrawWholeMapView`, and
+   even after a full `fadescreen FADE_TO_BLACK`/`FADE_FROM_BLACK` around the warp. It
+   also isn't confined to the immediate arrival map - it was reproduced at the *next*
+   connection crossing too (Road → Brightwell), several screens after leaving Garden,
+   ruling out "just a stale border-fill buffer." It reliably does **not** appear when
+   arriving at Road or Brightwell any other way (confirmed via the debug menu's direct
+   warp, landing at the identical coordinates). **This was not fully root-caused** -
+   something about transitioning away from `Wasteland_EstateGrounds`'s specific tileset
+   pairing leaves the engine in a state that shows briefly on the next one or two map
+   loads, through multiple different transition mechanisms, and it is real (reproduced
+   many times, not a fluke) but not understood at the level the rest of this file's
+   fixes are.
+4. **What actually shipped**: converted the Garden↔Road seam from a map `connection`
+   to a real warp instead (`warpdoor`), themed as walking through "the gate in the outer
+   wall" already mentioned in the garden's own arrival narration - `warp_events` at
+   Garden `(11,21)`/coord_event trigger there → lands at Road `(11,10)` (the real path
+   row, verified reachable all the way to the existing, unaffected Brightwell
+   connection); the reverse trigger sits at Road `(11,7)`, landing at Garden `(11,20)`
+   - both directions keep landing spot ≠ trigger tile, per the established
+   ping-pong-avoidance pattern. **This is a functional, complete fix** - confirmed via
+   real gameplay screenshots walking the whole Garden → Road → Brightwell chain
+   end-to-end, both directions. The narrative fit (a real gate) is arguably *better*
+   than the seamless connection was, not just a workaround.
+   The remaining oddity: a real screenshot taken immediately on arrival (before the
+   player's own next input) still sometimes shows the same noise, in the same top-left
+   region, regardless of which warp variant is used - but it is confirmed transient in
+   at least one tested case (cleared after the player pressed a direction once) and
+   never blocks movement, the debug menu, or any subsequent warp. **If this needs a
+   real fix later**: don't restart from scratch - start from "leaving
+   `Wasteland_EstateGrounds` specifically is the trigger, tile content at the border is
+   not the mechanism, and it can affect more than the immediately-next map," and
+   consider comparing against a vanilla-only test case (two real vanilla maps with
+   mismatched secondary tilesets connected/warped between) to establish whether this is
+   a pre-existing engine quirk under specific conditions or something introduced by this
+   project's specific setup.
+
+**Not addressed this round**: Brightwell's non-enterable buildings (no interior maps
+exist for any of its buildings - this was true before today too, not a regression;
+building real interiors is a bigger, separate task, not a bugfix). Whether the town's
+overall visual "messiness" Viktor mentioned is fully explained by the gate issue above
+or is a separate, still-open complaint about Brightwell's own layout hasn't been
+re-confirmed with him.
+
+**Build state**: `make DEBUG=1` rebuilt clean after every change in this entry. Normal
+resting build still needs a final rebuild once this entry's fixes are confirmed
+acceptable - see the handoff note for whoever picks this up next.
+
+### Twelfth custom feature: Garden and Road merged into one map, real wild encounters
+### added (2026-09-12, same day as the Eleventh)
+
+Viktor rejected the gate-with-narration-text fix outright: he wants a real, smooth
+opening between the estate and the road, not a warp dressed up with a line of text, and
+gave explicit permission to change the road (or anything else in this chapter) if that's
+what it takes. He also asked, directly, for the actual structural fix: research how
+these games are normally built and apply it up front, rather than iterating into
+correctness map by map. This entry is that fix for the garden/road seam specifically,
+plus the first real application of "what a first Pokémon route needs."
+
+**The actual fix: there is no more seam.** `Wasteland_EstateGrounds` (Rustboro secondary
+tileset) and `Wasteland_Road` (Mauville secondary tileset) were always going to have
+this problem no matter what sat at the border, because the two tilesets can't both be
+resident in VRAM at once (see the Eleventh feature entry for the full investigation).
+The fix isn't a better warp or a better connection - it's not having two maps with
+different tilesets meet at all. `Wasteland_Road`'s own layout already contained real,
+good estate-grounds-appropriate content in its northern rows (the two fenced flower
+plots, hedges, a pond) from the original Route117 crop - importantly, still `gTileset_
+Mauville`, the same tileset the working `Wasteland_Road`↔`Wasteland_Brightwell`
+connection already uses. So: **`Wasteland_EstateGrounds` is retired** (left in
+`map_groups.json` at its existing index, orphaned and unreachable, same treatment as
+Grayford - removing an entry would shift every later map's debug-menu index) and
+`Wasteland_EstateHouse`'s garden-facing door now warps directly into
+`Wasteland_Road` (both door tiles, `(5,7)`/`(6,7)`, now target `MAP_WASTELAND_ROAD`
+warp 0). The old aftermath narration moved with it (`Wasteland_Road_EventScript_
+Aftermath`, text lightly reworded to match what's actually on screen here - flower beds
+and a pond, not a fountain and a walled gate, since neither of those exist in this
+content). Landing spot `(17,6)`, return-trigger `(17,5)` (checklist's landing≠trigger
+rule) - **both independently verified open, correct-elevation tiles this time**, not
+assumed, and even so, the return trigger's first placement (`(16,6)`) turned out to be
+on a collision-blocked tile and had to be caught by testing and moved to `(17,5)` -
+worth remembering that "pick an adjacent tile" still needs its own collision check, not
+just "not the same tile as the trigger."
+
+**Confirmed via real gameplay screenshots**: walked the whole chain, both directions -
+`Wasteland_EstateHouse` → `Wasteland_Road` (arrival narration fires, no corruption) →
+across the real `Wasteland_Road`↔`Wasteland_Brightwell` connection → back the same way
+→ back into the house. Every crossing is now either a real connection (Road↔Brightwell,
+proven) or a real door warp (House↔Road, House↔SafeRoom, both proven) - no more
+scripted coord_event warps standing in for a route-to-route transition anywhere in this
+chain, and no more narration text papering over a mechanical join.
+
+**Real wild encounters added to `Wasteland_Road`** (`src/data/wild_encounters.json`,
+new entry keyed `MAP_WASTELAND_ROAD`) - this map had zero wild encounter data despite
+being a real route, which is simply wrong for what it is; every vanilla route has this.
+Reused Route101's real encounter table (Poochyena/Zigzagoon/Wurmple, levels 2-5) rather
+than inventing levels/rates from scratch - proven, appropriate for a first route, and
+the species already fit the "scrappy/feral" theming without needing new justification.
+Confirmed the map's real tall-grass tiles (metatile behavior `MB_TALL_GRASS`, IDs 13 and
+37, ~53 tiles scattered through the flower-plot and pond areas - already present in the
+copied Route117 data, not added) actually trigger it: verified via a real headless
+playthrough stepping onto a known grass tile, watching `is_in_overworld()` go false and
+catching the actual grass-shake battle-transition screen on camera. This is now the
+template for adding encounters to any future route: reuse a real vanilla table for the
+same narrative "distance into the game," and confirm with a real screenshot that the
+map's own tall-grass tiles are what's actually there, not assumed.
+
+**Viktor's decision on the open question above**: the Pokémon Center still works
+(someone stayed and kept it running); the Mart was raided and never came back online.
+Both built same day:
+
+- **`Wasteland_Brightwell_PokemonCenter`** - the real, shared `LAYOUT_POKEMON_CENTER_1F`
+  (same interior every vanilla town's center uses) plus the engine's own shared healing
+  script (`Common_EventScript_PkmnCenterNurse`) - genuinely heals the party, not a
+  cosmetic NPC. Confirmed via a real playthrough: talked to her, mashed through the
+  whole sequence, watched `is_in_overworld()` go true again on the other side with no
+  crash, and caught the real "Okay, I'll take your POKéMON for a few seconds" line on
+  screen. Reflavored dialogue only (a survivor who kept the machines running), not the
+  mechanic.
+- **`Wasteland_Brightwell_Mart`** - the real, shared `LAYOUT_MART` interior, but no
+  clerk and no shop trigger at all - a scavenger NPC explains why (shelves picked
+  clean, register gone) instead of leaving a normal-looking counter that silently does
+  nothing, which per the checklist is exactly the kind of thing that reads as a bug.
+  Confirmed the NPC's dialogue actually fires via a real screenshot.
+- Both doors are Brightwell/Verdanturf's own real door tiles ((12,3) Mart, (16,3)
+  Pokémon Center - `MB_ANIMATED_DOOR` behavior, confirmed by decoding the metatile
+  attribute directly rather than assuming), not invented. `gMapGroup_Wasteland` now has
+  8 entries (both appended at the end, per the standing index-stability rule) - Mart is
+  map 7, Pokémon Center is map 6.
+
+**Still open**: no trainer battle exists anywhere in this chapter yet (normal for a
+first route to have at least one); Brightwell's other buildings (the houses, not the
+Mart/Center) still have no interiors - lower priority than the two real services.
+
+### Thirteenth custom feature: the "no garden" bug and two Pokémon Center bugs, one
+### fixed, one not (2026-09-12, same day)
+
+Viktor tested the Twelfth feature's merge and the new buildings. Real findings:
+
+**"No garden" root-caused and fixed.** The merged map's arrival narration
+(`Wasteland_Road_EventScript_Aftermath`) was placed as a coord_event trigger sitting
+*exactly on* the door's landing tile `(17,6)`. Coord_events are step-based
+(`TryStartStepBasedScript`, gated on `input->tookStep`) - arriving via a warp places the
+player on a tile without that counting as a step, so a trigger sitting exactly on a
+landing tile can silently never fire. Confirmed via a real headless test: the flag
+stayed unset no matter how long the game sat idle after arrival. This is exactly why
+Viktor felt like there was "no garden" - the one thing establishing that this is the
+ruined estate grounds, not just more road, never played. Fixed by moving the trigger one
+tile south to `(17,7)`, directly in the path of a player's very first natural step
+toward the road - confirmed firing correctly afterward. **New checklist-worthy
+lesson**: never place an arrival-narration coord_event exactly on a warp's landing
+coordinate - put it one real step away, in the direction a player would naturally move.
+
+**A real, confirmed bug found and fixed**: the Pokémon Center's nurse script wrapped
+`Common_EventScript_PkmnCenterNurse` (which does its own `lock`/`faceplayer`
+internally) in an outer `lock`/`faceplayer`/custom-msgbox - a real vanilla reference
+(`FallarborTown_PokemonCenter_1F`) never does this. Fixed by matching the proven
+sequence exactly (bare `setvar` + `call`, no wrapper).
+
+**A second bug that looked real but was partly a self-inflicted testing artifact -
+worth understanding exactly, because it's the same failure class this whole file is
+about.** After the double-lock fix, re-testing with an imprecise, over-mashed button
+sequence (many more A presses than the dialogue actually needed) appeared to show the
+player permanently frozen - couldn't move, couldn't even open the Start menu. Confirmed
+via a very careful frame-by-frame re-test (one screenshot per press) that this was
+because the player was still standing in front of and facing the nurse: every excess A
+press after the conversation actually ended simply *re-triggered a brand new
+conversation* with her, over and over, which looks indistinguishable from a hang if
+you're not counting presses. With the exact right number of presses (confirmed via the
+frame-by-frame test), the dialogue closes cleanly, movement works immediately after,
+and the Start menu opens normally.
+
+This doesn't mean nothing was wrong - the original double-lock bug (documented above)
+was real and is fixed. But the *specific* "still frozen after this session's fix"
+finding reported back to Viktor was measured with the same kind of imprecise,
+un-counted, rapid-fire input pattern this file's own checklist should be warning
+against - a good concrete example of why "verify with a real screenshot" isn't enough
+by itself; the *input* driving that screenshot needs to be precise and understood, not
+just mashed and hoped. Also simplified `Wasteland_Brightwell_PokemonCenter_EventScript_
+Nurse` while investigating this: it no longer calls the shared
+`Common_EventScript_PkmnCenterNurse` at all, instead doing a plain
+lock/faceplayer/Yes-No/heal/message/release sequence with no `applymovement`/
+`waitmovement`/field-effect animation - less flourish (no nurse turn-around animation,
+no ball-glow effect), but nothing left in the sequence that could hang on a movement
+wait, belt-and-suspenders on top of the actual fix. **Still needs Viktor's own
+real-gameplay confirmation** - a careful headless re-test is good evidence but isn't
+the same as him actually playing it.
+
+**New checklist-worthy lesson**: when re-testing a fix by pressing a button repeatedly,
+count exactly how many presses the interaction actually needs and stop there - an
+NPC interaction sitting right next to the player will happily re-trigger itself
+forever if you keep mashing after it's done, and that can look exactly like a hang.
+
+### Fourteenth custom feature: the garden rebuilt as a real place, and a second
+### Brightwell house (2026-09-12, same day)
+
+Viktor rejected the merged garden/road map outright - the house needs to open into a
+real, distinct garden, not straight onto the road with a narration box standing in for
+it. This is the first real-content work done under the new process agreed earlier the
+same day (ask what feeling is wanted, find one real whole map that matches it, reskin
+only) rather than continuing to patch the existing geometry.
+
+**`Wasteland_EstateGrounds` rebuilt from scratch** as a real, whole, unmodified 40×20
+crop of vanilla Route104's lake/garden/house area (`gTileset_General`+
+`gTileset_Rustboro`) - the same crop identified earlier in the day as genuinely
+beautiful and fitting ("a lake with wooden bridges, a real house, flower beds"), now
+used properly: as **one self-contained map**, not stitched to anything. It reuses the
+map's old, orphaned slot in `gMapGroup_Wasteland` (index 2) rather than a new one.
+
+- `Wasteland_EstateHouse`'s garden-facing door (both tiles) now targets
+  `MAP_WASTELAND_ESTATE_GROUNDS` again (reverting the Twelfth feature's direct-to-Road
+  warp), landing at `(3,11)`, near the house visible in the crop.
+- The arrival narration (reworded to match this content - "the pond sits flat and
+  still, choked with algae" instead of the old fountain/gate references) is a
+  coord_event one tile away from the landing spot `(4,11)`, not on it - per checklist
+  item 6, landing tiles don't reliably fire step-based coord_events.
+- The exit to `Wasteland_Road` is a coord_event-triggered `warpdoor` at `(18,14)`
+  (along the crop's real path), landing at `(17,6)` in Road - the same coordinates
+  Road already had from the Twelfth feature, just re-purposed as "arrival from garden"
+  instead of "arrival from house." The return trip is a separate trigger one tile away
+  (`(3,10)`), same ping-pong-avoidance pattern as everywhere else in this project.
+- **Deliberately warps on both ends, not connections** - `Wasteland_EstateGrounds` and
+  `Wasteland_Road` have different secondary tilesets (Rustboro vs Mauville), and a
+  warp doesn't care about tileset matching the way a connection does (see the Eleventh
+  feature entry for why a connection between them specifically corrupted). This is the
+  practical version of the new "no crop-and-stitch" rule: a single real crop used as
+  its own map, joined to neighbors by warps, never joined edge-to-edge with a
+  different crop.
+- Confirmed via real gameplay screenshots: the garden looks and feels distinct (a real
+  house, flower beds, dirt path, no corruption), the narration fires correctly, and the
+  full chain (house → garden → road → Brightwell, both directions) walks cleanly.
+
+**A second Brightwell house added**: `Wasteland_Brightwell_House`, behind Brightwell's
+real `(17,15)` door (Verdanturf's own "House," confirmed real via its `MB_ANIMATED_DOOR`
+behavior tag before wiring it) - the real, shared `LAYOUT_HOUSE1` interior, reskinned
+with one NPC who fills in a piece of the story (she's informally caring for the Kid
+NPC standing outside by the well, whose mother worked the checkpoint and hasn't come
+back). Confirmed working via a real screenshot of the dialogue firing.
+
+Brightwell now has 3 real, enterable interiors (Pokémon Center, Mart, this house) out
+of its buildings; the remaining ones (Wanda's-House-equivalent, Friendship-Rater's-
+House-equivalent, if kept) are still closed - lower priority, same "add one at a time,
+whole map, reskin only" approach whenever picked up again.
+
+### Fifteenth custom feature: the garden's landing spot and exit finally feel real,
+### after Viktor's explicit ultimatum (2026-09-12, same day)
+
+Viktor tested the Fourteenth feature's rebuilt garden and rejected it in the strongest
+terms used in this project so far: arriving from the house "just spawn[ed] middle of
+some plants" (no visible door) and the exit to the road was "a box that magically
+teleports" him, discoverable only by wandering - explicitly framed as the last chance
+("We can not continue if you cant stich a house to a garden and a garden to a road...
+otherwise there is no need to continue"). **Root cause of both**: the Fourteenth
+entry's own "confirmed via real gameplay screenshots... no corruption" check only
+verified the map *loaded cleanly* - it never actually looked at whether the landing
+tile read as a doorway or whether the exit was visually findable, which is exactly the
+gap between "mechanically correct" and "doesn't feel like a bug" this whole project
+keeps tripping over. Both are now fixed using real, verified, already-present features
+of this exact map crop, not new invented art:
+
+**House-side landing, fixed by discovering (and re-checking, after a first wrong guess)
+that this crop already has a real house in it.** First attempt copied a *different*
+house's exterior door cluster (RustboroCity_House1's own facade) wholesale into open
+ground near the old landing spot - technically real, tile-for-tile copied per
+checklist item 1, but rendering it revealed a second, disconnected-looking building
+awkwardly stacked below the crop's *existing* real house, which was worse, not
+better. Caught by actually rendering the result and looking at it (checklist item 8)
+before touching mGBA, not after. Reverted, then looked again at what this crop already
+contains: it's built around vanilla Route104's real **Pretty Petal Flower Shop**,
+complete with its own real door (local `(5,8)`, `MB_NON_ANIMATED_DOOR` behavior
+confirmed by decoding the metatile attribute directly, not assumed). Rather than
+scripting a coord_event-based warp at all, `warp_events[0]` now sits directly on that
+real door tile and targets `Wasteland_EstateHouse`'s own garden-door warp id - a
+genuine native door-to-door warp, exactly like every other real door in this project
+(the mansion's own front door, Brightwell's mart/center doors). This is simpler than
+the coord_event pattern used everywhere else, not just a fix: no ping-pong-avoidance
+landing spot is needed, because (confirmed empirically, see below) arriving via a
+native door-tile warp doesn't re-trigger `TryDoorWarp` the way arriving on a
+step-based coord_event tile can re-trigger *that*. The old `ExitToHouse` coord_event
+script is gone entirely - unnecessary once the transition is a real door.
+
+**A real, load-bearing discovery about how native door warps actually land the
+player, worth remembering for every future door**: the engine doesn't land the player
+exactly on the `warp_events` coordinate - `TryDoorWarp`'s exit animation walks them one
+additional tile out from the door first. The door here is at local `(5,8)`; the player
+actually comes to rest at `(5,9)`, confirmed via `get_pos()` after warping, not
+assumed. This bit the *narration* trigger on the very first fix attempt: it was placed
+at `(5,9)` reasoning that was "one tile past the landing coordinate" - but the
+landing coordinate itself doesn't matter, the *actual resting position* does, and
+those turned out to be the same tile here. Confirmed via a direct flag read
+(`FLAG_SEEN_ESTATE_GROUNDS_AFTERMATH` stayed `False` no matter how long the game sat
+idle) that this reproduced the exact "coord_event on the landing tile never fires" bug
+from the Thirteenth feature entry, just one tile further out than expected. Fixed by
+moving the trigger to `(5,10)` - one real step further, in the direction the player
+naturally moves next. **New checklist-worthy lesson**: after any native door warp,
+verify the player's *actual* resting `pos()`, not the `warp_events` coordinate, before
+placing anything step-based near it - a real door's exit animation moves the player
+past where the JSON says they land.
+
+**Road-side exit, fixed by finding a real, pre-existing gap instead of patching one
+open.** Traced this crop's exact origin (`Wasteland_EstateGrounds/map.bin` matches
+vanilla `Route104/map.bin` starting at row 10, confirmed by a byte-for-byte row
+search) and found that local `(10-11, 17-19)` - a gap in the crop's southern
+hedge/fence boundary, flanked by real hedge tiles on both sides and a wooden
+dock/bridge tile inside it - is not an accident of cropping: in the uncropped
+Route104, the tiles immediately south of this exact gap (row 30) are a real, working
+2-tile door into Petalburg Woods. This crop's own southern edge was never an
+arbitrary cut here; it's a real, intentional vanilla passage that just happened to
+lead somewhere we didn't keep. Repurposed it: the exit coord_event trigger sits at
+`(10,18)`, in the middle of the real gap (a visually obvious break in the hedge line,
+not open field), and the return-arrival landing (`warp_events[1]`) sits at `(10,17)`,
+one tile into the gap from the other side - same landing≠trigger pattern as
+everywhere else, and this one was verified, not assumed, this time.
+
+**Confirmed end-to-end via a real headless walkthrough** (`tools/mgba_probe.py`,
+`boot_to_overworld()` + the debug menu's warp tool to get into the house, then real
+D-pad movement and door/gate steps - not just static renders): walked into
+`Wasteland_EstateHouse`, stepped down onto its real door, landed at the flower shop's
+door in the garden (screenshot: player standing right in front of a real house with
+flower beds either side - exactly what Viktor asked for, not open ground), walked to
+the hedge gap, crossed into `Wasteland_Road` (confirmed via `get_location()` changing
+map), then walked the entire return trip - back through the gate into the garden
+(landing exactly at the intended `(10,17)`), back up to the mansion door, and back
+into the house (landing at `Wasteland_EstateHouse`'s own real door tile `(5,7)`) - a
+complete, working, bidirectional loop, both directions independently confirmed, not
+just the forward path.
+
+**One more self-inflicted false alarm during this exact verification, worth recording
+since it's the *same* failure class as the Thirteenth entry's Pokémon Center
+incident, just in the opposite direction**: the first walkthrough attempt mashed the
+narration textbox only 6-8 times and concluded the player was completely frozen (no
+direction worked, at all). It wasn't a hang - the narration text is four pages long
+with a typewriter print effect, and 6-8 presses had only reached page two, so the
+field was still genuinely, correctly locked mid-message. Confirmed by taking a
+screenshot after *every single* press instead of assuming completion, which showed
+the textbox still visibly open and mid-sentence. Fixed the test (not the game) by
+mashing 30 times; the game was never broken. **Checklist item 12 already covers this
+in the over-mashing direction (re-triggering an NPC); this is the under-mashing
+mirror of it** - a multi-page msgbox needs to be confirmed *closed* (via a screenshot,
+not a press count guessed in advance) before concluding a lack of movement afterward
+means anything is wrong.
+
+The transient top-left rendering noise documented in the Eleventh feature entry
+(leaving `Wasteland_EstateGrounds` specifically, still not fully root-caused) is still
+present in some of this session's screenshots - confirmed, again, harmless: it never
+blocked movement, the debug menu, or any of the warps tested here, and clears after
+one input. Not re-investigated further this session; see the Eleventh entry if it
+ever needs a real fix.
+
+**Build state**: both `make DEBUG=1` and the normal resting build were rebuilt clean
+after every change in this entry.
+
+### Sixteenth custom feature: the garden/road exit replaced with a real tunnel, after
+### the hedge-gap fix still didn't work for Viktor (2026-09-12, same day)
+
+Viktor tested the Fifteenth feature's fix and reported the hedge-gap exit "doesn't
+work" while a "random place around the flowers" teleported him to the road, landing
+"in the middle of the road" with no natural passage. Investigated by rendering the
+exact tile data with a coordinate grid overlaid on it (not just reasoning about
+collision bytes) - the trigger tile itself checked out fine (open, correctly wired,
+confirmed firing in a headless walkthrough), but this **could not be reconciled with
+Viktor's live report**, and rather than guess at a third explanation, he was asked for
+screenshots to pin down the actual discrepancy. **His response reframed the whole
+approach**: stop diagnosing this specific spot and just build it a different way -
+"I just want a process that goes forward, I don't care how you solve it."
+
+**Root cause of the whole class of bug, finally named properly**: every version of
+this exit so far - the original coord_event on open grass, then the "hedge gap" -
+relied on the player recognizing an *invisible* trigger tile as meaningful. A hedge
+gap reads as "a place with no fence," which is a much weaker visual signal than an
+actual door, and apparently wasn't landing as intended even when mechanically
+correct. The fix is to stop building exits this way entirely: **every transition in
+this chapter that isn't a real map `connection` should be a real, visible door**, the
+same pattern that has never once caused a bug when actually used (the mansion's own
+door, the flower-shop door, Brightwell's mart/center doors).
+
+**What shipped**: a new connective map, `Wasteland_EstateTunnel`
+(`data/maps/Wasteland_EstateTunnel/`), reusing vanilla `RusturfTunnel`'s real layout
+binary verbatim (`gTileset_General`+`gTileset_RusturfTunnel`, 36×24) for pure tile art
+- none of that map's own NPCs, items, or Team Aqua/Wanda story content came with it
+(fresh, empty `object_events`/`coord_events`, same "layout only" pattern already used
+for `Wasteland_EstateHouse` = `RustboroCity_House1`). This tunnel sits between the
+garden and the road, connected by two real, tile-for-tile cave-mouth doors:
+- **Garden side** (`local (10,17)`): the exact cave-mouth cluster (metatiles
+  145/167/159/169/123/124/115, `MB_NON_ANIMATED_DOOR` behavior confirmed by decoding
+  the attribute byte, not assumed) copied from vanilla `Route116`'s own real tunnel
+  entrance at `(47,8)` - same `gTileset_General`+`gTileset_Rustboro` pairing as the
+  garden, so every tile transplants with zero translation. Placed right at the end of
+  the garden's existing path (replacing the old ambiguous "path fades into open grass"
+  tail), oriented so the path leads straight into a visible dark doorway in a rock
+  face instead of trailing off into nothing.
+- **Road side** (`local (17,6)`): the matching real cave-mouth cluster copied from
+  `VerdanturfTown`'s own real tunnel entrance at `(8,1)` - same `gTileset_General`+
+  `gTileset_Mauville` pairing as the road. Deliberately kept at the exact coordinate
+  the road's old (now-removed) landing-only warp used, to minimize churn elsewhere on
+  that map.
+- Both are genuine `warp_events` entries with no coord_event, no script, no
+  ping-pong-avoidance landing spot needed at all - walking onto either door just works
+  via the engine's ordinary `TryDoorWarp` path, confirmed working in **both directions
+  at both doors** via a real headless walkthrough (house → real door → garden →
+  narration → real cave door → tunnel → real cave door → road, then back the same way).
+  This is simpler than every other version of this transition attempted today, not
+  just more visible - no custom logic anywhere in the chain.
+
+**Narratively**, this reads as an old service/smuggling tunnel dug under the estate
+wall - fits the collapse setting at least as well as a hedge gap, arguably better
+(a hole in a wall someone dug on purpose says more about the world than an unfenced
+gap in a hedge).
+
+**New checklist-worthy lesson, the actual point of this whole entry**: when an
+open-ground coord_event exit has needed fixing more than once, the fix is not a
+better coord_event placement - it's removing the coord_event and building a real door
+instead, even if that means adding a whole extra connective map. A real door is
+never ambiguous to a player; an invisible trigger tile always risks being one, no
+matter how carefully its coordinate is chosen or how thoroughly its collision is
+checked - the player has no way to see the difference between "empty grass" and
+"empty grass that happens to warp you," and this project has now hit that exact wall
+three separate times with three different specific coordinates. Prefer building a
+small custom connective interior (reusing a real whole vanilla map for its tile art,
+same as this tunnel) over a fourth attempt at placing an outdoor trigger correctly.
+
+**Build state**: `make DEBUG=1` and the normal resting build both rebuilt clean.
+
+## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
+
+Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
+curated multi-gen roster (exact list/count undecided), main appeal is exploration +
+tactical team-building, not full Pokédex completion.
+
+**Setting:** Fallout-inspired collapse, ~15–20 years before the game. Pre-collapse
+society relied on Pokémon for power/agriculture/transport/protection; their use in war
+and crime drove a powerful corporation to build a Pokémon-derived psychic control
+network, publicly marketed as protection. The company activated it region-wide despite
+danger signs; the protagonist's father supported deployment. The signal overwhelmed
+Pokémon (panic/attack, or unresponsive/fled), causing cascading infrastructure and
+social collapse — not a nuclear scenario. Corporate cities survived via better
+safeguards and now run genuinely functional (if surveilled/coercive) societies,
+sustaining dependency the company exploits. Warlords hold resources/settlements
+(mix of protectors and exploiters); independent communities survive by trade and
+Pokémon partnership but face raids and corporate pressure. The company concealed its
+responsibility, blaming Pokémon/extremists/failed governments.
+
+**Opening (confirmed):** starts mid-attack on the protagonist's home by rebels. Father
+hides protagonist (sheltered young adult) in a safe room with one of his Pokémon
+(the starter). Rebels kill the household (mother, servants) and kidnap the father alive
+— he has the knowledge to disable the control network, which corporate cities now
+depend on, so shutdown isn't simple. Protagonist survives, buries their mother, leaves
+on a revenge-driven search. Over the journey they discover father/company caused the
+collapse — this is the central arc. Whether the protagonist ends up allied with rebels,
+independent, or something else is explicitly undecided and must not be assumed. Father
+is written as genuinely loving and convinced his work prevents greater suffering
+(control-experiment theme, Fallout TV as tonal reference — not a plot source; don't
+borrow specific Fallout lore/characters). Preserve rebel responsibility for the opening
+massacre — no corporate false-flag retcon by default; corporate guilt doesn't excuse
+rebel crimes.
+
+**Tone:** adult, dark and violent, with absurd/deliberately stupid humor arising from
+bureaucracy, corporate messaging, petty/incompetent villains — not children's-adventure
+tone. Ordinary battle defeat is just fainting; death can occur in story events but
+mandatory permanent party death is not approved.
+
+**Design principles:** exploration has practical payoff (allies, clues, tactical
+options); difficulty rewards preparation/adaptation over grinding; the world is varied
+(ruins, occupied towns, surviving communities, Pokémon-reclaimed areas) — not a uniform
+desert; Pokémon are central to both the catastrophe and survival, not just re-skinned
+weapons; keep companionship and hope alongside institutional cruelty. Regional bosses
+mix traditional gym leaders and warlords; old badges/tokens can retain function but
+rules should be locally justified — no automatic "defeat warlord → become champion."
+Target ~30–60 min for a first playable opening chapter (proof of loop, not final
+map/story), using a small roster subset.
+
+**Starter (confirmed, see technical status above):** Houndour → enhanced Houndoom,
+supersedes an earlier three-stage-line shortlist (documented in the Astra brief but
+dead — Shinx/Piplup/Snivy/etc. shortlist, ignore it). Delayed evolution (level 32) is
+explained in-fiction as a rare natural developmental trait giving unusual strength but
+delayed evolution readiness — invented lore, not real Pokémon biology, not an
+experiment/destiny/friendship gate. Recommended staging: brief reassurance from father
+in the safe-room scene; a psychic NPC in the first settlement explains the delayed
+development from experience/observation (not literally reading the Pokémon's mind).
+Evolution must use the plain level-up flow at level 32+ with no additional gate — the
+NPC dialogue must not unlock it, and training pace (not a scripted battle) determines
+when it triggers.
+
+**Technical direction:** RHH pokeemerald-expansion (pinned at 1.17.0), Porymap,
+optional Poryscript, Git, mGBA. Keep the curated species roster separate from the
+regional Pokédex and from actual encounter/gift/trade/breeding/evolution availability —
+audit all of those against the roster once it's chosen. Delay survival meters, weapon
+systems, branching campaigns, multiple difficulty modes, and full custom sprite work
+until core play is proven.
+
+**Verification priorities (from the brief):** reproducible build; fresh-game progression
+without debug shortcuts; save/reload before/after story events; loss/retry flows,
+healing/respawn, map connections; multiple viable teams before bosses; roster
+availability/evolution consistency; battle-engine tests for custom mechanics; preserve
+known-good versions, assess upstream updates separately. Never describe a researched
+feature as locally tested — verify for real before claiming it works.
+
+## Development sequence (from the brief)
+
+1. ~~Adult tone/opening premise established.~~ Done (design).
+2. ~~Father's knowledge/responsibility, his job, rebels' reason for taking him.~~ Done
+   (design) — job title still open.
+3. ~~Catastrophe and father's responsibility established.~~ Done (design) — rebel
+   cooperation and final faction relationship still open.
+4. Set battle rules and provisional roster principles. — **in progress** (battle gimmick
+   mechanics decided/disabled, roster target size + selection principles agreed, see
+   above; the actual species list is intentionally deferred to be built chapter by
+   chapter rather than all at once; remaining battle rules beyond gimmicks still open).
+5. ~~Establish pinned build environment; compile and run unchanged base.~~ Done.
+6. ~~Prototype custom map, event, later-gen species/move, save/reload.~~ Done — custom
+   species, custom map + event, and save/reload all confirmed working in mGBA (see
+   above). Later-gen species/move prototyping specifically not done, but the mechanism
+   (species_info entries) is proven via the Alder line.
+7. Build and playtest the opening chapter, then expand incrementally. — **in progress**:
+   confirmed-working chain is now safe-room gift → estate grounds aftermath → road →
+   Brightwell (raided town, now with four NPCs including Rourke's real plot content
+   about "the Ashband" raiders and "Miller's Cut") — see "Opening sequence plot
+   revision," the Fifth/Sixth custom feature sections, and the Ninth (2026-09-12) for
+   the connections rewrite and the two door/exit bugs it took to get here reliably.
+   Grayford/Senna is built but currently disconnected (deferred per the plot revision —
+   no longer "first settlement"). Still open: whether Brightwell's current
+   Verdanturf-based art gets the fuller Rustboro-based redesign scoped in the Eighth
+   feature entry (deferred there for time/risk reasons, not reattempted this session for
+   the same reason — see the World-building checklist's point about not rushing a large
+   risky piece with no way to verify it live), what's actually behind "the company
+   office" clue (deliberately left vague, not yet discussed with Viktor), and the real
+   attack/staging content for beat 2 ("the wait"), agreed in concept but never
+   implemented (needs rewriting anyway since it assumed the mother was dying in this
+   scene, which is no longer true). **None of this session's fixes have been walked
+   through in mGBA yet** (Viktor was away and asked for the GUI not to be launched) —
+   that's the first thing to check when he's back.
+
+## Reference links (from the brief, for when they're needed)
+
+- Engine: https://github.com/rh-hideout/pokeemerald-expansion
+- Features: https://github.com/rh-hideout/pokeemerald-expansion/blob/master/FEATURES.md
+- Install: https://github.com/rh-hideout/pokeemerald-expansion/blob/master/INSTALL.md
+- New species tutorial: docs/tutorials/how_to_new_pokemon.md (in this repo)
+- Testing system tutorial: docs/tutorials/how_to_testing_system.md (in this repo)
+- Porymap: https://huderlem.github.io/porymap/
+- Poryscript: https://github.com/huderlem/poryscript
+- mGBA: https://github.com/mgba-emu/mgba
+- Houndoom baseline stats: https://pokemondb.net/pokedex/houndoom
