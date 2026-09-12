@@ -9400,6 +9400,17 @@
       "border_filepath": "data/layouts/Wasteland_EstateTunnel/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_EstateTunnel/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_MILLERS_CUT",
+      "name": "Wasteland_MillersCut_Layout",
+      "width": 30,
+      "height": 46,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Wasteland_MillersCut/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_MillersCut/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

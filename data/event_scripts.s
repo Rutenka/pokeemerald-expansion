@@ -1060,6 +1060,7 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_Brightwell_Mart/scripts.inc"
 	.include "data/maps/Wasteland_Brightwell_House/scripts.inc"
 	.include "data/maps/Wasteland_EstateTunnel/scripts.inc"
+	.include "data/maps/Wasteland_MillersCut/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"
