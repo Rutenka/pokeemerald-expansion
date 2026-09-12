@@ -1051,6 +1051,7 @@ gStdScripts_End::
 
 	@ Wasteland: custom maps
 	.include "data/maps/Wasteland_SafeRoom/scripts.inc"
+	.include "data/maps/Wasteland_Grayford/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"

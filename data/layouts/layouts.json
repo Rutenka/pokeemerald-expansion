@@ -9334,6 +9334,17 @@
       "border_filepath": "data/layouts/Wasteland_SafeRoom/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_SafeRoom/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_GRAYFORD",
+      "name": "Wasteland_Grayford_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Dewford",
+      "border_filepath": "data/layouts/Wasteland_Grayford/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Grayford/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
