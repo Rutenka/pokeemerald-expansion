@@ -1,0 +1,82 @@
+{
+  "id": "MAP_WASTELAND_ASHBAND_CHECKPOINT",
+  "name": "Wasteland_AshbandCheckpoint",
+  "layout": "LAYOUT_WASTELAND_ASHBAND_CHECKPOINT",
+  "music": "MUS_AQUA_MAGMA_HIDEOUT",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_NONE",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": false,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BIKER",
+      "x": 10,
+      "y": 29,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_UP",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "1",
+      "script": "Wasteland_AshbandCheckpoint_EventScript_Grunt",
+      "flag": "FLAG_DEFEATED_ASHBAND_CHECKPOINT_GRUNT"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_1",
+      "x": 5,
+      "y": 22,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_AshbandCheckpoint_EventScript_Mother",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BIKER",
+      "x": 8,
+      "y": 23,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_AshbandCheckpoint_EventScript_Enforcer",
+      "flag": "FLAG_DEFEATED_ASHBAND_ENFORCER"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 6,
+      "y": 23,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "ITEM_POTION",
+      "script": "Common_EventScript_FindItem",
+      "flag": "FLAG_ITEM_ASHBAND_CHECKPOINT"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 10,
+      "y": 34,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_MILLERS_CUT",
+      "dest_warp_id": "2"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": []
+}

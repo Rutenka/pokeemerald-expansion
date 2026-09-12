@@ -9411,6 +9411,17 @@
       "border_filepath": "data/layouts/Wasteland_MillersCut/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_MillersCut/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ASHBAND_CHECKPOINT",
+      "name": "Wasteland_AshbandCheckpoint_Layout",
+      "width": 37,
+      "height": 38,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Wasteland_AshbandCheckpoint/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_AshbandCheckpoint/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
