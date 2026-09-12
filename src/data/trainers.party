@@ -16887,3 +16887,37 @@ Double Battle: No
 
 Poochyena
 Level: 7
+
+=== TRAINER_ASHBAND_LOOKOUT ===
+Name: LOOKOUT
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Zigzagoon
+Level: 9
+
+=== TRAINER_ASHBAND_CHECKPOINT_GRUNT ===
+Name: GRUNT
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Poochyena
+Level: 11
+
+=== TRAINER_ASHBAND_ENFORCER ===
+Name: ENFORCER
+Class: Ashband
+Pic: Aqua Grunt F
+Gender: Female
+Double Battle: No
+AI: Check Bad Move / Try To Faint
+
+Mightyena
+Level: 14
+
+Koffing
+Level: 13

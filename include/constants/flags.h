@@ -56,11 +56,11 @@
 #define FLAG_SEEN_BRIGHTWELL_AFTERMATH 0x22 // Wasteland: gates the one-time raid-aftermath narration in Brightwell
 #define FLAG_WASTELAND_UNCONDITIONAL_TRIGGER 0x23 // Wasteland: never actually set - used as the gate on coord_event-driven scripted warps placed on plain (non-door-tagged) ground, where "flag not set" always evaluates true. Reusable across every custom map that needs a scripted exit where no real door tile exists to reuse.
 #define FLAG_DEFEATED_ASHBAND_SCOUT 0x24 // Wasteland: set once the Ashband scout ambush on the Road is defeated - also hides the NPC for good afterward
-#define FLAG_UNUSED_0x025    0x25 // Unused Flag
-#define FLAG_UNUSED_0x026    0x26 // Unused Flag
-#define FLAG_UNUSED_0x027    0x27 // Unused Flag
-#define FLAG_UNUSED_0x028    0x28 // Unused Flag
-#define FLAG_UNUSED_0x029    0x29 // Unused Flag
+#define FLAG_DEFEATED_ASHBAND_CHECKPOINT_GRUNT 0x25 // Wasteland: hides the checkpoint's grunt guard after defeat
+#define FLAG_DEFEATED_ASHBAND_ENFORCER 0x26 // Wasteland: hides the checkpoint enforcer boss and unlocks the mother's post-rescue dialogue
+#define FLAG_ITEM_ASHBAND_CHECKPOINT 0x27 // Wasteland: the checkpoint's item ball
+#define FLAG_SEEN_MILLERS_CUT_AFTERMATH 0x28 // Wasteland: gates the one-time arrival narration on Miller's Cut
+#define FLAG_DEFEATED_ASHBAND_LOOKOUT 0x29 // Wasteland: hides the Miller's Cut ambush NPC after defeat
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag
