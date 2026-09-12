@@ -1058,6 +1058,7 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_Road/scripts.inc"
 	.include "data/maps/Wasteland_Brightwell_PokemonCenter/scripts.inc"
 	.include "data/maps/Wasteland_Brightwell_Mart/scripts.inc"
+	.include "data/maps/Wasteland_Brightwell_House/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"
