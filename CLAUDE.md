@@ -2090,6 +2090,67 @@ formalized only after its underlying logic had already been exercised.
 fix. `tools/validate_maps.py` itself needs no build - `python3 tools/validate_maps.py`
 runs directly.
 
+### Twentieth custom feature: the first trainer battle - an Ashband scout on
+### the Road (2026-09-12, same day)
+
+Per Viktor's "yes, build the trainer battle" - tied directly into existing lore rather
+than invented fresh: Rourke (an existing Brightwell NPC) already names "the Ashband"
+as the raider faction that hit the estate and took Dad toward "Miller's Cut," warning
+the player to "watch every tree line. They won't announce themselves before they do."
+Viktor's own pushback during design ("they can't just be standing there waiting for a
+polite duel") led to the actual shipped framing: a **sight-triggered ambush**, not a
+walk-up-and-press-A NPC - the scout spots the player and forces the fight because
+letting someone from the estate reach Brightwell alive is a liability to them, not
+because they want a fair fight. This plays out *before* the player ever reaches
+Brightwell and hears Rourke name the Ashband, so the warning lands as confirmation of
+something already lived through, not new information.
+
+**New engine plumbing needed, none of it existed in this project before today:**
+- `TRAINER_CLASS_ASHBAND` (new class, appended to the end of the enum in
+  `include/constants/trainers.h` + its `gTrainerClasses[]` entry in
+  `src/battle_main.c`) - reuses the vanilla "Aqua Grunt M" battle sprite purely as a
+  visual asset (same "reuse real assets, reskin the meaning" pattern already used for
+  the Houndour/Houndoom Alder line), not any Team Aqua affiliation.
+- `TRAINER_ASHBAND_SCOUT` (`include/constants/opponents.h`, id 855, bumping
+  `TRAINERS_COUNT_EMERALD` to 856) - **the engine only has room for 9 total custom
+  trainers before trainer-flag space overflows** (855-863 available, per that file's
+  own comment) - worth remembering before adding many more.
+- The actual party (`src/data/trainers.party`, auto-compiled into `trainers.h` by
+  `tools/trainerproc` - never hand-edit the generated `.h` directly): a single level-7
+  Poochyena, one notch above the Road's own level 2-5 wild encounters, and the same
+  species already on the roster doc - no new species needed for a first trainer.
+- Overworld sprite: `OBJ_EVENT_GFX_BIKER`, a real vanilla asset that reads as "rough,
+  leather-jacket type" without visually branding them as a specific canon villain team.
+
+**A real placement bug caught during testing, before it ever reached Viktor**: the
+scout was first placed facing `MOVEMENT_TYPE_FACE_DOWN`, reasoning it'd watch the
+grass to its south - but the player actually approaches walking south *from* the
+tunnel exit, meaning they'd be approaching the scout from directly behind its sight
+line, never triggering it. Confirmed via a real headless walkthrough (player walked
+straight past into the sight zone with nothing happening), traced to
+`GetTrainerApproachDistance`/`GetTrainerApproachDistanceNorth` in `src/trainer_see.c`
+(sight range is a literal tile count in the trainer's *facing* direction, checked
+against `PlayerGetDestCoords` as each step's destination is chosen), and fixed by
+flipping to `MOVEMENT_TYPE_FACE_UP`. Re-confirmed working: a real walkthrough now
+shows the ambush firing exactly one tile out, the correct intro line
+("You're the one from the estate...") appearing, and a real battle starting with the
+correct trainer (Poochyena Lv7) against the player's actual Houndour Lv5.
+
+**Honest gap, not swept under the rug**: the test battle was played out via blind
+button-mashing (no real strategy) and was lost ("Houndour fainted!"), so the win path
+- specifically the custom flee script (`Wasteland_Road_EventScript_ScoutFlees`:
+`setflag` + `applymovement` + `removeobject`, structurally identical to Dad's proven
+exit sequence in the Safe Room) - was not exercised end-to-end this session. Given it
+reuses an already-verified pattern exactly, this is treated as low-risk rather than
+re-tested to exhaustion, but it hasn't been *confirmed* the way this file's other
+fixes have been - worth a deliberate win (or asking Viktor to confirm it live) before
+calling it fully proven.
+
+**Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both rebuilt
+clean. `tools/validate_maps.py Wasteland_Road` shows only its two pre-existing
+warnings (elevation-0 border tiles, connection-seam asymmetry vs. Brightwell), neither
+new nor related to this feature.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

@@ -55,7 +55,7 @@
 #define FLAG_SEEN_ESTATE_GROUNDS_AFTERMATH 0x21 // Wasteland: gates the one-time aftermath narration on the estate grounds map
 #define FLAG_SEEN_BRIGHTWELL_AFTERMATH 0x22 // Wasteland: gates the one-time raid-aftermath narration in Brightwell
 #define FLAG_WASTELAND_UNCONDITIONAL_TRIGGER 0x23 // Wasteland: never actually set - used as the gate on coord_event-driven scripted warps placed on plain (non-door-tagged) ground, where "flag not set" always evaluates true. Reusable across every custom map that needs a scripted exit where no real door tile exists to reuse.
-#define FLAG_UNUSED_0x024    0x24 // Unused Flag
+#define FLAG_DEFEATED_ASHBAND_SCOUT 0x24 // Wasteland: set once the Ashband scout ambush on the Road is defeated - also hides the NPC for good afterward
 #define FLAG_UNUSED_0x025    0x25 // Unused Flag
 #define FLAG_UNUSED_0x026    0x26 // Unused Flag
 #define FLAG_UNUSED_0x027    0x27 // Unused Flag
