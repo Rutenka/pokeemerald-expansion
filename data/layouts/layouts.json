@@ -9327,8 +9327,8 @@
     {
       "id": "LAYOUT_WASTELAND_SAFE_ROOM",
       "name": "Wasteland_SafeRoom_Layout",
-      "width": 6,
-      "height": 6,
+      "width": 9,
+      "height": 7,
       "primary_tileset": "gTileset_Building",
       "secondary_tileset": "gTileset_Lab",
       "border_filepath": "data/layouts/Wasteland_SafeRoom/border.bin",

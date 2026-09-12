@@ -1834,6 +1834,108 @@ same as this tunnel) over a fourth attempt at placing an outdoor trigger correct
 
 **Build state**: `make DEBUG=1` and the normal resting build both rebuilt clean.
 
+### Seventeenth custom feature: a real process, real git history, a personal fork,
+### and the Safe Room's "corruption" turning out to be a proportions problem
+### (2026-09-12, same day)
+
+Viktor asked for a full process reset (used the `grilling` + `domain-modeling` Claude
+Code skills, installed this session from the `mattpocock/skills` collection, alongside
+`grill-with-docs`) rather than continuing to fix bugs one playtest at a time. Interview
+outcome, all confirmed by Viktor: reconstruct the untracked pile of prior work into
+real, per-map git commits (done - see git log, 16 commits from the base tag through
+today, e.g. `85ec6b028e` for the Safe Room, `cb54153f1d` for the Estate Tunnel);
+create and push to a personal GitHub fork, since `origin` had been pointing at the
+upstream `rh-hideout` repo this whole time with zero backup of any of this project's
+work (done - `origin` is now `github.com/Rutenka/pokeemerald-expansion`, `upstream`
+is the original repo); one commit = one map/building going forward, but Viktor only
+gets a manual test route at coarser "playable checkpoint" boundaries, not after every
+single commit; a real automated map/warp/event validator, standalone first and
+promoted into `make check` once proven (not yet built - next up); `docs/roster.md`
+tracking supported vs. catchable species separately (done).
+
+**Before touching any of that, an evidence-based visual audit of the existing map
+chain** (Viktor's own words: the built content "doesn't work and looks bad," decision
+on fix-vs-rebuild delegated to the assistant) - a background agent walked the whole
+safe-room-to-Brightwell chain with real headless screenshots and found: Estate House,
+Estate Tunnel, Road, and all of Brightwell (town + 3 interiors) genuinely look fine;
+Estate Grounds still has the unfixed transient rendering-noise glitch from the
+Eleventh feature entry; and the Safe Room's opening cutscene showed real, repeatable
+visual corruption (horizontal stripe garbage, a checkerboard block, a solid red box)
+the instant the map loaded. Verdict at the time: repair, not rebuild - only two real
+items, not a whole-chain problem.
+
+**The Safe Room "corruption" was re-investigated in more depth and turned out to be a
+real finding, but not the finding it first looked like.** Frame-by-frame headless
+screenshots (not just "wait N frames and look once") showed the exact same striped/
+checkerboard pattern persisted no matter how long the game sat idle, survived a
+same-map self-rewarp, and - the decisive test - was byte-for-byte identical even with
+the opening cutscene's script completely disabled, proving this had nothing to do
+with `MAP_SCRIPT_ON_FRAME_TABLE`, `msgbox` timing, or any script at all. Rendering
+`data/layouts/Wasteland_SafeRoom/map.bin` directly with `tools/tileset_preview.py`
+(no emulator involved) produced pixel-identical "corruption": the grid-pattern floor
+and red door are the room's real, correct, intended art - reused verbatim from
+`LittlerootTown_ProfessorBirchsLab` (metatile 514 is that real vanilla lab's own most
+common floor tile, confirmed by tallying its map data directly). **The actual defect
+was the room's size**: at the original 6x6, the room was so much smaller than the GBA's
+15x10-tile viewport that the primary tileset's border metatile (a bold horizontal-line
+pattern) filled most of the visible screen around a tiny floor island, which reads as
+broken/glitchy at a glance even though every tile was rendering exactly as designed.
+Checking every other real map sharing this exact tileset pair
+(`LittlerootTown_ProfessorBirchsLab` 13x13, `Route114_LanettesHouse` 11x8,
+`Route119_WeatherInstitute` 20x13/20x11) confirmed 6x6 was far smaller than any real
+precedent - the smallest is nearly double the area.
+
+**Fix shipped**: enlarged the room to 9x7 (still deliberately the smallest interior in
+the project, per Viktor's "small/cramped" brief, but no longer smaller than the
+camera viewport itself), keeping the exact same real tile IDs (514 floor, 520
+wall/border, 518/519 door) just at a size where they read as a room instead of a
+sliver. Dad moved from (2,2) to (4,2), the player's canonical start from (2,3) to
+(4,3), the door from (2,5)/(3,5) to (4,6)/(5,6), and Dad's exit movement extended from
+3x `walk_down` to 4x to match the new distance. Confirmed via real headless
+screenshots (border now a modest margin, not the dominant feature) and a full
+cutscene walkthrough (Dad visible, dialogue displays, he walks the new distance to the
+new door and disappears, aftermath text plays, both flags end up set).
+
+**New checklist-worthy lesson**: a room significantly smaller than the GBA's visible
+viewport (15x10 tiles) will show mostly border-fill tiles from almost any player
+position, and a bold/high-contrast border metatile can make a perfectly correctly-
+rendered tiny room look like rendering corruption at a glance. Before concluding a
+"broken-looking" screenshot is an engine bug, render the map's own `.bin` data
+directly with `tools/tileset_preview.py` (no emulator) and compare - if it matches the
+"corrupted" screenshot exactly, the data is correct and the real problem is
+proportions/tile choice, not a bug. Check real room sizes using the same tileset pair
+before picking a "small" custom room's dimensions, the same way item 1 already
+requires checking real furniture arrangements.
+
+**Two more incidental discoveries worth recording:**
+- `pokeemerald.sav`'s flag/var writes persist immediately to the on-disk save file
+  even without an in-game "Save" menu action - confirmed directly (a flag set mid-test
+  in one Python process was still set when a brand-new `MgbaSession` loaded the same
+  `.sav` file in a later, separate process). This means repeated headless testing
+  against the same save file accumulates real, permanent state between separate
+  script runs, not just within one - if a test's outcome looks wrong (an NPC missing,
+  a cutscene never firing), check whether its flag/one-shot-var was already consumed
+  by earlier testing before concluding anything is broken. This is exactly what
+  happened mid-investigation here: `VAR_WASTELAND_SAFE_ROOM_STATE` was already at 1
+  (consumed) from earlier testing in this same session, making the cutscene look
+  completely inert until the var and `FLAG_RECEIVED_WASTELAND_STARTER` were manually
+  reset before re-testing.
+- **`Wasteland_SafeRoom`'s warp indices are no longer what this file previously
+  documented.** Adding the second door tile (Tenth/Eleventh feature entries) inserted
+  a new `warp_events` entry at index 1, silently shifting the canonical player-start
+  warp from index 1 to index 2. The debug-menu testing note earlier in this file
+  ("warp to warp 1, not warp 0") is now **stale and wrong** - warp 1 is a door tile,
+  warp 2 is the real start. Caught by testing, not by re-reading old notes - a good
+  reminder that warp_events arrays are exactly as index-fragile as `map_groups.json`'s
+  array (which already had a standing warning about this), and nothing had flagged
+  that risk for warp indices specifically until it actually bit a test.
+
+**Not yet done**: the standalone map/warp/event validator script (Q4 from the
+interview) - the plan is to build it before the next new map, not retroactively audit
+old ones with it first. Estate Grounds' rendering-noise glitch (Eleventh feature
+entry) is still unfixed. Everything in this entry was verified without launching
+`mgba-qt` - Viktor has not yet seen any of tonight's fixes with his own eyes.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

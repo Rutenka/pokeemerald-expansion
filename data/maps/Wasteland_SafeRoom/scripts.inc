@@ -80,10 +80,19 @@ Wasteland_SafeRoom_EventScript_DadLeaves::
 	releaseall
 	end
 
-@ Dad now stands at (2,2), player at (2,3) (see map.json - warp 1, a landing-
-@ only spot facing him), door at (2,5)/(3,5), so a straight 3-tile walk south
-@ takes him right out through it.
+@ Room is 9x7 (enlarged from an original 6x6 - the room was so much smaller
+@ than the GBA viewport that the primary tileset's border metatile, a
+@ horizontal-line pattern, dominated nearly the whole screen and read as
+@ rendering corruption at a glance; confirmed via a static per-tile render
+@ that the room's own data was never actually wrong, just badly
+@ proportioned - see the reused floor/wall tile IDs below, both copied
+@ verbatim from the real LittlerootTown_ProfessorBirchsLab, which also
+@ uses 514 as its single most common floor tile). Dad stands at (4,2),
+@ player at (4,3) (see map.json - warp 2, a landing-only spot facing him),
+@ door at (4,6)/(5,6), so a straight 4-tile walk south takes him right out
+@ through it.
 Wasteland_SafeRoom_Movement_DadExits:
+	walk_down
 	walk_down
 	walk_down
 	walk_down
