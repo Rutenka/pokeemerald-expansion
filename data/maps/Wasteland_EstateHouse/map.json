@@ -42,7 +42,7 @@
     {
       "type": "trigger",
       "x": 2,
-      "y": 1,
+      "y": 2,
       "elevation": 0,
       "var": "FLAG_WASTELAND_UNCONDITIONAL_TRIGGER",
       "var_value": "FALSE",

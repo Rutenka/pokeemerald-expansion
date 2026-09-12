@@ -2022,6 +2022,74 @@ shared script macro rather than copy-pasting the block above into each affected 
 **Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both rebuilt
 clean.
 
+### Nineteenth custom feature: the map/warp validator script, and a real bug it
+### caught on its first run (2026-09-12, same day)
+
+Built `tools/validate_maps.py`, the Q4 interview deliverable - a standalone, no-build,
+no-emulator static checker reading `map.json`/`layouts.json`/tileset data directly,
+covering the mechanical failure classes that have actually caused real, repeated bugs
+in this project (per the world-building checklist):
+
+- **Dangling warp targets** - `dest_map` exists, `dest_warp_id` is in range for the
+  destination's own `warp_events` (foundational, hasn't actually been hit as a bug,
+  but cheap and catches typos before they become a silent black-screen warp).
+- **coord_event sitting exactly on a warp's landing tile** - the Thirteenth/Fifteenth
+  feature entries' "step-based triggers don't fire on arrival" bug class.
+- **Half-wired two-tile doors** - decodes each map's actual metatile behavior grid
+  (parsing `metatile_attributes.bin` directly, matching `include/global.fieldmap.h`'s
+  documented bit layout) to find door-behavior tiles, then flags a wired door tile
+  whose horizontal neighbor is also door-behavior but has no warp - the
+  Tenth/Eleventh feature entries' bug class.
+- **Suspicious elevation-0 ground** - walkable outdoor tiles at elevation 0
+  (`ELEVATION_TRANSITION`) not near any warp/coord_event (which would be a legitimate
+  wildcard use) - the Tenth feature entry's walk-on-water bug class. A warning, not an
+  error, since it's a heuristic.
+- **Map connection collision continuity** - for every `connections` entry, walks the
+  whole shared edge using the real `FillConnection` offset formula (re-derived for
+  east/west by symmetry with the north/south formula CLAUDE.md already documents) and
+  flags collision mismatches. **Downgraded to a warning after testing against the
+  real, proven-working Road<->Brightwell connection**: it flagged 13 mismatched tile
+  pairs there, none of which are real bugs - most of a connection seam is *expected*
+  to be asymmetric (a route's open ground correctly ending at a town's solid building
+  wall is normal and not a bug), and collision data alone can't distinguish that from
+  the Ninth feature entry's actual bug (a tile that visually *looked* open but wasn't).
+  This check is only useful as a shortlist of exactly which coordinates to look at with
+  `tileset_preview.py --map` or in-game, not as a verdict by itself - documented as
+  such in the tool's own output, not just here.
+
+**Found a real, previously-unknown bug on its very first run against existing shipped
+content**: `Wasteland_EstateHouse`'s arrival-facing coord_event (`FaceEastOnArrival`,
+meant to turn the player away from the stairwell wall on arrival from the Safe Room -
+see the Ninth feature entry) was sitting at (2,1), exactly on `warp_events[0]`'s own
+landing coordinate. Per the same step-based-trigger mechanism documented repeatedly
+elsewhere in this file, this coord_event almost certainly never actually fired -
+meaning every arrival into this room has likely left the player facing whatever
+direction they last faced in the Safe Room, not properly turned into the room, this
+whole time, undetected because nobody had specifically checked player-facing-direction
+after this exact warp. Fixed by moving the trigger to (2,2) - one confirmed-walkable
+tile south, the direction a player arriving at this landing spot naturally moves next
+(verified against the layout's own collision data, not assumed). This is a genuine
+example of the validator paying for itself immediately, not just a smoke test.
+
+**Deliberately scoped tightly for a first version** - not attempted yet: reachability
+analysis (so the connection check could tell "unreachable asymmetry" from "a player
+can actually stand here" automatically), a check for the second half of the "does a
+door's *destination* also have both tiles wired" question (currently only checks the
+door's own map, not cross-referencing the far side), and wild-encounter/item/trainer
+validation from the original interview ask. Extend this script rather than starting a
+second one when picking any of those up - the tileset/layout-loading plumbing already
+here (behavior decoding, connection offset math) is the expensive part to get right
+and is now proven working, not the part worth redoing.
+
+**Next step per the agreed interview plan (R2-Q3)**: keep this as a standalone script
+for fast iteration for now; promote it into a real `make check` test once it's proven
+itself across a few more sessions, the same way `test/wasteland_safe_room.c` was
+formalized only after its underlying logic had already been exercised.
+
+**Build state**: `make -j2` (the resting build) rebuilt clean after the Estate House
+fix. `tools/validate_maps.py` itself needs no build - `python3 tools/validate_maps.py`
+runs directly.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
