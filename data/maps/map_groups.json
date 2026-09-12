@@ -1164,6 +1164,7 @@
   ],
   "gMapGroup_Wasteland": [
     "Wasteland_SafeRoom",
-    "Wasteland_Grayford"
+    "Wasteland_Grayford",
+    "Wasteland_EstateGrounds"
   ]
 }

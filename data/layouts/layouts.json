@@ -9345,6 +9345,17 @@
       "border_filepath": "data/layouts/Wasteland_Grayford/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_Grayford/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ESTATE_GROUNDS",
+      "name": "Wasteland_EstateGrounds_Layout",
+      "width": 40,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Wasteland_EstateGrounds/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_EstateGrounds/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
