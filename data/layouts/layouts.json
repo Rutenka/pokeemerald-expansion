@@ -9356,6 +9356,17 @@
       "border_filepath": "data/layouts/Wasteland_EstateGrounds/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_EstateGrounds/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_BRIGHTWELL",
+      "name": "Wasteland_Brightwell_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/Wasteland_Brightwell/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Brightwell/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
