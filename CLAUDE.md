@@ -2308,6 +2308,77 @@ ones) shows no errors anywhere, only the same pre-existing warnings as before pl
 new elevation-0 warning on Miller's Cut's own border row (consistent with every other
 map's border rows so far, not treated as urgent).
 
+### Twenty-second custom feature: three real bugs from Viktor's first live
+### playtest of tonight's build (2026-09-13)
+
+Viktor's first actual `mgba-qt` session since the original safe-room prototype -
+everything else this whole stretch had only ever been checked headlessly. Found
+three real issues in minutes that headless testing had missed or mischaracterized.
+
+**1. Every Ashband NPC was genuinely invisible.** `OBJ_EVENT_GFX_BIKER` silently
+fails to render in an Emerald-mode build - confirmed by checking every real vanilla
+map that uses it (every single one is an `_Frlg` map, despite the graphics data and
+enum constant existing unconditionally in the shared source with no version guard).
+The sight-trigger, the "!", and the battle all worked correctly - only the sprite
+itself never drew, which is exactly what Viktor described. Reproduced in my own
+headless screenshots once I knew to look for it (a real screenshot 3 tiles from the
+Lookout, well within camera range, shows no sprite at all). Swapped all four Ashband
+object events (Scout, Lookout, Checkpoint Grunt, Enforcer) to `OBJ_EVENT_GFX_HIKER`,
+confirmed rendering correctly via the same test. Worth remembering: an overworld
+sprite constant existing and having real backing graphics data doesn't mean it's
+safe to use outside the game version it's actually ever used in - check real usage,
+not just data presence, the same lesson as the FRLG-only trainer battle pic/class
+caught earlier in the Twentieth feature entry, just one layer deeper (that time it
+was the battle sprite; this time the overworld one).
+
+**2. Blackout never respawned at Brightwell, a real missing feature, not expected
+behavior.** `Wasteland_Brightwell_PokemonCenter` healed the party via `special
+HealPlayerParty` but never registered itself as a respawn point - confirmed by
+diffing against a real vanilla Pokemon Center's own `MAP_SCRIPT_ON_TRANSITION`
+(`PetalburgCity_PokemonCenter_1F_OnTransition`), which calls `setrespawn
+HEAL_LOCATION_PETALBURG_CITY` on every single visit, not just when healing. Ours
+had no `MAP_SCRIPT_ON_TRANSITION` at all. Added two new heal locations
+(`include/constants/heal_locations.h` + `src/data/heal_locations.json`):
+`HEAL_LOCATION_WASTELAND_SAFE_ROOM` (registered via `setrespawn` in the safe room's
+own opening-cutscene script, so an early blackout before ever reaching Brightwell
+sends the player back there) and `HEAL_LOCATION_WASTELAND_BRIGHTWELL` (registered
+via the Pokemon Center's new `MAP_SCRIPT_ON_TRANSITION`, matching real vanilla
+convention exactly). **Confirmed via real headless testing, not just reasoned
+through**: visited Brightwell's Center, lost a battle on the Road, landed back at
+(16,4) right outside the Center door. The Safe Room path uses the identical
+`setrespawn` primitive already proven by that test, but the specific fresh-cutscene
+re-test was inconclusive (an unstrategic blind-mashed battle happened to end in a
+win instead of a loss that run) - treated as low-risk given it's the same proven
+mechanism, not re-claimed as independently confirmed.
+
+**3. The Garden/Road tunnel doors looked like random floating objects, not real
+terrain - a real design problem, not a bug.** Investigated the actual complaint
+directly: a static render of the real rock-door cluster on each map showed exactly
+what Viktor described - a small, isolated 3x2-ish rock block sitting on bare flat
+grass with no surrounding hillside, nothing like how real vanilla ever uses this
+tile art (checked Route116's own real Rusturf Tunnel entrance for comparison - it's
+carved into a massive mountain wall spanning most of the map, never a small
+standalone prop). Viktor's own framing settled the direction: it doesn't need to be
+a cave, and he explicitly doesn't care about the specific theme as long as it reads
+as deliberate rather than random. Rather than importing a whole new building
+(more research, more risk, more time) or fabricating new rock geology with no real
+precedent to copy (repeating the exact mistake this project's own checklist item 1
+exists to prevent), used each map's own real, already-present tree-cluster tile
+pattern (metatiles 198/199, sampled directly from an existing grove already on each
+map) to flank the tunnel doors on both sides - turning an isolated box into a small
+tree-framed nook. Confirmed via both a static render and a real gameplay screenshot
+that the path itself stayed clear and the door still functions (successfully warped
+through into `Wasteland_EstateTunnel` in a live headless test after the change).
+Deliberately a proportionate fix, not a full redesign - "smooth and intentional,"
+which is what was actually asked for.
+
+**Also fixed while investigating**: `Wasteland_MillersCut`'s Lookout NPC had its
+`graphics_id` changed in this same pass since it was one of the four Biker sprites.
+
+**Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both rebuilt
+clean after every fix in this entry. `tools/validate_maps.py` shows no new errors on
+either modified map (Road, Estate Grounds).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
