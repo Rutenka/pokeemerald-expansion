@@ -2379,6 +2379,89 @@ which is what was actually asked for.
 clean after every fix in this entry. `tools/validate_maps.py` shows no new errors on
 either modified map (Road, Estate Grounds).
 
+### Path/terrain design rule set (agreed with Viktor, 2026-09-13) and the real
+### root cause behind "the paths look artificial"
+
+Viktor's detailed complaint (abrupt rectangular path widenings, hard square corners,
+inconsistent width, grass cutting into paths in geometric chunks, intersections
+reading as random sandy blobs, a cave doorway that looked half-rendered) led to a real
+root-cause finding, not a request to hand-tune individual tiles.
+
+**Root cause: Wasteland_Road was a 40-column crop of the real 60-column-wide
+Route117, and the crop boundary sliced directly through Route117's own real,
+well-designed circular plaza** (a genuine "town square" feature with a tree cluster
+in the middle, confirmed by rendering the full uncropped map). Every symptom Viktor
+described - the sudden rectangular widening, the "unfinished-looking edge," the
+intersection that reads as a random sandy area instead of a clear destination - is
+exactly what a real, competently-designed Game Freak plaza looks like when you only
+keep half of it. This is the exact failure mode checklist item 11 (2026-09-12) was
+written to prevent, on the one map that rule was never actually applied to.
+
+**Rule set** (apply before editing any future map, not just when something looks
+wrong afterward):
+- **Never crop a real map so a boundary cuts through a road, junction, plaza, or
+  building.** Either resize the map to fit the whole feature, or move the crop window
+  so the cut falls on genuinely uniform terrain (plain grass, a tree wall) instead.
+  Prefer a whole real map outright over any crop - `EstateHouse`, `Brightwell`,
+  `MillersCut`, and `AshbandCheckpoint` already do this; Road and (mostly) Garden were
+  the exceptions.
+- **Pick one path width per map and hold it.** Widen only at a deliberate
+  destination (a plaza, a building entrance, a bridge approach, a cave mouth), never
+  mid-route because the source tile happened to be wider there.
+- **Bends and junctions come from a real vanilla junction, copied whole** - the shape
+  and every branch, not a path trimmed down to one branch that now looks like it
+  stops for no reason.
+- **A path should never end at a map's own crop boundary.** It should end at a real
+  destination inside the map (a door, a junction, a tree wall) - if a path currently
+  terminates at the map edge, that's a sign the crop cut through something.
+- **A cave mouth needs a real, correctly-assembled surrounding rock face** - the
+  arch-top tiles go *above* the door tile, matching the real source exactly (found and
+  fixed a case tonight where an earlier session had stacked an arch-center tile
+  *below* a door instead of above it, creating a false second doorway - see below).
+  A tree-framed nook (used tonight on both Road and Garden) is an acceptable
+  proportionate interim treatment, not the final word - a full hillside like
+  Route116's own real Rusturf Tunnel entrance is the fuller version of this, not yet
+  done everywhere.
+
+**Concrete fixes shipped tonight, evidence-based, not guessed:**
+1. **`Wasteland_Road` resized from a 40x20 crop to the full, uncropped 60x20
+   Route117.** The plaza is now completely intact. The tunnel door and its tree
+   framing were re-painted onto the fresh data (the whole file was replaced with
+   pure vanilla Route117, which reverted every prior hand-patch on this map,
+   intentionally - most of those patches, on inspection, were working around problems
+   the incomplete crop had created in the first place, not fixing anything real).
+   Also corrected a real collision mistake made while re-painting the door: the rock
+   tiles flanking it must be solid (`collision=1`), matching real VerdanturfTown's own
+   door exactly - only the door tile itself is walkable. The Brightwell connection
+   automatically follows the new right edge (`connections` are edge-relative, no
+   coordinate to update) - re-verified via `tools/validate_maps.py` and a real
+   headless walkthrough of the door.
+2. **The Garden's cave door - the "especially broken," half-rendered one Viktor
+   called out - was a real assembly mistake, not a rendering bug.** The tile directly
+   below the door was metatile 159, the *arch-center* tile that's supposed to sit
+   *above* a door (matching real Verdanturf's own row order) - placed below instead,
+   it rendered as a second, disconnected dark archway right under the real one,
+   exactly matching "half a door painted onto a brown wall." Fixed by swapping it for
+   169 (a plain rock-side tile, already used without issue immediately beside it).
+   Confirmed via a close-up render before/after - the false second doorway is gone,
+   single coherent door remains.
+
+**Explicitly not done yet, scope was too large for one pass**: a full systematic path
+audit of Brightwell/MillersCut/AshbandCheckpoint (lower priority - these are already
+whole real maps, not crops, so the specific root cause found above shouldn't apply,
+but not independently confirmed), and upgrading both cave mouths from "tree-framed
+nook" to a full real hillside formation. Flagged honestly as open, not silently
+dropped.
+
+**Forward-progression question Viktor also asked**: the Ashband Lookout fight on
+Miller's Cut is currently a dead end (its own map's real north door, to Mt. Chimney in
+vanilla, was deliberately left unwired as future content - see the Twenty-first
+feature entry). Viktor's own instinct - attach a genuinely new road/area rather than
+try to sew further content into the existing crop - matches this project's own
+hard-won lesson exactly (whole real maps, never crop-and-stitch). Agreed as the plan;
+the actual content of "what's beyond Miller's Cut" is a real story decision Viktor
+should make, not something to decide unilaterally - not yet built.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
