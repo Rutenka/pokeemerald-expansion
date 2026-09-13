@@ -259,6 +259,50 @@ def check_elevation_zero(map_json, layout, attrs, errors, warnings):
         )
 
 
+def check_event_tiles_walkable(map_json, layout, errors):
+    """Every warp_events and coord_events coordinate on THIS map must itself be
+    collision-open in the current tile data. This exists specifically because a
+    hand-patch that overwrites a region of a map's raw .bin data (e.g. pasting in
+    a rock formation) can silently turn a warp's landing tile, a door tile, or a
+    coord_event trigger tile solid without anyone noticing - the previous version
+    of this validator only checked whether events pointed at valid destinations
+    and metatile *behavior*, never whether the *collision* at an event's own
+    coordinate was still 0. This is exactly the class of bug that trapped a
+    player right outside Wasteland_EstateHouse's door (2026-09-13): a new rock
+    formation was pasted over the mansion door's own landing tile and the
+    arrival-narration coord_event's tile, both silently made solid, and nothing
+    caught it before a real playtest did. Run this after ANY hand-patch to a
+    map's raw tile bytes, not just when adding a new warp - it's cheap and
+    covers every event already on the map, not just the one being worked on.
+    """
+    w, h = layout["width"], layout["height"]
+    grid = load_grid(layout)
+
+    def is_blocked(x, y):
+        if not (0 <= x < w and 0 <= y < h):
+            return False  # out of bounds isn't this check's concern
+        _, collision, _ = grid[y][x]
+        return collision != 0
+
+    for i, wv in enumerate(map_json.get("warp_events", [])):
+        x, y = wv["x"], wv["y"]
+        if is_blocked(x, y):
+            errors.append(
+                f"warp_events[{i}] at ({x},{y}) sits on a collision-blocked tile - "
+                f"a hand-patch likely overwrote this warp's own tile with solid "
+                f"terrain. The warp itself may still fire, but check whether the "
+                f"player can actually stand here / walk away afterward."
+            )
+    for i, ce in enumerate(map_json.get("coord_events", [])):
+        x, y = ce["x"], ce["y"]
+        if is_blocked(x, y):
+            errors.append(
+                f"coord_events[{i}] at ({x},{y}) sits on a collision-blocked tile - "
+                f"this trigger can never fire (the player can never step onto it), "
+                f"and a hand-patch likely overwrote it with solid terrain."
+            )
+
+
 def check_connections(name, map_json, maps_index, errors, warnings):
     layouts = load_layouts()
     connections = map_json.get("connections") or []
@@ -352,6 +396,7 @@ def validate_one(name, maps_index):
     check_coord_event_on_landing_tile(map_json, errors)
     check_doors(map_json, layout, attrs, errors, warnings)
     check_elevation_zero(map_json, layout, attrs, errors, warnings)
+    check_event_tiles_walkable(map_json, layout, errors)
     check_connections(name, map_json, maps_index, errors, warnings)
     return errors, warnings
 

@@ -433,6 +433,36 @@ something breaks.
     genuine `warp_events` entry on a visibly-a-doorway tile, with no coord_event at
     all. This costs one extra map but permanently removes the whole failure class.
 
+17. **After hand-patching a region of a map's raw tile data, re-check every existing
+    warp/coord_event *on that same map*, not just the one thing you were working
+    on.** Confirmed as a real, shipped bug 2026-09-13: rebuilding the Garden's cave
+    door (Seventeenth feature entry) pasted a tall "spine" of rock at columns 4-7,
+    rows 9-15 to make the formation look bigger - directly on top of the mansion
+    door's own landing tile `(5,9)` and the arrival-narration coord_event at
+    `(5,10)`, both silently turned solid. The player walked out of the house
+    straight into a wall with no way to move, at all, the very first thing Viktor
+    saw on his next test. Caught by him within seconds of pressing a direction key -
+    not caught by the assistant, despite a render, a validator run, and a live
+    walk-through of the *other* door on the same map all being done right before
+    calling this "done." **Root cause of why it wasn't caught**: every check that
+    session was scoped to "does the thing I'm working on work" (the tunnel door),
+    never "did I just overwrite something else on this map that already worked."
+    A hand-edit that pastes real byte-for-byte data over a rectangular tile region
+    is, by construction, blind to what it's overwriting unless that's checked
+    separately. **Fixed both the immediate bug and the process gap**: reverted the
+    offending rows to their pre-edit state (keeping the tunnel formation itself,
+    which didn't overlap anything), and added a new automated check to
+    `tools/validate_maps.py` (`check_event_tiles_walkable`) that scans every
+    `warp_events` and `coord_events` coordinate on a map and flags any that sit on
+    a collision-blocked tile - confirmed, by re-running it against the actual
+    broken data pulled from git history, that it would have caught this exact bug
+    before it ever reached Viktor. **Standing rule going forward**: any time a
+    map's raw `.bin` is hand-edited - not just when adding a new warp, every time -
+    run `tools/validate_maps.py` on that map afterward as a non-optional step, and
+    treat a passing run as necessary but review the map's *other* existing
+    events/doors specifically (mentally or via a targeted collision dump) before
+    calling the edit done, not just the region being changed.
+
 ### First custom feature: starter species (done, confirmed 2026-09-07)
 
 Adding the confirmed starter — enhanced Houndour → Houndoom line, exclusive to the
