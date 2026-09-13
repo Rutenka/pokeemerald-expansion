@@ -349,6 +349,18 @@
       "y": 12,
       "respawn_map": "MAP_SIX_ISLAND_POKEMON_CENTER_1F",
       "respawn_npc": "LOCALID_SIX_ISLAND_NURSE"
+    },
+    {
+      "id": "HEAL_LOCATION_WASTELAND_SAFE_ROOM",
+      "map": "MAP_WASTELAND_SAFE_ROOM",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "id": "HEAL_LOCATION_WASTELAND_BRIGHTWELL",
+      "map": "MAP_WASTELAND_BRIGHTWELL",
+      "x": 16,
+      "y": 4
     }
   ]
 }

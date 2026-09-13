@@ -20,6 +20,7 @@ Wasteland_SafeRoom_OnFrame:
 
 Wasteland_SafeRoom_EventScript_OpeningCutscene::
 	setvar VAR_WASTELAND_SAFE_ROOM_STATE, 1
+	setrespawn HEAL_LOCATION_WASTELAND_SAFE_ROOM
 	lockall
 	turnobject LOCALID_PLAYER, DIR_NORTH
 	msgbox Wasteland_SafeRoom_Text_DadUrgent1, MSGBOX_DEFAULT

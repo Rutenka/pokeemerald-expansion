@@ -5,7 +5,21 @@
 @ decision (2026-09-12): this one still works, unlike the mart next door -
 @ someone stayed and kept it running.
 Wasteland_Brightwell_PokemonCenter_MapScripts::
+	map_script MAP_SCRIPT_ON_TRANSITION, Wasteland_Brightwell_PokemonCenter_OnTransition
 	.byte 0
+
+@ Real bug found via Viktor's own playtesting (2026-09-13): this map heals the
+@ party via `special HealPlayerParty` but was never registering itself as the
+@ player's respawn point, unlike every real vanilla Pokemon Center (which all
+@ do this in their own MAP_SCRIPT_ON_TRANSITION, e.g.
+@ PetalburgCity_PokemonCenter_1F's `setrespawn HEAL_LOCATION_PETALBURG_CITY` -
+@ confirmed missing here by comparison, not guessed). Without this, blacking
+@ out anywhere in the game would always send the player back to whatever
+@ heal location the save happened to start with, never to Brightwell no
+@ matter how many times they healed here.
+Wasteland_Brightwell_PokemonCenter_OnTransition:
+	setrespawn HEAL_LOCATION_WASTELAND_BRIGHTWELL
+	end
 
 @ Real bug history: this originally called the engine's shared
 @ Common_EventScript_PkmnCenterNurse (data/scripts/pkmn_center_nurse.inc), which
