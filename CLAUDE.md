@@ -2462,6 +2462,71 @@ hard-won lesson exactly (whole real maps, never crop-and-stitch). Agreed as the 
 the actual content of "what's beyond Miller's Cut" is a real story decision Viktor
 should make, not something to decide unilaterally - not yet built.
 
+### Seventeenth custom feature: both cave doors rebuilt as real, larger hillside
+### formations transplanted from vanilla Route116 (2026-09-13)
+
+Viktor's most recent feedback (after praising the Twelfth-through-Sixteenth entries'
+path/junction cleanup) singled out the two cave doors specifically: the first
+(Garden's) had a doorway that read as "cut off," and both still looked like
+"isolated rectangular blocks of cliff texture... pasted into flat grass," with no
+sense of a larger hillside behind them. Explicit spec: irregular natural outline,
+extend the rock formation to imply a bigger hillside/mountain beyond the map, blend
+via cliffs/rocks/trees, keep the entrance fully visible/framed, real approach path.
+
+**Root cause of "isolated rectangular block": the doors were only ever the 3x2
+`145/159/167/169` cluster itself, with a couple of hand-picked tree tiles flanking
+it (the Sixteenth entry's fix) - never an actual surrounding rock mass.** A real
+vanilla cave mouth is never just the door cluster; it's a small piece of a much
+larger, irregular rock formation the door happens to be embedded in. Confirmed by
+inspecting the door cluster's real usage in vanilla `Route116` (`(47,8)`, same
+`gTileset_General` primary the door tiles already come from) - it sits inside a
+~17x11 tile irregular hillside with a real approach corridor cut through it, not a
+flat rectangle.
+
+**What shipped**: transplanted real, raw tile data (metatile+collision+elevation,
+copied byte-for-byte from `Route116/map.bin` via direct `.bin` editing, never
+hand-invented) from around that same door into both `Wasteland_EstateGrounds` and
+`Wasteland_Road`, positioned so the door lands on the exact same `warp_events`
+coordinate each map already had (`(10,17)` Garden, `(17,6)` Road) - **no map.json
+changes needed at all**, only the two `.bin` files.
+
+- **Garden**: pasted a "mushroom" shape - a wide low base (source rows 7-10, all 17
+  source columns) across Garden rows 16-19/cols 4-20 (filling the previously-bare
+  grass gap between the garden's fence boundary and the map's south edge), plus a
+  narrower vertical "spine" (source rows 0-6, only the leftmost 4 source columns,
+  which happen to be a real repeating cliff-face column in the source) rising
+  through Garden rows 9-15/cols 4-7, poking up past the garden's fence/path band
+  right next to the map's own left-edge tree line (blends into it, satisfying the
+  "use surrounding trees" spec point for free, not by design). The result reads as
+  a hillside that continues up past the garden's cultivated area, not a hole in
+  the lawn.
+- **Road**: pasted a single 7x11 block (source rows 2-8, columns spanning the door's
+  real neighborhood) directly onto Road rows 0-6/cols 11-21 - the one open-ish strip
+  of land between Road's two existing ponds and the flower-plot fence below the
+  door. Accepted a small (~3-column) trim into the left pond's dock/edge
+  decoration to fit; the ponds themselves and the flower plot are untouched.
+- Confirmed the door tile itself landed correctly at both locations before doing
+  anything else (`167`, collision 0, elevation 0 - unpacked straight from the copied
+  raw value, not recomputed) - this is what let the door coordinate stay unchanged.
+- `tools/validate_maps.py` re-run clean (pre-existing, unrelated warnings only:
+  Brightwell's own long-standing decorative-door warning, and elevation-0 warnings
+  on tiles that are copied verbatim from vanilla Route116's own working data, not a
+  hand-patch - same caveat as always, real vanilla data isn't "wrong" just because a
+  generic heuristic flags it).
+- **Confirmed via real gameplay screenshots and a real functional walk-through**
+  (`tools/mgba_probe.py`, driving the DEBUG-menu warp tool programmatically,
+  boot_to_overworld() + scripted digit entry - both builds' debug menus, no Viktor
+  involvement): both formations render as genuine irregular hillsides with the
+  door clearly dark/framed/visible from a normal approach distance (not
+  sprite-occluded), and walking *up into* each door from a few tiles south
+  correctly triggers `TryDoorWarp` into `Wasteland_EstateTunnel` and lands at the
+  expected coordinate on the other side, for both Garden→Tunnel and Road→Tunnel
+  directions. This is the first cave-formation fix this project has verified with
+  both a real render *and* a real walk-in-and-warp check before calling it done,
+  rather than a render alone.
+
+**Build state**: both `make -j2` (normal) and `make DEBUG=1 -j2` rebuilt clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
