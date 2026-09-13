@@ -2527,6 +2527,146 @@ changes needed at all**, only the two `.bin` files.
 
 **Build state**: both `make -j2` (normal) and `make DEBUG=1 -j2` rebuilt clean.
 
+### Twenty-third custom feature: the corporate settlement - Rustboro, a checkpoint,
+### and the game's first proper boss (2026-09-13, autonomous per Viktor's explicit
+### "work on a bigger new update before I play through again")
+
+Confirmed direction via `AskUserQuestion`: the next major area is a corporate-
+controlled settlement, for tonal contrast with Brightwell/the Ashband thread, a home
+for the first Gym-Leader-style boss, and a seed for the "father/company caused the
+collapse" thread. Reached from Miller's Cut's real, previously-unwired north door
+(led to Mt. Chimney in vanilla JaggedPass - see the Twenty-first feature entry).
+
+**New maps, all whole real vanilla layouts reused verbatim, reskin only (per checklist
+item 11):**
+- **`Wasteland_Rustboro`** = vanilla `RustboroCity` (40x60, `gTileset_General`+
+  `gTileset_Rustboro`) - Devon Corporation's real home city in vanilla, a genuinely
+  free thematic fit for "corporate-controlled settlement" that a previous session had
+  already scoped and deferred (Eighth feature entry). All 16 real NPC
+  positions/sprites kept as-is (one exception: the vanilla "Rival" placeholder slot
+  was dropped entirely, not relevant to this story); only dialogue was reflavored
+  toward a surveilled-but-functional corporate tone with the brief's requested
+  "absurd bureaucracy" humor (badge policies, compliance reports nobody reads, a
+  teacher who smiles for "exactly the right amount of time"). Real signs reflavored
+  the same way, including turning the real Devon Corp sign into an explicit
+  "RESTRICTED ACCESS" notice.
+- **`Wasteland_CorpCheckpoint`** = vanilla `BattleFrontier_ReceptionGate` (9x14,
+  `gTileset_General`+`gTileset_BattleFrontier`) - a real north-south gate-building
+  layout, reused as the border checkpoint between Miller's Cut and the city. One
+  guard NPC (`OBJ_EVENT_GFX_POLICEMAN`) with bureaucratic-comedy dialogue, no battle
+  (deliberately - the comedy needs him harmless, not a gatekeeping fight).
+- **`Wasteland_RustboroGym`** = vanilla `RustboroCity_Gym` (11x20,
+  `gTileset_Building`+`gTileset_RustboroGym`) - reflavored as the "Overseer's
+  Assessment Center" (still colloquially "the Gym" per an NPC's own line, per the
+  brief's "regional bosses mix gym leaders and warlords" note plus the bureaucracy
+  joke of an authoritarian re-brand nobody actually uses). All 5 real NPC
+  positions/sprites kept (guide + 3 gauntlet trainers + Roxanne's own slot, now the
+  boss); genuinely reused `trainerbattle_single` structure identical to vanilla's own
+  Roxanne script, not reinvented.
+- **`Wasteland_Rustboro_PokemonCenter` / `_Mart`** = the same universal shared
+  `LAYOUT_POKEMON_CENTER_1F`/`LAYOUT_MART` interiors already used for Brightwell's -
+  but unlike Brightwell's raided mart, both are fully staffed and functional here,
+  directly matching the design brief's "corporate cities... run genuinely functional
+  societies" line. The mart's real clerk position/sprite
+  (`OBJ_EVENT_GFX_MART_EMPLOYEE` at the real vanilla counter tile) was copied from
+  `OldaleTown_Mart`, not guessed.
+
+**New engine plumbing**: `TRAINER_CLASS_CORPORATE` (new class + battle-intro name,
+mirroring exactly how `TRAINER_CLASS_ASHBAND` was added in the Twentieth feature
+entry - a class name string used in `trainers.party` must have a matching enum entry
+in `include/constants/trainers.h` and a `gTrainerClasses[]` row in
+`src/battle_main.c`, or the build fails at the data.c inclusion of the generated
+`trainers.h` with an "undeclared" error - caught immediately by the build, not
+guessed at). Four new trainers (`TRAINER_CORP_TRAINER_1/2/3`, `TRAINER_CORP_OVERSEER`,
+ids 859-862) - **this uses up the very last of the engine's 9-trainer custom-flag
+budget** (855-863, all now allocated between the Ashband and this). New flags
+(0x2A-0x2F) for each trainer's defeat state (though per real vanilla convention,
+observed by checking `RustboroCity_Gym`'s own real trainers, ordinary gauntlet
+trainers don't actually use a hide-flag - only the object's "flag" field for
+permanently hiding an NPC, which vanilla itself only does for one-time story
+encounters, not rematchable gym trainers; the 3 gauntlet trainers here correctly use
+`flag: "0"`, matching that real convention rather than the Ashband's one-time-ambush
+pattern). A new heal location (`HEAL_LOCATION_WASTELAND_RUSTBORO`) and its own
+`MAP_SCRIPT_ON_TRANSITION`/`setrespawn` on the new Pokemon Center, matching every
+other town's pattern exactly (Twenty-second feature entry's lesson applied
+proactively this time, not found as a bug afterward).
+
+**A real trainer-name length bug caught immediately by the build, not guessed**: the
+boss's `Name:` field was originally "OVERSEER REYES" (14 characters) - `trainerName`
+is a fixed `TRAINER_NAME_LENGTH` (10) buffer; anything longer produces a real
+"excess elements in array initializer" compile error, not a truncation or a runtime
+bug. Fixed by shortening the data-level `Name:` to "REYES" - her fuller "OVERSEER
+REYES" framing still appears in actual dialogue text, which has no such limit.
+
+**A real TM-item-name bug also caught by the build**: this expansion's TM items are
+named by move (`ITEM_TM_<MOVE_NAME>`) but only for the specific move list in
+`include/constants/tms_hms.h`'s `FOREACH_TM` macro - `ITEM_TM_THUNDER_WAVE` doesn't
+exist because Thunder Wave isn't a TM move in this configuration, despite the naming
+convention suggesting any move name would work. Checked the real list before picking
+a substitute (`ITEM_TM_SHOCK_WAVE`, thematically fitting the boss's own Magneton)
+rather than guessing again.
+
+**Two real map-design bugs found by testing before this was called done, both
+fixed before Viktor ever sees this build:**
+1. **A missing `<MapName>_MapScripts::` label is a real link error, not just a style
+   convention.** `Wasteland_CorpCheckpoint`'s `scripts.inc` was first written with
+   only its guard's dialogue script - every map's compiled `map.json` unconditionally
+   references `<MapName>_MapScripts` from `data/maps.s`, so a map with genuinely no
+   map-load behavior still needs the label present with a bare `.byte 0` body (the
+   same pattern every other "layout only, no scripted behavior" map in this project
+   already uses, e.g. `Wasteland_EstateTunnel`) - caught immediately as an
+   `undefined reference` at link time, fixed by adding the missing header.
+2. **A landing spot's own immediate open neighbor is not the same question as
+   whether that landing spot is reachable from the rest of the map - the exact BFS
+   lesson from the Twenty-first feature entry, repeated here because it wasn't
+   applied proactively that time either.** The first Rustboro landing coordinate
+   (`(32,58)`, picked by eyeballing a small locally-open patch near the south edge)
+   turned out to sit in a genuinely disconnected 36-tile pocket, sealed off from the
+   rest of the city by solid walls one row north - confirmed by running a real BFS
+   from a known-connected reference point (the Gym's own door) and checking whether
+   the candidate coordinate was ever reached (**36 tiles reachable from the bad spot,
+   1036 from a real door** - not a subtle case). This was caught by scripted headless
+   testing (the arrival narration's trigger tile turned out to be solid, immediately
+   suspicious) before Viktor ever saw it, not assumed safe because it looked open in
+   a data dump. Fixed by re-running the same BFS from the Gym door and picking
+   `(15,59)` - a tile confirmed to be part of that same 1036-tile connected
+   component - as the new landing/narration-trigger pair. **New checklist-worthy
+   lesson, generalizing the Twenty-first entry's one-off finding into a standing
+   rule**: before finalizing ANY new landing spot on a large open map (not just deep
+   interior navigation), run a real BFS reachability check from a known-good
+   reference point on that same map - "this specific tile has open neighbors" is not
+   sufficient, only "this tile is in the same connected component as everywhere else
+   a player needs to reach" is.
+
+**Confirmed via real headless gameplay** (`tools/mgba_probe.py`, scripted debug-menu
+warps + real D-pad movement, no Viktor involvement): walked the complete chain -
+Miller's Cut's real north door → into the checkpoint (confirmed landing, confirmed
+walking the guard's corridor) → out the checkpoint's north door → landed in Rustboro
+at the corrected, BFS-verified spot → the arrival narration fired correctly and set
+its flag (confirmed via a direct flag read, not just a screenshot) → walked into the
+Gym → the first gauntlet trainer's sight-based ambush fired correctly, producing a
+real battle-transition screen with the trainer's actual sprite on screen. The
+Overseer boss fight itself (the gauntlet's final encounter) was not personally played
+to a win/loss this session - same disclosure standard as prior entries' honestly-
+flagged gaps (the Ashband Scout's win path, the deeper Miller's Cut interior) - low
+risk given it reuses the exact same `trainerbattle_single` pattern already proven
+working on this map's own gauntlet trainer, but not independently confirmed.
+
+**Deliberately not built this pass, to keep the milestone shippable rather than
+open-ended**: interiors for Devon Corp, the Pokémon School, or any of Rustboro's
+plain houses/flats (their real doors are simply omitted from `warp_events`, same
+accepted trade-off Brightwell's own unbuilt buildings already established as
+precedent - not a new risk category). No new wild encounter table (Rustboro is a
+city; nothing in this pass needed one). The actual "what's behind the corporate
+guilt" reveal is still not written - this area seeds the tone and the roster, not
+the plot payoff itself.
+
+**Build state**: both `make -j2` (normal, the resting build) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` run across every new map - clean except the
+expected/accepted "closed building door" warnings on Rustboro (9 of them, matching
+the 9 real buildings deliberately left unwired) and one pre-existing Miller's Cut
+elevation warning unrelated to this session's changes.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

@@ -24,15 +24,28 @@ Tera are disabled project-wide), progressive reveal tied to exploration.
 | Koffing | Catchable | `Wasteland_MillersCut`, wild encounter (levels 8-12); also on the Ashband Enforcer's team | Toxic-gas support/attrition | First roster addition not sourced from the reused vanilla table - picked for the toxic/bunker checkpoint theme, per selection principle 2 |
 | Mightyena | Catchable (evolution only, not yet in any wild table) | Evolves from Poochyena at level 18 (plain vanilla level-up); also the Ashband Enforcer's lead | Physical raider "attack dog" | Ties the Ashband's dog motif together across the Scout (Poochyena) and Enforcer (Mightyena) - no new work needed, this is Poochyena's real vanilla evolution |
 | Zigzagoon (Ashband Lookout's team) | see above | Trainer-only for now, level 9 | — | Same species already on the roster, just also used as a trainer's Pokémon for variety instead of another Poochyena |
+| Magnemite | Catchable (trainer-only for now) | `Wasteland_RustboroGym`, Corporate trainer's team (Lv14) | Fast special/status disruptor, immune to Ground | First "clean/corporate/industrial" pick - contrasts the scrappy wasteland fauna so far, fits the security-drone framing of the assessment center |
+| Baltoy | Catchable (trainer-only for now) | `Wasteland_RustboroGym`, Corporate trainer's team (Lv14) | Bulky psychic/ground utility, Rapid Spin support | Ancient-tech/ground-psychic fit for the corporate faction; ties into the setting's "Pokémon-derived psychic network" theme |
+| Voltorb | Catchable (trainer-only for now) | `Wasteland_RustboroGym`, Corporate trainer's team (Lv15) | Fast special disruptor | Round drone/security-orb read, matches the surveillance theme |
+| Magneton | Catchable (evolution only, not yet in any wild table) | Evolves from Magnemite (plain vanilla level-up); also the Overseer boss's lead | Bulkier special/status disruptor, Steel/Electric coverage | Boss-tier step up from the gauntlet trainer's Magnemite |
+| Solrock | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's team (Lv18) | Bulky psychic/rock, sets up with Cosmic Power | Direct thematic tie to the setting's psychic-control-network premise - a "surveillance eye" read |
+| Porygon | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's ace (Lv19) | Recovery + Agility stall/sweeper, all-type coverage via Conversion | Literally an artificial/digital Pokémon - the single best-fitting species in the whole roster for "a corporation that builds Pokémon-derived control tech," used deliberately as the boss's ace |
 
-**Trainer roster so far** (all `TRAINER_CLASS_ASHBAND`, reusing the vanilla Aqua Grunt
-battle sprite purely as art - see the Twentieth feature entry in CLAUDE.md): Scout
-(`Wasteland_Road`, Poochyena Lv7), Lookout (`Wasteland_MillersCut`, Zigzagoon Lv9),
-Checkpoint Grunt (`Wasteland_AshbandCheckpoint`, Poochyena Lv11), Enforcer
-(`Wasteland_AshbandCheckpoint` boss, Mightyena Lv14 + Koffing Lv13). Only 9 total
-custom trainer slots exist before trainer-flag space overflows (see
-`include/constants/opponents.h`) - 4 used, 5 remain.
+**Trainer roster so far**: the Ashband (all `TRAINER_CLASS_ASHBAND`, reusing the
+vanilla Aqua Grunt battle sprite purely as art - see the Twentieth feature entry in
+CLAUDE.md): Scout (`Wasteland_Road`, Poochyena Lv7), Lookout (`Wasteland_MillersCut`,
+Zigzagoon Lv9), Checkpoint Grunt (`Wasteland_AshbandCheckpoint`, Poochyena Lv11),
+Enforcer (`Wasteland_AshbandCheckpoint` boss, Mightyena Lv14 + Koffing Lv13). The
+corporate settlement (all `TRAINER_CLASS_CORPORATE`, reusing "Expert M/F" and "Leader
+Roxanne" battle sprites as art - see the Twenty-third feature entry): Kessler
+(`Wasteland_RustboroGym`, Magnemite Lv14), Priya (`Wasteland_RustboroGym`, Baltoy
+Lv14), Drummond (`Wasteland_RustboroGym`, Voltorb Lv15), Overseer Reyes
+(`Wasteland_RustboroGym` boss, Magneton Lv17 + Solrock Lv18 + Porygon Lv19 - the
+game's first proper multi-mon boss fight). All 9 total custom trainer slots are now
+used (see `include/constants/opponents.h`) - no more custom trainers can be added
+without freeing flag space (see that file's own comment for how).
 
-**Open**: no gym-leader/proper "regional boss" (as opposed to a checkpoint-tier
-enforcer) exists yet. Brightwell's own non-service buildings and Grayford are still
-unconnected/undeveloped.
+**Open**: Brightwell's own non-service buildings and Grayford are still
+unconnected/undeveloped. Most of Rustboro's real buildings (Devon Corp, the Pokémon
+School, several houses/flats) are deliberately left closed for now - see the
+Twenty-third feature entry in CLAUDE.md.

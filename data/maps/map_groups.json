@@ -1174,6 +1174,11 @@
     "Wasteland_Brightwell_House",
     "Wasteland_EstateTunnel",
     "Wasteland_MillersCut",
-    "Wasteland_AshbandCheckpoint"
+    "Wasteland_AshbandCheckpoint",
+    "Wasteland_CorpCheckpoint",
+    "Wasteland_Rustboro",
+    "Wasteland_RustboroGym",
+    "Wasteland_Rustboro_PokemonCenter",
+    "Wasteland_Rustboro_Mart"
   ]
 }

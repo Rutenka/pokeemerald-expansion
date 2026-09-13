@@ -9422,6 +9422,39 @@
       "border_filepath": "data/layouts/Wasteland_AshbandCheckpoint/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_AshbandCheckpoint/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_RUSTBORO",
+      "name": "Wasteland_Rustboro_Layout",
+      "width": 40,
+      "height": 60,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Wasteland_Rustboro/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Rustboro/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_CORP_CHECKPOINT",
+      "name": "Wasteland_CorpCheckpoint_Layout",
+      "width": 9,
+      "height": 14,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_BattleFrontier",
+      "border_filepath": "data/layouts/Wasteland_CorpCheckpoint/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_CorpCheckpoint/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_RUSTBORO_GYM",
+      "name": "Wasteland_RustboroGym_Layout",
+      "width": 11,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_RustboroGym",
+      "border_filepath": "data/layouts/Wasteland_RustboroGym/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_RustboroGym/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

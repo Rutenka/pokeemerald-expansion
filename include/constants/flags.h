@@ -61,6 +61,12 @@
 #define FLAG_ITEM_ASHBAND_CHECKPOINT 0x27 // Wasteland: the checkpoint's item ball
 #define FLAG_SEEN_MILLERS_CUT_AFTERMATH 0x28 // Wasteland: gates the one-time arrival narration on Miller's Cut
 #define FLAG_DEFEATED_ASHBAND_LOOKOUT 0x29 // Wasteland: hides the Miller's Cut ambush NPC after defeat
+#define FLAG_DEFEATED_CORP_TRAINER_1 0x2A // Wasteland: Rustboro Gym gauntlet trainer 1
+#define FLAG_DEFEATED_CORP_TRAINER_2 0x2B // Wasteland: Rustboro Gym gauntlet trainer 2
+#define FLAG_DEFEATED_CORP_TRAINER_3 0x2C // Wasteland: Rustboro Gym gauntlet trainer 3
+#define FLAG_DEFEATED_CORP_OVERSEER 0x2D // Wasteland: Rustboro Gym boss, first proper boss fight
+#define FLAG_SEEN_RUSTBORO_ARRIVAL 0x2E // Wasteland: gates the one-time arrival narration on Wasteland_Rustboro
+#define FLAG_ITEM_WASTELAND_RUSTBORO_ITEM_1 0x2F // Wasteland: Rustboro's hidden item ball
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag

@@ -523,6 +523,7 @@ enum TrainerClassID
     TRAINER_CLASS_PAINTER_FRLG,
 
     TRAINER_CLASS_ASHBAND, // Wasteland: the raider faction responsible for the estate attack
+    TRAINER_CLASS_CORPORATE, // Wasteland: Rustboro's corporate security/testing staff
 
     TRAINER_CLASS_COUNT,
 };

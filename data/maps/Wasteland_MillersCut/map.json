@@ -50,6 +50,20 @@
       "elevation": 0,
       "dest_map": "MAP_WASTELAND_ASHBAND_CHECKPOINT",
       "dest_warp_id": "0"
+    },
+    {
+      "x": 13,
+      "y": 5,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_CORP_CHECKPOINT",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 14,
+      "y": 5,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_CORP_CHECKPOINT",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [

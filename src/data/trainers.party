@@ -16921,3 +16921,77 @@ Level: 14
 
 Koffing
 Level: 13
+
+=== TRAINER_CORP_TRAINER_1 ===
+Name: KESSLER
+Class: Corporate
+Pic: Expert M
+Gender: Male
+Double Battle: No
+AI: Basic Trainer / Check Bad Move
+
+Magnemite
+Level: 14
+- Tackle
+- Thunder Wave
+- Sonic Boom
+- Screech
+
+=== TRAINER_CORP_TRAINER_2 ===
+Name: PRIYA
+Class: Corporate
+Pic: Expert F
+Gender: Female
+Double Battle: No
+AI: Basic Trainer / Check Bad Move
+
+Baltoy
+Level: 14
+- Confusion
+- Rock Tomb
+- Harden
+- Rapid Spin
+
+=== TRAINER_CORP_TRAINER_3 ===
+Name: DRUMMOND
+Class: Corporate
+Pic: Expert M
+Gender: Male
+Double Battle: No
+AI: Basic Trainer / Check Bad Move
+
+Voltorb
+Level: 15
+- Charge
+- Sonic Boom
+- Rollout
+- Screech
+
+=== TRAINER_CORP_OVERSEER ===
+Name: REYES
+Class: Corporate
+Pic: Leader Roxanne
+Gender: Female
+Double Battle: No
+AI: Basic Trainer / Check Bad Move / Try To Faint / Smart Switching
+
+Magneton
+Level: 17
+- Thunder Wave
+- Sonic Boom
+- Screech
+- Supersonic
+
+Solrock
+Level: 18
+- Rock Throw
+- Confusion
+- Psywave
+- Cosmic Power
+
+Porygon
+Level: 19
+- Psybeam
+- Agility
+- Recover
+- Conversion

@@ -865,11 +865,16 @@
 #define TRAINER_ASHBAND_ENFORCER            857 // Wasteland: checkpoint boss
 #define TRAINER_ASHBAND_LOOKOUT             858 // Wasteland: sight-triggered ambush on Wasteland_MillersCut
 
+#define TRAINER_CORP_TRAINER_1               859 // Wasteland: Rustboro Gym gauntlet trainer
+#define TRAINER_CORP_TRAINER_2               860 // Wasteland: Rustboro Gym gauntlet trainer
+#define TRAINER_CORP_TRAINER_3               861 // Wasteland: Rustboro Gym gauntlet trainer
+#define TRAINER_CORP_OVERSEER                862 // Wasteland: Rustboro Gym boss
+
 // NOTE: Because each Trainer uses a flag to determine when they are defeated, there is only space for 9 additional trainers before trainer flag space overflows
 //       More space can be made by shifting flags around in constants/flags.h or changing how trainer flags are handled
 //       MAX_TRAINERS_COUNT can be increased but will take up additional saveblock space
 
-#define TRAINERS_COUNT_EMERALD     859
+#define TRAINERS_COUNT_EMERALD     863
 #define MAX_TRAINERS_COUNT_EMERALD 864
 
 #if IS_FRLG

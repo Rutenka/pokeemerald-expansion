@@ -361,6 +361,12 @@
       "map": "MAP_WASTELAND_BRIGHTWELL",
       "x": 16,
       "y": 4
+    },
+    {
+      "id": "HEAL_LOCATION_WASTELAND_RUSTBORO",
+      "map": "MAP_WASTELAND_RUSTBORO",
+      "x": 16,
+      "y": 38
     }
   ]
 }

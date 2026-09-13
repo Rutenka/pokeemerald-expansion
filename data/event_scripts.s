@@ -1062,6 +1062,11 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_EstateTunnel/scripts.inc"
 	.include "data/maps/Wasteland_MillersCut/scripts.inc"
 	.include "data/maps/Wasteland_AshbandCheckpoint/scripts.inc"
+	.include "data/maps/Wasteland_CorpCheckpoint/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro/scripts.inc"
+	.include "data/maps/Wasteland_RustboroGym/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_PokemonCenter/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Mart/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"
