@@ -84,6 +84,25 @@ def load_behavior_indices():
 
 BEHAVIORS = load_behavior_indices()
 DOOR_BEHAVIORS = {BEHAVIORS["MB_NON_ANIMATED_DOOR"], BEHAVIORS["MB_ANIMATED_DOOR"]}
+# Every metatile behavior that actually causes a passive warp_events entry to
+# fire on its own via ordinary walking (TryDoorWarp, ForcedMovement_Warp*,
+# stairs, etc.) - a warp_events array entry with NONE of these on its own
+# tile, and no coord_event at the same coordinate either, is real destination
+# *data* that nothing ever invokes (see check_warp_has_trigger below and the
+# Twenty-ninth feature entry's real, shipped bug: Rustboro's return warp sat
+# on plain MB_NORMAL ground and simply never fired on foot).
+WARP_TRIGGER_BEHAVIORS = DOOR_BEHAVIORS | {
+    b for name, b in BEHAVIORS.items()
+    if name in (
+        "MB_NORTH_ARROW_WARP", "MB_SOUTH_ARROW_WARP", "MB_EAST_ARROW_WARP", "MB_WEST_ARROW_WARP",
+        "MB_WATER_SOUTH_ARROW_WARP", "MB_DEEP_SOUTH_WARP",
+        "MB_AQUA_HIDEOUT_WARP", "MB_LAVARIDGE_GYM_1F_WARP", "MB_LAVARIDGE_GYM_B1F_WARP",
+        "MB_BATTLE_PYRAMID_WARP", "MB_MOSSDEEP_GYM_WARP",
+        "MB_UP_RIGHT_STAIR_WARP", "MB_UP_LEFT_STAIR_WARP", "MB_DOWN_RIGHT_STAIR_WARP", "MB_DOWN_LEFT_STAIR_WARP",
+        "MB_STAIRS_OUTSIDE_ABANDONED_SHIP", "MB_ROCK_STAIRS",
+        "MB_WATERFALL", "MB_ASHGROVE_LADDER",
+    )
+}
 WATER_BEHAVIORS = {
     BEHAVIORS[name]
     for name in (
@@ -184,15 +203,31 @@ def check_warps(map_json, maps_index, errors):
             errors.append(f"warp_events[{i}] at ({w['x']},{w['y']}): {msg}")
 
 
-def check_coord_event_on_landing_tile(map_json, errors):
+def check_coord_event_on_landing_tile(map_json, warnings):
+    # Downgraded from an error to a warning (2026-09-14): a coord_event on a
+    # landing tile is the Thirteenth/Fifteenth feature entries' real bug
+    # class ONLY if the script is meant to fire on/soon after arrival (e.g.
+    # arrival narration) - warps arriving there don't count as a "step", so
+    # it silently never fires. But the Twenty-ninth feature entry found a
+    # second, legitimate use of this exact same property: an *outbound* exit
+    # trigger deliberately placed on a landing tile, specifically so it does
+    # NOT fire on arrival (no step taken) and only fires later, when a
+    # player genuinely walks back onto that tile to leave. This check can't
+    # tell those two cases apart from the data alone - flag it, but verify
+    # by intent (is this script supposed to run right after arriving, or
+    # only when the player deliberately returns here?) before assuming it's
+    # broken.
     warp_coords = {(w["x"], w["y"]) for w in map_json.get("warp_events", [])}
     for i, ce in enumerate(map_json.get("coord_events", [])):
         if (ce["x"], ce["y"]) in warp_coords:
-            errors.append(
+            warnings.append(
                 f"coord_events[{i}] at ({ce['x']},{ce['y']}) sits exactly on a warp's landing "
-                f"tile - step-based triggers can silently never fire on a tile the player warps "
-                f"into rather than walks onto (see checklist item 6 / the Thirteenth and "
-                f"Fifteenth feature entries). Move it one real step away."
+                f"tile - a step-based trigger here silently never fires on arrival (warping in "
+                f"isn't a 'step'), only on a later genuine step onto the same tile. Broken if "
+                f"this is meant to run right after arriving (e.g. narration - see checklist item "
+                f"6 / the Thirteenth and Fifteenth feature entries); correct and intentional if "
+                f"this is an outbound exit trigger that should only fire when a player "
+                f"deliberately walks back here to leave (see the Twenty-ninth feature entry)."
             )
 
 
@@ -307,6 +342,51 @@ def check_event_tiles_walkable(map_json, layout, attrs, errors):
             )
 
 
+def check_warp_has_trigger(map_json, layout, attrs, warnings):
+    """A warp_events entry is only destination *data* - it does nothing on
+    its own unless something actually invokes it: either the tile it sits on
+    has a real passive warp-triggering behavior (a door, an arrow-warp,
+    stairs, ...), or a coord_event at that same coordinate runs an explicit
+    `warp`/`warpdoor` script command. A warp_events entry on plain ground
+    with neither is silent, permanently-dead data - it will never fire no
+    matter how a player approaches it, and (this is what makes it dangerous)
+    it still looks completely correct in every other check: valid
+    destination, open collision, no elevation mismatch. Confirmed as a real,
+    shipped bug 2026-09-14: Rustboro's return warp to the corporate
+    checkpoint sat on plain MB_NORMAL ground with no coord_event, and simply
+    never fired for a real player, despite passing every other check this
+    file already had. Only warp_events entries that are the *reciprocal
+    landing target* of some other map's real door are exempt from needing
+    their own trigger (a landing coordinate is written to purely for warps
+    arriving *into* it - it isn't itself expected to fire outbound), so this
+    check cannot tell a genuinely-dead entry apart from a landing-only one
+    just from this map's own data. Reported as a warning, not an error, for
+    that reason - but treat every one of these as a real "does the return
+    trip actually work" question to check, not a false positive to ignore.
+    """
+    w, h = layout["width"], layout["height"]
+    grid = load_grid(layout)
+    coord_event_coords = {(ce["x"], ce["y"]) for ce in map_json.get("coord_events", [])}
+
+    for i, wv in enumerate(map_json.get("warp_events", [])):
+        x, y = wv["x"], wv["y"]
+        if not (0 <= x < w and 0 <= y < h):
+            continue
+        behavior = attrs.behavior(grid[y][x][0])
+        if behavior in WARP_TRIGGER_BEHAVIORS:
+            continue
+        if (x, y) in coord_event_coords:
+            continue
+        warnings.append(
+            f"warp_events[{i}] at ({x},{y}) sits on plain ground (metatile behavior "
+            f"has no passive warp trigger) with no coord_event at the same "
+            f"coordinate either - if this is meant to fire outbound (not just serve "
+            f"as a landing target for warps arriving here), it never will. Add a "
+            f"coord_event + `warp`/`warpdoor` script command, or confirm this is "
+            f"landing-only."
+        )
+
+
 def check_connections(name, map_json, maps_index, errors, warnings):
     layouts = load_layouts()
     connections = map_json.get("connections") or []
@@ -397,10 +477,11 @@ def validate_one(name, maps_index):
     attrs = TilesetAttrs(layout["primary_tileset"], layout["secondary_tileset"])
 
     check_warps(map_json, maps_index, errors)
-    check_coord_event_on_landing_tile(map_json, errors)
+    check_coord_event_on_landing_tile(map_json, warnings)
     check_doors(map_json, layout, attrs, errors, warnings)
     check_elevation_zero(map_json, layout, attrs, errors, warnings)
     check_event_tiles_walkable(map_json, layout, attrs, errors)
+    check_warp_has_trigger(map_json, layout, attrs, warnings)
     check_connections(name, map_json, maps_index, errors, warnings)
     return errors, warnings
 

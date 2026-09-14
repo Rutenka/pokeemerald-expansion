@@ -3042,6 +3042,79 @@ correctly.
 clean. `tools/validate_maps.py` clean on both changed maps (only the same
 pre-existing, unrelated warnings as before).
 
+### Thirtieth custom feature: the Rustboro return warp actually never fired
+### at all - a real, systemic validator gap closed (2026-09-14, same day as
+### the Twenty-ninth)
+
+Viktor reported the return path still didn't work even after the sign fix,
+and separately that he hadn't seen the Lookout's blockade before beating her.
+Investigated both for real rather than assuming the sign alone was enough.
+
+**The blockade turned out to be working correctly.** Read Viktor's actual
+live save file directly: `FLAG_DEFEATED_ASHBAND_LOOKOUT` and her internal
+engine-tracked defeat flag are both `True`, matching a genuine real win, and
+his position/map both check out consistent with having played through
+Rustboro normally. The Twenty-ninth feature entry's fix is doing its job -
+this reads as a real perception gap (the blockade may not have visually
+registered as "a deliberate wall" in the moment, not a mechanism failure),
+not a shipped bug. Recorded here rather than silently dropped, since Viktor's
+own read of what he experienced should not be waved away without checking.
+
+**The return warp itself was a real, confirmed, more serious bug than the
+earlier discoverability fix implied.** A live headless test proved it
+directly: walking onto Rustboro's `(15,59)` did *nothing at all*, even with
+the sign already shipped right next to it. Root cause: a `warp_events` array
+entry is only ever destination *data* - something else has to actually
+invoke it, either a real door/arrow-warp/stairs tile *behavior* (which
+triggers `TryDoorWarp`-style checks), or an explicit coord_event with a
+`warp` script command. This tile is plain `MB_NORMAL` ground with neither -
+the entry existed and pointed somewhere correct, passed every prior
+validator check, and simply never fired for a real player no matter how they
+approached it. The sign fix from the Twenty-fifth entry solved a real problem
+(discoverability) but was built on top of a warp that was already silently
+dead, which nobody had actually confirmed by testing the mechanism itself
+end-to-end rather than trusting that "it's the reciprocal of a warp that
+already works" was enough.
+
+**Fixed with the established coord_event + `warp` script pattern** (used
+throughout this project before real doors became the default) - with one
+subtlety worth remembering: the exit trigger is placed at the *same*
+coordinate as the arrival landing spot, which normally violates the
+"landing != trigger" rule (checklist items 6/13/15). This is intentional and
+correct here, not an oversight: a coord_event never fires on the frame of a
+warp *arrival* (no real step taken), only on a later genuine step onto that
+same tile - so arriving players are never bounced back immediately, and only
+players who deliberately walk back into this specific dead-end corner
+trigger the return warp. This works specifically because the landing pocket
+is a narrow, one-tile-wide dead end with nowhere else to go past it - the
+same trick would NOT be safe on a tile in the middle of a busy thoroughfare
+a player might cross by accident.
+
+**The real fix that should prevent this whole class of bug going forward**:
+added `check_warp_has_trigger` to `tools/validate_maps.py` - flags any
+`warp_events` entry whose tile has no passive warp-triggering behavior *and*
+no coord_event at the same coordinate. Ran it across every Wasteland map
+immediately: found exactly one other flagged entry, the Safe Room's
+long-documented, genuinely-intentional landing-only player-start warp - no
+other real bugs of this class exist elsewhere. Also had to soften the
+existing `check_coord_event_on_landing_tile` from an error to a warning,
+since it was (correctly, for its original purpose) flagging this new
+legitimate pattern as broken - it now explains both readings (broken arrival
+trigger vs. intentional exit trigger) since the data alone can't distinguish
+them.
+
+**Confirmed via real headless gameplay**: walked the full round trip,
+Rustboro's landing spot -> back into the checkpoint's real door -> all the
+way out into Miller's Cut, in one continuous test. **Also confirmed
+Viktor's actual live save file was left completely unaffected by all of this
+testing** - position and every flag checked read back identical to his real,
+current progress after the fact, despite the testing walking his saved
+character through several maps mid-verification.
+
+**Build state**: both `make -j2` (normal) and `make DEBUG=1 -j2` rebuilt
+clean. `tools/validate_maps.py` run across every Wasteland map - zero hard
+errors, only the one expected/accepted Safe Room warning from the new check.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

@@ -15,6 +15,28 @@ Wasteland_Rustboro_OnTransition:
 	setrespawn HEAL_LOCATION_WASTELAND_RUSTBORO
 	end
 
+@ The actual return path to Miller's Cut - real bug found and fixed
+@ 2026-09-14: the plain warp_events entry here (shared with the arrival
+@ landing coordinate) never fires on its own, because this tile has no real
+@ door/warp *behavior* tag (checklist item 16's exact lesson) - a
+@ warp_events array entry is only ever real destination *data* that
+@ something else (a door tile's TryDoorWarp check, or an explicit `warp`
+@ script command) has to actually invoke; simply listing a coordinate there
+@ does nothing on its own. Confirmed via a live headless test: walking onto
+@ (15,59) did nothing at all, on a build that had already shipped the sign
+@ pointing right at it. Fixed with the same coord_event + `warp` command
+@ pattern this project used before real doors became the default (see the
+@ Eighth feature entry) - safe to reuse the landing tile itself for the
+@ trigger here (not the usual "landing != trigger" rule) specifically
+@ because a coord_event never fires on the frame of a warp *arrival* (no
+@ real step taken), only on a later, genuine step onto that same tile - so
+@ arriving players are never bounced immediately, only players who
+@ deliberately walk back into this corner to leave.
+Wasteland_Rustboro_EventScript_ExitToCheckpoint::
+	warp MAP_WASTELAND_CORP_CHECKPOINT, 1
+	waitstate
+	end
+
 Wasteland_Rustboro_EventScript_Arrival::
 	lockall
 	msgbox Wasteland_Rustboro_Text_Arrival1, MSGBOX_DEFAULT

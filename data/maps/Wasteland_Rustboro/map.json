@@ -165,6 +165,13 @@
       "var": "FLAG_SEEN_RUSTBORO_ARRIVAL",
       "var_value": "FALSE",
       "script": "Wasteland_Rustboro_EventScript_Arrival"
+    },
+    {
+      "type": "trigger",
+      "x": 15, "y": 59, "elevation": 0,
+      "var": "FLAG_WASTELAND_UNCONDITIONAL_TRIGGER",
+      "var_value": "FALSE",
+      "script": "Wasteland_Rustboro_EventScript_ExitToCheckpoint"
     }
   ],
   "bg_events": [
