@@ -9280,6 +9280,10 @@ void ApplyExperienceMultipliers(s32 *expAmount, u8 expGetterMonId, u8 faintedBat
 
         *expAmount = value + 1;
     }
+
+    // Wasteland: flat story-pacing multiplier, applied last so it stacks on
+    // top of every vanilla bonus above rather than replacing any of them.
+    *expAmount = (*expAmount * WASTELAND_EXP_MULTIPLIER_PERCENT) / 100;
 }
 
 void BS_ItemRestoreHP(void)

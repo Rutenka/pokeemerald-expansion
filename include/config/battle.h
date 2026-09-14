@@ -17,6 +17,7 @@
 #define B_SPLIT_EXP                 GEN_LATEST // In Gen6+, all Pokémon that participate in a battle gain full experience. In Gen5 and earlier, the total experience would be evenly split across them.
 #define B_SCALED_EXP                GEN_LATEST // In Gen5 and Gen7+, experience gain is weighted by the difference between the levels of the player's Pokémon and the target.
 #define B_UNEVOLVED_EXP_MULTIPLIER  GEN_LATEST // In Gen6+, if a Pokémon is at or past the level where it would be able to evolve, but it has not, it gains ~1.2x experience. This only applies to species with the EVO_LEVEL method.
+#define WASTELAND_EXP_MULTIPLIER_PERCENT 150 // Wasteland (2026-09-14, per Viktor's request): flat exp-gain multiplier applied on top of everything else in ApplyExperienceMultipliers, since normal leveling felt too slow. 100 = vanilla rate. Paired with the level-cap system in config/caps.h so the faster rate doesn't cause overleveling - it just gets a party to each chapter's cap sooner instead of grinding for it.
 #define B_LEVEL_UP_NOTIFICATION     GEN_LATEST // In Gen9+, if a Pokémon gains enough experience to level up multiple times, a message is only displayed once.
 
 // Stat settings

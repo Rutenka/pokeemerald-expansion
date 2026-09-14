@@ -7,17 +7,22 @@
 
 u32 GetCurrentLevelCap(void)
 {
+    // Wasteland (2026-09-14, per Viktor's request): replaced the vanilla
+    // gym-badge milestones with our own story flags, in the order they're
+    // actually encountered. Each cap sits comfortably above the
+    // corresponding boss/trainer's own level (see docs/roster.md for their
+    // levels) so the player's team can match or exceed them without a grind,
+    // then plateaus until the next story beat clears - the entry a player
+    // hasn't reached yet (no flags set) uses the FIRST row, so that value is
+    // also the starting cap for a brand new game.
     static const u32 sLevelCapFlagMap[][2] =
     {
-        {FLAG_BADGE01_GET, 15},
-        {FLAG_BADGE02_GET, 19},
-        {FLAG_BADGE03_GET, 24},
-        {FLAG_BADGE04_GET, 29},
-        {FLAG_BADGE05_GET, 31},
-        {FLAG_BADGE06_GET, 33},
-        {FLAG_BADGE07_GET, 42},
-        {FLAG_BADGE08_GET, 46},
-        {FLAG_IS_CHAMPION, 58},
+        {FLAG_DEFEATED_ASHBAND_SCOUT, 10},             // Road ambush, Lv7 Poochyena
+        {FLAG_DEFEATED_ASHBAND_LOOKOUT, 13},            // Miller's Cut ambush, Lv9 Zigzagoon
+        {FLAG_DEFEATED_ASHBAND_CHECKPOINT_GRUNT, 16},   // Checkpoint grunt, Lv11 Poochyena
+        {FLAG_DEFEATED_ASHBAND_ENFORCER, 18},           // Checkpoint boss, Lv14 Mightyena/Lv13 Koffing
+        {FLAG_DEFEATED_CORP_OVERSEER, 22},              // Rustboro Gym boss, team Lv17-19
+        {FLAG_SYS_GAME_CLEAR, 27},                      // No further story beat exists yet - placeholder ceiling, raise as new chapters ship
     };
 
     u32 i;

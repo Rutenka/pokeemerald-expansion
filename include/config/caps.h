@@ -11,12 +11,18 @@
 #define LEVEL_CAP_VARIABLE              2 // Level cap is chosen according to the contents of the event variable specified by B_LEVEL_CAP_VARIABLE
 
 // Level Cap Configs
-#define B_EXP_CAP_TYPE                  EXP_CAP_NONE   // [EXP_CAP_NONE, EXP_CAP_HARD, EXP_CAP_SOFT] choose the type of level cap to apply
-#define B_LEVEL_CAP_TYPE                LEVEL_CAP_NONE // [LEVEL_CAP_NONE, LEVEL_CAP_FLAG_LIST, LEVEL_CAP_VARIABLE] choose the method to derive the level cap
+// Wasteland (2026-09-14, per Viktor's request): story milestones cap party
+// level until the next boss/chapter beat clears, using our own flags (see
+// src/caps.c's sLevelCapFlagMap) instead of vanilla gym badges. HARD means a
+// capped mon gains zero further exp (not just reduced) until the cap rises -
+// picked over EXP_CAP_SOFT for a clean, legible "you've hit the ceiling for
+// this chapter" signal rather than a barely-perceptible slowdown.
+#define B_EXP_CAP_TYPE                  EXP_CAP_HARD // [EXP_CAP_NONE, EXP_CAP_HARD, EXP_CAP_SOFT] choose the type of level cap to apply
+#define B_LEVEL_CAP_TYPE                LEVEL_CAP_FLAG_LIST // [LEVEL_CAP_NONE, LEVEL_CAP_FLAG_LIST, LEVEL_CAP_VARIABLE] choose the method to derive the level cap
 #define B_LEVEL_CAP_VARIABLE            0 // event variable used to derive level cap if B_LEVEL_CAP_TYPE is set to LEVEL_CAP_VARIABLE
 
 #define B_RARE_CANDY_CAP                FALSE // If set to true, Rare Candies can't be used to go over the level cap
-#define B_LEVEL_CAP_EXP_UP              FALSE // If set to true, mons under level cap will receive more experience
+#define B_LEVEL_CAP_EXP_UP              TRUE // If set to true, mons under level cap will receive more experience - helps underleveled/newly-caught party members catch up to the current cap faster
 
 // EV Cap Constants
 #define EV_CAP_NONE                     0 // Regular behavior, no EV caps are applied

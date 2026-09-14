@@ -2915,6 +2915,58 @@ to be.
 
 **Build state**: `make -j2` rebuilt clean.
 
+### Twenty-eighth custom feature: faster leveling + a real per-chapter level
+### cap system (2026-09-14, same day as the Twenty-seventh)
+
+Viktor asked for two related things: leveling felt too slow, and he wants a
+level cap tied to story progress (chapter/boss beats) rather than open-ended
+grinding. **Checked before building anything custom: the engine already has a
+complete, configurable level-cap system built in** (`include/config/caps.h`,
+`src/caps.c`) - previously fully disabled (`EXP_CAP_NONE`/`LEVEL_CAP_NONE`),
+driven in vanilla by gym badge flags. No new mechanism needed, just wiring it
+to our own story flags instead of ripping it out and rebuilding it.
+
+**Level cap, now live**:
+- `B_EXP_CAP_TYPE` -> `EXP_CAP_HARD` (a capped mon gains *zero* further exp,
+  not just reduced - picked over `EXP_CAP_SOFT` for a clean, legible "you've
+  hit this chapter's ceiling" signal rather than an almost-invisible slowdown).
+- `B_LEVEL_CAP_TYPE` -> `LEVEL_CAP_FLAG_LIST`, with `src/caps.c`'s
+  `sLevelCapFlagMap` rewritten to use our own story flags in the order
+  they're actually encountered, each cap set comfortably above that beat's
+  own trainer levels (docs/roster.md has the source levels):
+  `FLAG_DEFEATED_ASHBAND_SCOUT`->10, `_LOOKOUT`->13, `_CHECKPOINT_GRUNT`->16,
+  `_ENFORCER`->18, `FLAG_DEFEATED_CORP_OVERSEER`->22, then a placeholder
+  ceiling of 27 keyed on the real (never-yet-set) `FLAG_SYS_GAME_CLEAR` until
+  a next real chapter flag exists to replace it with - extend this table the
+  same way every time a new boss/chapter beat ships, never leave it stale.
+- `B_LEVEL_CAP_EXP_UP` -> `TRUE` (mons under the current cap gain *more* exp,
+  not just normal) - helps an underleveled or newly-caught party member catch
+  up to the rest of the team's level fast, rather than lagging permanently.
+
+**Faster leveling, on top of the cap (not instead of it)**: a flat
+`WASTELAND_EXP_MULTIPLIER_PERCENT` (150, i.e. +50%) constant added in
+`include/config/battle.h`, applied as the very last step of
+`ApplyExperienceMultipliers` in `src/battle_script_commands.c` - stacks on
+top of every vanilla bonus (Lucky Egg, traded-mon, Exp Charm, etc.) rather
+than replacing any of them. The two changes are deliberately paired: the
+faster rate gets a party to each chapter's cap quickly without grinding,
+and the cap stops that same faster rate from trivializing the next boss by
+overleveling past it.
+
+**Confirmed via a live headless read of Viktor's actual current save** (not
+just reasoned about): `FLAG_DEFEATED_ASHBAND_SCOUT` and `_LOOKOUT` both read
+`True`, `_CHECKPOINT_GRUNT`/`_ENFORCER`/`FLAG_DEFEATED_CORP_OVERSEER` all read
+`False` - meaning his real current cap is 16 (the checkpoint-grunt tier),
+which matches where he's actually at in the story. The cap mechanism itself
+is long-standing, widely-used engine code (not new/risky logic this project
+wrote), so this wasn't independently re-verified with a full battle
+end-to-end - the two numbers changed (the flag table's contents, the flat
+multiplier constant) are the only real risk surface, and both are simple
+data, not new code paths.
+
+**Build state**: both `make -j2` (normal, the resting build) and
+`make DEBUG=1 -j2` rebuilt clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
