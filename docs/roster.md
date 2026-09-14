@@ -30,6 +30,7 @@ Tera are disabled project-wide), progressive reveal tied to exploration.
 | Magneton | Catchable (evolution only, not yet in any wild table) | Evolves from Magnemite (plain vanilla level-up); also the Overseer boss's lead | Bulkier special/status disruptor, Steel/Electric coverage | Boss-tier step up from the gauntlet trainer's Magnemite |
 | Solrock | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's team (Lv18) | Bulky psychic/rock, sets up with Cosmic Power | Direct thematic tie to the setting's psychic-control-network premise - a "surveillance eye" read |
 | Porygon | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's ace (Lv19) | Recovery + Agility stall/sweeper, all-type coverage via Conversion | Literally an artificial/digital Pokémon - the single best-fitting species in the whole roster for "a corporation that builds Pokémon-derived control tech," used deliberately as the boss's ace |
+| Natu | Catchable | `Wasteland_Rustboro`, wild encounter via a single scripted `wildbattle` (Lv13, Selin's pet, part of the pre-Gym incident quest) - guaranteed to end up on the player's team one way or another (catch it in the fight, or Selin gives it to you afterward if you don't) | Early psychic/flying utility, sets up for Xatu later | First living (not artificial) "network-affected" Pokémon - deliberately contrasts the Gym's mechanical Magnemite/Baltoy/Voltorb with something the network can hurt too, not just power |
 
 **Trainer roster so far**: the Ashband (all `TRAINER_CLASS_ASHBAND`, reusing the
 vanilla Aqua Grunt battle sprite purely as art - see the Twentieth feature entry in
@@ -49,3 +50,9 @@ without freeing flag space (see that file's own comment for how).
 unconnected/undeveloped. Most of Rustboro's real buildings (Devon Corp, the Pokémon
 School, several houses/flats) are deliberately left closed for now - see the
 Twenty-third feature entry in CLAUDE.md.
+
+**The pre-Gym "incident" side quest** (see CLAUDE.md's Thirty-third feature entry)
+uses `wildbattle`/`givemon` instead of new Trainers specifically because all 9 custom
+trainer slots are already spent (above) - Voltorb and Baltoy reuse the exact species
+already fighting for the Gym itself (a deliberate small "preview of what's coming"),
+Natu is the one new addition, picked to be the quest's single catchable reward.

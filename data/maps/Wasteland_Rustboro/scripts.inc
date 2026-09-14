@@ -78,21 +78,40 @@ Wasteland_Rustboro_EventScript_Woman::
 	release
 	end
 
-@ First real story-connected side quest (2026-09-14, per Viktor's request
-@ that side content always tie back to finding the father, not be generic
-@ filler): the Gym is now locked behind a sponsorship a guard checks for
-@ (see the map.json guard NPC, hidden once FLAG_HAS_GYM_SPONSORSHIP is set).
-@ DevonEmployee2 can vouch for the player but needs his own misfiled
-@ paperwork back - which FatMan, the city's actual records clerk, is
-@ holding without realizing it. Two existing NPCs, no new map, no new
-@ trainer - just their dialogue branching on two new flags.
+@ Side quest, first version (2026-09-14): the Gym is locked behind a
+@ sponsorship a guard checks for, earned from FatMan/DevonEmployee2. Viktor
+@ asked for more weight than a plain fetch-quest - "help them with
+@ something... get ignored, then something happens, then earn their trust" -
+@ so this is now the front door of a 3-part incident (see the drone/
+@ artifact/pet encounters below) rather than a single conversation. FatMan
+@ dismisses the player outright on first talk; that dismissal is what the
+@ incident interrupts. No new map, no new trainer (the 9-slot custom
+@ trainer budget is fully spent - see docs/roster.md) - three real
+@ `wildbattle` encounters instead, which don't touch that budget at all.
 Wasteland_Rustboro_EventScript_FatMan::
 	lock
 	faceplayer
 	goto_if_set FLAG_HAS_MISFILED_PAPERWORK, Wasteland_Rustboro_EventScript_FatManAfter
+	goto_if_set FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_FatManIncidentCheck
 	msgbox Wasteland_Rustboro_Text_FatMan, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_FatManDismissal, MSGBOX_DEFAULT
+	setflag FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED
+	msgbox Wasteland_Rustboro_Text_IncidentAlarm, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_FatManIncidentCheck::
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
+	msgbox Wasteland_Rustboro_Text_FatManImpressed, MSGBOX_DEFAULT
 	msgbox Wasteland_Rustboro_Text_FatManGivesPaperwork, MSGBOX_DEFAULT
 	setflag FLAG_HAS_MISFILED_PAPERWORK
+	release
+	end
+
+Wasteland_Rustboro_EventScript_FatManStillBusy::
+	msgbox Wasteland_Rustboro_Text_FatManStillBusy, MSGBOX_DEFAULT
 	release
 	end
 
@@ -189,17 +208,78 @@ Wasteland_Rustboro_EventScript_DevonEmployee2Sponsored::
 	release
 	end
 
+@ Incident site 1 of 3 (2026-09-14) - Man2's own original line ("You get used
+@ to the drones... they're not even armed. Probably.") already foreshadowed
+@ this. A real `wildbattle` (Voltorb), not a trainer - the custom trainer ID
+@ budget is fully spent (docs/roster.md).
 Wasteland_Rustboro_EventScript_Man2::
 	lock
 	faceplayer
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_Man2Normal
+	goto_if_set FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_Man2AfterDrone
+	msgbox Wasteland_Rustboro_Text_Man2DroneAlert, MSGBOX_DEFAULT
+	setwildbattle SPECIES_VOLTORB, 13, ITEM_NONE
+	waitse
+	playmoncry SPECIES_VOLTORB, CRY_MODE_ENCOUNTER
+	delay 40
+	waitmoncry
+	dowildbattle
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_Man2DroneWon
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_Man2DroneWon
+	release
+	end
+
+Wasteland_Rustboro_EventScript_Man2Normal::
 	msgbox Wasteland_Rustboro_Text_Man2, MSGBOX_DEFAULT
 	release
 	end
 
+Wasteland_Rustboro_EventScript_Man2DroneWon::
+	setflag FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED
+	msgbox Wasteland_Rustboro_Text_Man2DroneWon, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_Man2AfterDrone::
+	msgbox Wasteland_Rustboro_Text_Man2AfterDrone, MSGBOX_DEFAULT
+	release
+	end
+
+@ Incident site 2 of 3 (2026-09-14) - the Scientist's own original line
+@ ("Please don't touch the equipment. It remembers.") already foreshadowed
+@ this directly. A real `wildbattle` (Baltoy), same reasoning as Man2 above.
 Wasteland_Rustboro_EventScript_Scientist::
 	lock
 	faceplayer
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_ScientistNormal
+	goto_if_set FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED, Wasteland_Rustboro_EventScript_ScientistAfterArtifact
+	msgbox Wasteland_Rustboro_Text_ScientistArtifactAlert, MSGBOX_DEFAULT
+	setwildbattle SPECIES_BALTOY, 13, ITEM_NONE
+	waitse
+	playmoncry SPECIES_BALTOY, CRY_MODE_ENCOUNTER
+	delay 40
+	waitmoncry
+	dowildbattle
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_ScientistArtifactWon
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_ScientistArtifactWon
+	release
+	end
+
+Wasteland_Rustboro_EventScript_ScientistNormal::
 	msgbox Wasteland_Rustboro_Text_Scientist, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_ScientistArtifactWon::
+	setflag FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED
+	msgbox Wasteland_Rustboro_Text_ScientistArtifactWon, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_ScientistAfterArtifact::
+	msgbox Wasteland_Rustboro_Text_ScientistAfterArtifact, MSGBOX_DEFAULT
 	release
 	end
 
@@ -247,6 +327,37 @@ Wasteland_Rustboro_Text_FatMan::
 	.string "reports for this district.\p"
 	.string "Not one has ever been read, as far\l"
 	.string "as I can tell. I file them anyway.$"
+
+Wasteland_Rustboro_Text_FatManDismissal::
+	.string "And no, I can't help you. I don't\n"
+	.string "have clearance to help people who\l"
+	.string "just “wandered in.”\p"
+	.string "Take it up with Coordination. Or\n"
+	.string "don't. Not my problem either way.$"
+
+Wasteland_Rustboro_Text_IncidentAlarm::
+	.string "Somewhere across the district, an\n"
+	.string "alarm starts - short, rising, cut\l"
+	.string "off mid-note.\p"
+	.string "Nobody in the office even looks\n"
+	.string "up. Like they were waiting for it.$"
+
+Wasteland_Rustboro_Text_FatManStillBusy::
+	.string "Still can't help you. District's a\n"
+	.string "mess right now - people all over the\l"
+	.string "block reporting Pokémon behaving\l"
+	.string "wrong, and nobody up top's saying\l"
+	.string "why.\p"
+	.string "Sort that out first. Then we'll\n"
+	.string "talk.$"
+
+Wasteland_Rustboro_Text_FatManImpressed::
+	.string "Word travels. Drone on Ash Row, the\n"
+	.string "Study Hall thing, and now Selin's\l"
+	.string "bird.\p"
+	.string "Didn't expect an outsider to\n"
+	.string "actually deal with any of it.\l"
+	.string "Didn't expect anyone to, honestly.$"
 
 Wasteland_Rustboro_Text_FatManGivesPaperwork::
 	.string "…Actually, hold on.\p"
@@ -346,9 +457,45 @@ Wasteland_Rustboro_Text_Man2::
 	.string "while.\p"
 	.string "They're not even armed. Probably.$"
 
+Wasteland_Rustboro_Text_Man2DroneAlert::
+	.string "That drone's not on its usual\n"
+	.string "loop.\p"
+	.string "Its eye just… locked on you.\n"
+	.string "Get ready!$"
+
+Wasteland_Rustboro_Text_Man2DroneWon::
+	.string "It just… stopped. Like someone cut\n"
+	.string "the signal mid-command.\p"
+	.string "Six years on this block. Never\n"
+	.string "seen one do that before today.$"
+
+Wasteland_Rustboro_Text_Man2AfterDrone::
+	.string "Maintenance hauled it off this\n"
+	.string "morning.\p"
+	.string "Nobody's explaining anything.\n"
+	.string "Same as always.$"
+
 Wasteland_Rustboro_Text_Scientist::
 	.string "Please don't touch the equipment.\n"
 	.string "It remembers.$"
+
+Wasteland_Rustboro_Text_ScientistArtifactAlert::
+	.string "I told you - it remembers!\p"
+	.string "It's not supposed to move on its\n"
+	.string "own. Someone's still transmitting\l"
+	.string "to it - !$"
+
+Wasteland_Rustboro_Text_ScientistArtifactWon::
+	.string "Whatever was steering it let go\n"
+	.string "the second you won.\p"
+	.string "I should write this up. I already\n"
+	.string "know nobody upstairs wants it\l"
+	.string "written up.$"
+
+Wasteland_Rustboro_Text_ScientistAfterArtifact::
+	.string "Back in its case. Bolted down,\n"
+	.string "this time.\p"
+	.string "That's the whole fix, apparently.$"
 
 Wasteland_Rustboro_Text_Boy1::
 	.string "It's not really a gym. It's an\n"
@@ -410,3 +557,112 @@ Wasteland_Rustboro_Text_GymGuard::
 	.string "No Assessment without sponsorship.\n"
 	.string "Talk to someone with real standing\l"
 	.string "in this city. Not me.$"
+
+@ Incident site 3 of 3, the capstone (2026-09-14) - Selin's own Natu, the
+@ one living creature in this incident rather than a drone or an artifact,
+@ deliberately given more weight - and the one the player can keep
+@ afterward (Viktor's ask: a catchable reward that fits the story and the
+@ early game). A real `wildbattle`, same reasoning as the other two sites -
+@ if the player catches it themselves during the fight, no separate gift is
+@ needed; if they win without catching it, Selin gives it to them directly
+@ afterward via `givemon`, using the same party/PC/no-room branching as the
+@ Safe Room's own starter gift.
+Wasteland_Rustboro_EventScript_Selin::
+	lock
+	faceplayer
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_SelinNormal
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_SelinAfter
+	msgbox Wasteland_Rustboro_Text_SelinAlert, MSGBOX_DEFAULT
+	setwildbattle SPECIES_NATU, 13, ITEM_NONE
+	waitse
+	playmoncry SPECIES_NATU, CRY_MODE_ENCOUNTER
+	delay 40
+	waitmoncry
+	dowildbattle
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinCaught
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinWonNotCaught
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinNormal::
+	msgbox Wasteland_Rustboro_Text_Selin, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinCaught::
+	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
+	msgbox Wasteland_Rustboro_Text_SelinCaught, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinWonNotCaught::
+	msgbox Wasteland_Rustboro_Text_SelinWonNotCaught, MSGBOX_DEFAULT
+	givemon SPECIES_NATU, 13
+	goto_if_eq VAR_RESULT, 0, Wasteland_Rustboro_EventScript_SelinGaveNatuParty
+	goto_if_eq VAR_RESULT, 1, Wasteland_Rustboro_EventScript_SelinGaveNatuPC
+	goto_if_eq VAR_RESULT, 2, Wasteland_Rustboro_EventScript_SelinNoRoomForNatu
+	end
+
+Wasteland_Rustboro_EventScript_SelinGaveNatuParty::
+	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinGaveNatuPC::
+	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
+	msgbox Wasteland_Rustboro_Text_SelinNatuSentToPC, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinNoRoomForNatu::
+	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
+	msgbox gText_NoMoreRoomForPokemon, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinAfter::
+	msgbox Wasteland_Rustboro_Text_SelinAfter, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_Text_Selin::
+	.string "She won't come down off the awning\n"
+	.string "today. Won't even look at me.\p"
+	.string "It's been like this since the\n"
+	.string "alarm.$"
+
+Wasteland_Rustboro_Text_SelinAlert::
+	.string "There - ! That's not her. She's\n"
+	.string "never acted like this in nine\l"
+	.string "years.\p"
+	.string "Please - I don't know what else to\n"
+	.string "do.$"
+
+Wasteland_Rustboro_Text_SelinCaught::
+	.string "You - caught her?\p"
+	.string "I don't know whether to thank you\n"
+	.string "or cry. Both, maybe.\p"
+	.string "Take care of her. Whatever that\n"
+	.string "alarm was, I don't think she's\l"
+	.string "fully back.$"
+
+Wasteland_Rustboro_Text_SelinWonNotCaught::
+	.string "She's calm now. Calmer than she's\n"
+	.string "been all day, actually - calmer\l"
+	.string "than before, even.\p"
+	.string "I don't think she's fully mine\n"
+	.string "anymore. Not after that.\p"
+	.string "Here. Please. I can't watch her go\n"
+	.string "through that again, and I don't\l"
+	.string "think I'm the one she trusts to\l"
+	.string "stop it next time.$"
+
+Wasteland_Rustboro_Text_SelinNatuSentToPC::
+	.string "There was no room in your party,\n"
+	.string "so NATU was sent to a Box at home.$"
+
+Wasteland_Rustboro_Text_SelinAfter::
+	.string "She's sleeping better with you\n"
+	.string "around, I think. Or she just likes\l"
+	.string "the company.$"

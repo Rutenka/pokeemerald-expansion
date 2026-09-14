@@ -3288,6 +3288,140 @@ an in-game Save - the emulator's SRAM flush timing, not confirmed further).
 rebuilt clean. `tools/validate_maps.py` run across the full project - zero
 hard errors, only pre-existing/expected warnings.
 
+### Thirty-third custom feature: the Rustboro side quest rebuilt as a real
+### 3-part "prove yourself" incident, done overnight per Viktor's explicit
+### go-ahead (2026-09-14/15 overnight)
+
+Viktor rejected the Thirty-second feature's paperwork-fetch quest as too
+thin - he wanted something with real weight, citing the Fallout TV series'
+"dismissed, then something happens, then you earn trust through action"
+shape, more of a challenge than "talk to some dude," and more interesting
+Pokémon on both sides (battles and a catchable reward). Asked to be left
+alone overnight rather than approve each call - two quick recommendation
+questions were asked before he went to sleep (what the incident should be,
+whether to keep the existing FatMan/DevonEmployee2 NPCs), and he
+delegated both to "whatever looks good in the game" / "whatever fits
+best" - so both were decided here, not assumed silently.
+
+**The incident, decided**: a brief network malfunction spooks several of
+the city's own controlled Pokémon into acting erratically - not raiders,
+not generic thugs, but the setting's own central premise (the psychic
+control network) glitching in miniature, right in front of the player, in
+the same city that's supposed to be safe. This was picked over "opportunists
+exploit a blackout" and "an Ashband cell in the city" for a concrete
+reason: it's the only option that deepens the actual mystery ("someone's
+still transmitting to it" - see below) rather than just restaging a fight
+already used elsewhere in this chapter, and it lets the Gym's own
+Magnemite/Baltoy/Voltorb gauntlet (Twenty-third feature entry) read as a
+"tame, controlled version of what you already saw loose in the street" -
+a real foreshadow, not a coincidence of shared species.
+
+**Structure - reuses FatMan and DevonEmployee2 rather than replacing them**,
+per Viktor's own steer ("what fits best with the rest") and because both
+were already built, tested, and load-bearing for the sponsorship mechanic:
+1. **Dismissed.** FatMan's first conversation no longer hands over
+   paperwork - he brushes the player off outright
+   (`Wasteland_Rustboro_Text_FatManDismissal`), which is what the incident
+   interrupts: a short narration beat plays immediately after
+   (`Wasteland_Rustboro_Text_IncidentAlarm` - "an alarm starts... nobody in
+   the office even looks up. Like they were waiting for it," a small,
+   deliberate hint that this isn't the first time). Sets
+   `FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED`.
+2. **The incident - three sites, any order.** Two reuse existing NPCs whose
+   original one-line flavor text already foreshadowed this without either
+   of us planning it that way: Man2 ("You get used to the drones... they're
+   not even armed. Probably.") now has his own patrol drone (wild Voltorb,
+   Lv13) turn on him; the Scientist ("Please don't touch the equipment. It
+   remembers.") has his animated effigy (wild Baltoy, Lv13) break loose,
+   with a new line making the mystery explicit - "It's not supposed to move
+   on its own. Someone's still transmitting to it." The third is a new
+   NPC, **Selin** (`OBJ_EVENT_GFX_WOMAN_5`, placed at `(13,38)`, next to the
+   existing-but-previously-decorative "PRIVATE RESIDENCE" sign - confirmed
+   open/reachable via a real collision-grid dump before placing, not
+   assumed), whose pet Natu is the one living creature in this incident
+   rather than a machine, deliberately given more emotional weight and
+   framed as the capstone.
+3. **Earn trust.** Once all three flags are set, FatMan's own script now
+   branches to `Wasteland_Rustboro_Text_FatManImpressed` ("Drone on Ash
+   Row, the Study Hall thing, and now Selin's bird... didn't expect anyone
+   to deal with any of it, honestly") before finally handing over the
+   paperwork - DevonEmployee2's sponsorship grant is unchanged past that
+   point. Re-talking to FatMan before all three are resolved shows a new
+   "still busy, sort that out first" line instead of silently repeating the
+   original dismissal.
+
+**No new Trainer was added - the 9-slot custom trainer ID budget is fully
+spent** (docs/roster.md, Twenty-third feature entry) - all three incident
+fights are real `setwildbattle`/`dowildbattle` encounters instead, the same
+proven vanilla idiom `AquaHideout_B1F` uses for its hidden Electrodes
+(`waitse`+`playmoncry`+`delay`+`waitmoncry` before the battle, then
+`specialvar VAR_RESULT, GetBattleOutcome` branching on `B_OUTCOME_WON`/
+`B_OUTCOME_CAUGHT`). This is a genuinely different, lower-risk mechanism
+than a Trainer battle - no trainer ID, no trainer flag, and it composes
+cleanly with the catch mechanic for Natu (see below).
+
+**The catchable reward, decided**: Natu, Lv13 - picked deliberately as the
+one living (not mechanical) "network-affected" Pokémon in the incident, to
+contrast with the Gym's artificial trio and to give the reward some
+emotional stakes (a resident's actual pet, not a wild spawn). The player
+can catch it themselves mid-battle (a real Poké Ball throw, standard wild
+battle mechanics, no scripting needed) - if they instead just win without
+catching it, Selin gives it to them afterward via `givemon`, reusing the
+exact party-full/PC/no-room branching already proven by the Safe Room's
+starter gift (`Wasteland_Rustboro_EventScript_SelinWonNotCaught`). Either
+path guarantees the player ends up with it, matching Viktor's "should be
+catchable, fits the story, part of the early game" ask without leaving it
+to RNG whether they actually get it.
+
+**Confirmed via real headless gameplay, the full chain, start to finish**:
+talked to FatMan (confirmed `FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED` sets,
+dismissal + alarm text both display), re-talked to confirm the "still busy"
+branch, fought and won all three encounters live (not simulated - real
+wild battles against the correct species/level, confirmed via screenshot:
+"Voltorb Lv13," etc.), confirmed each site's own resolved-flag sets and
+its distinct post-battle line displays, fully mashed through Selin's
+`givemon` sequence and confirmed `FLAG_WASTELAND_RUSTBORO_PET_RESOLVED` sets
+only once that completes (not earlier - checklist item 15's exact lesson,
+hit again here: an early check read `False` because the multi-page
+post-battle text plus the give-mon prompt were still open, not because
+anything was broken). With all three resolved, confirmed FatMan's
+`Impressed` branch fires and `FLAG_HAS_MISFILED_PAPERWORK` sets, and
+DevonEmployee2's sponsorship grant fires the same way it always has.
+
+**A real testing near-miss, worth recording**: the very first live attempt
+at the Voltorb fight tried to flee (to avoid ever risking Viktor's actual
+party in a real completed battle) via a guessed FIGHT/BAG/POKEMON/RUN menu
+navigation sequence - it was wrong, and the wild Voltorb got a real attack
+in before the mistake was caught via screenshot. Rather than keep
+fumbling the flee sequence, the safer and more informative choice was made
+instead: just win the fight for real (Houndour Lv17 vs. Voltorb Lv13 is not
+a close fight) - winning has zero negative persistence risk and is also
+the actual code path that needed proving anyway. **Verified this left
+Viktor's real save completely untouched despite three real completed wild
+battles and one real `givemon` call**: `pokeemerald.sav`'s own on-disk
+modification timestamp was checked directly and is from well before
+tonight's testing began - not one byte of it was rewritten by any of this
+session's testing, confirming (with harder evidence than a flag re-check
+alone this time) that emulated session state never reaches the real save
+file without an explicit in-game Save action, no matter what happens
+in-battle. All quest flags were additionally re-set to `False` after every
+test pass as a belt-and-suspenders measure, and confirmed `False` again on
+a fresh boot each time.
+
+**Deliberately not built tonight, scope kept tight rather than sprawling**:
+no changes to DevonEmployee2's own dialogue beyond what already existed
+(his "ask FatMan" line already reads fine post-incident, no rewrite
+needed); no attempt to give the three wild encounters custom (non-default)
+movesets - `setwildbattle` doesn't support that, and inventing a parallel
+mechanism for it wasn't worth the added risk for a one-time side quest;
+Devon Corp HQ's own interior remains unbuilt (Twenty-seventh feature entry
+already scoped it as the next real destination, unrelated to this quest).
+
+**Build state**: `make -j2` (the resting build) and `make DEBUG=1 -j2`
+both rebuilt clean. `tools/validate_maps.py` run across the full project -
+zero hard errors, only the same pre-existing/expected warnings as before
+(no new ones from the new Selin object or the script changes).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

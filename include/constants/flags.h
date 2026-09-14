@@ -69,6 +69,10 @@
 #define FLAG_ITEM_WASTELAND_RUSTBORO_ITEM_1 0x2F // Wasteland: Rustboro's hidden item ball
 #define FLAG_HAS_MISFILED_PAPERWORK 0x30 // Wasteland: the FatMan gives up DevonEmployee2's misfiled sponsorship authorization
 #define FLAG_HAS_GYM_SPONSORSHIP 0x31 // Wasteland: DevonEmployee2 vouches for the player - lets the Assessment Center guard step aside
+#define FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED 0x32 // Wasteland: set when FatMan's dismissal is interrupted by the network-glitch incident - gates all 3 incident encounters and blocks paperwork until they're resolved
+#define FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED 0x33 // Wasteland: Man2's patrol drone (wild Voltorb) calmed
+#define FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED 0x34 // Wasteland: the Scientist's animated effigy (wild Baltoy) calmed
+#define FLAG_WASTELAND_RUSTBORO_PET_RESOLVED 0x35 // Wasteland: the resident's pet (wild Natu) calmed - also gates the gift-mon fallback if not caught in battle
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag
