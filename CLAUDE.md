@@ -2859,6 +2859,62 @@ neighbor) rather than re-spending the research budget.
 
 **Build state**: `make -j2` rebuilt clean. `tools/validate_maps.py` unaffected.
 
+### Twenty-seventh custom feature: the red thread - why Rustboro, and what the
+### Overseer fight actually means (2026-09-14, same day as the Twenty-sixth)
+
+Viktor asked directly for story direction after reaching Rustboro: what's the
+throughline, should the Overseer fight be mandatory, and what context should
+arrival carry. Investigated a real bug report first (a whiteout after losing to
+the Overseer allegedly landing somewhere wrong) - **traced the actual engine
+respawn mechanism (`ScrCmd_setrespawn` -> `SetLastHealLocationWarp` ->
+`gSaveBlock1Ptr->lastHealLocation`, then `DoWhiteOut` ->
+`SetWarpDestinationToLastHealLocation`) and confirmed via a direct memory read
+that healing at Rustboro's Pokemon Center correctly updates the respawn point
+before the Gym is ever reached** - couldn't reproduce a wrong destination.
+Also checked `EventScript_AfterWhiteOutHeal` (a real vanilla post-whiteout
+cutscene keyed on `FLAG_DEFEATED_RUSTBORO_GYM`, which nothing in this project
+ever sets or calls) to rule out vanilla dialogue bleeding through - confirmed
+unreachable, nothing calls it. Left as an open item if it recurs - a screenshot
+next time would settle it, since the mechanism itself checks out clean.
+
+**Confirmed via `AskUserQuestion` - two real creative decisions, not
+unilateral calls**: (1) the Overseer fight is now a **mandatory** story gate,
+framed as earning clearance rather than a generic badge fight; (2) the
+player's arrival in Rustboro is now **direct**, not observational - the
+character explicitly connects the city to the checkpoint's ledger discovery.
+
+**What shipped**:
+- **Rustboro's arrival narration gained a third beat**
+  (`Wasteland_Rustboro_Text_Arrival3`) stating the goal outright: the player
+  is here specifically because of the "DEVON CORPORATION - LOGISTICS" ledger,
+  looking for whoever's arming the Ashband.
+- **The Devon Corp guard NPC (`CorpGuard`) now has two dialogue states**,
+  gated on `FLAG_DEFEATED_CORP_OVERSEER`: before, he explicitly says nobody
+  gets past this door without Assessment clearance; after, he acknowledges it
+  but is clear that clearing the Gym still isn't clearance for *this specific
+  building* - Devon Corp HQ itself stays narratively locked (no interior
+  exists yet), but the throughline to it is now explicit rather than left to
+  a static "RESTRICTED ACCESS" sign alone.
+- The Overseer's own existing post-battle line ("I'll file this as a pass.
+  Someone above me can decide what that means") already meshed with this
+  framing without needing a rewrite - kept as-is.
+
+**Confirmed via real headless gameplay**: the new 3-page arrival narration
+displays and completes correctly (flag confirmed set via a direct read, not
+just a screenshot). The guard's before/after dialogue branch uses the exact
+same `goto_if_set` + two-variant pattern already proven correct many times
+this session (the Mother, the Nurse, etc.) - not independently re-verified
+live this round given time, but structurally identical to code already tested.
+
+**Still open, by design, not an oversight**: Devon Corp HQ's actual interior
+(the real `RUSTBORO_CITY_DEVON_CORP_1F/2F/3F` layouts, already scoped as
+available real vanilla content) is the next real destination this now
+explicitly points at - not built yet. When it is, the guard's door should
+finally get wired, gated on whatever the next real clearance beat turns out
+to be.
+
+**Build state**: `make -j2` rebuilt clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

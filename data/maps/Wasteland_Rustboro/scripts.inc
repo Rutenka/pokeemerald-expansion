@@ -21,6 +21,8 @@ Wasteland_Rustboro_EventScript_Arrival::
 	closemessage
 	msgbox Wasteland_Rustboro_Text_Arrival2, MSGBOX_DEFAULT
 	closemessage
+	msgbox Wasteland_Rustboro_Text_Arrival3, MSGBOX_DEFAULT
+	closemessage
 	setflag FLAG_SEEN_RUSTBORO_ARRIVAL
 	releaseall
 	end
@@ -35,6 +37,17 @@ Wasteland_Rustboro_Text_Arrival2::
 	.string "Nobody here looks like they've seen\n"
 	.string "what's out on the road.\p"
 	.string "Maybe that's the point.$"
+
+@ Direct, per Viktor's confirmed call (2026-09-14): the player has real,
+@ written proof (the checkpoint records room's ledger) that Devon
+@ Corporation supplies the Ashband. Arriving here is not incidental - it's
+@ the reason this city matters right now.
+Wasteland_Rustboro_Text_Arrival3::
+	.string "That ledger's still fresh in your\n"
+	.string "head. DEVON CORPORATION - LOGISTICS.\p"
+	.string "This is their city. If anyone knows\n"
+	.string "why they're arming the people who\l"
+	.string "took DAD, it's someone in here.$"
 
 Wasteland_Rustboro_EventScript_Woman::
 	lock
@@ -99,10 +112,22 @@ Wasteland_Rustboro_EventScript_DevonEmployee1::
 	release
 	end
 
+@ Referenced by Viktor's confirmed decision (2026-09-14): the Overseer's
+@ Assessment Center is a real gate now, not a skippable side fight - this is
+@ the guard telling the player that directly, before and after they clear it.
+@ Devon Corp's own door stays unwired (no interior built yet - see the
+@ standing "closed for now" note above), but the dialogue already sets up
+@ why it matters once that interior exists.
 Wasteland_Rustboro_EventScript_CorpGuard::
 	lock
 	faceplayer
+	goto_if_set FLAG_DEFEATED_CORP_OVERSEER, Wasteland_Rustboro_EventScript_CorpGuardCleared
 	msgbox Wasteland_Rustboro_Text_CorpGuard, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_CorpGuardCleared::
+	msgbox Wasteland_Rustboro_Text_CorpGuardCleared, MSGBOX_DEFAULT
 	release
 	end
 
@@ -219,7 +244,18 @@ Wasteland_Rustboro_Text_DevonEmployee1::
 Wasteland_Rustboro_Text_CorpGuard::
 	.string "This area is monitored for your\n"
 	.string "safety and ours.\p"
-	.string "Mostly ours.$"
+	.string "Mostly ours.\p"
+	.string "Nobody gets past this door without\n"
+	.string "Assessment clearance. That's not me\l"
+	.string "being difficult - I just don't have\l"
+	.string "the authority to let you through.$"
+
+Wasteland_Rustboro_Text_CorpGuardCleared::
+	.string "Cleared Assessment, huh.\p"
+	.string "That's a start. It's not the same\n"
+	.string "as clearance for this building - but\l"
+	.string "it's the only door in this city that\l"
+	.string "ever opens for anyone.$"
 
 Wasteland_Rustboro_Text_DevonEmployee2::
 	.string "We don't call it a control network\n"
