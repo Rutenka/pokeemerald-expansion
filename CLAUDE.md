@@ -2803,6 +2803,62 @@ requires.
 **Build state**: `make -j2` rebuilt clean. `tools/validate_maps.py` unaffected
 (no new warnings on `Wasteland_MillersCut`).
 
+### Twenty-sixth custom feature: a genuine walkability bug in the corporate-gate
+### approach, root cause not fully explained, fix confirmed empirically
+### (2026-09-14, same day as the Twenty-fifth)
+
+Even after the sign fix, Viktor reported being unable to progress past "the
+first part of the mountain" beyond the checkpoint, describing small rocks that
+"require jumping with a bicycle" - not a wayfinding complaint this time, a real
+walkability question. Investigated properly rather than re-guessing at
+directions:
+
+- Decoded every non-plain metatile behavior across the checkpoint-to-gate
+  stretch of `Wasteland_MillersCut` and found 14 tiles (5 distinct metatile IDs:
+  766/768/769/770/771) all carrying `MB_BUMPY_SLOPE` behavior, arranged in small
+  2-4 tile clusters directly on the only viable route - these are exactly the
+  tiles Viktor was describing.
+- **Traced the real engine source expecting to confirm bumpy slopes don't block
+  plain walking (per this project's own existing comment in
+  `tools/smart_walk.py`, and per real vanilla Jagged Pass being completable
+  without any bike)**: `GetVanillaCollision`, `GetCollisionAtCoords`,
+  `IsMetatileDirectionallyImpassable`, `IsElevationMismatchAt`, and the forced-
+  movement tables in `field_player_avatar.c` were all read in full - none of
+  them reference `MB_BUMPY_SLOPE` as blocking on-foot movement, and
+  `metatile_behavior.c`'s own comment on the relevant flag table literally says
+  "set but never read." By every code path checked, this should have been
+  ordinary walkable ground.
+- **Empirically, it wasn't.** A live headless test confirmed the player
+  genuinely cannot move onto one of these tiles from any direction that isn't
+  already a dead end - tried repeatedly, with generous frame timing, checked
+  via direct position reads and screenshots (character stands still, no
+  animation, no bounce-back) - contradicting every code path traced. **The
+  real root cause was not found and is being honestly recorded as unresolved**,
+  not papered over: something about this exact behavior/tileset combination
+  blocks on-foot movement in the actual compiled ROM despite no explicit check
+  for it anywhere in the traced source.
+- **Fixed pragmatically rather than continuing to chase the root cause**: all
+  14 `MB_BUMPY_SLOPE` tiles replaced with `MB_MOUNTAIN_TOP` (metatile 767) -
+  the same plain tile already used immediately adjacent to every one of these
+  clusters in the real source data, so this isn't inventing new terrain, just
+  removing a tile whose behavior tag turned out to be broken in practice.
+  Matches the project's own standing rule (checklist item 16) to replace a
+  mechanism that's caused a real problem rather than trying to perfectly
+  characterize it first.
+- **Confirmed via real headless gameplay, both directions**: walked from just
+  outside the checkpoint all the way to the gate, and - using
+  `tools/smart_walk.py`'s recomputing walker for a clean, unambiguous result -
+  from the gate all the way back to the checkpoint, both fully successful with
+  no navigation failures.
+
+**If this exact symptom (a tile with open collision that empirically blocks
+movement anyway) shows up on a future map, don't re-trace the same code paths
+expecting a different answer - they were read thoroughly and found nothing.**
+Go straight to the empirical fix (swap the tile for a confirmed-walkable
+neighbor) rather than re-spending the research budget.
+
+**Build state**: `make -j2` rebuilt clean. `tools/validate_maps.py` unaffected.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
