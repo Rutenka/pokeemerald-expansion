@@ -78,10 +78,26 @@ Wasteland_Rustboro_EventScript_Woman::
 	release
 	end
 
+@ First real story-connected side quest (2026-09-14, per Viktor's request
+@ that side content always tie back to finding the father, not be generic
+@ filler): the Gym is now locked behind a sponsorship a guard checks for
+@ (see the map.json guard NPC, hidden once FLAG_HAS_GYM_SPONSORSHIP is set).
+@ DevonEmployee2 can vouch for the player but needs his own misfiled
+@ paperwork back - which FatMan, the city's actual records clerk, is
+@ holding without realizing it. Two existing NPCs, no new map, no new
+@ trainer - just their dialogue branching on two new flags.
 Wasteland_Rustboro_EventScript_FatMan::
 	lock
 	faceplayer
+	goto_if_set FLAG_HAS_MISFILED_PAPERWORK, Wasteland_Rustboro_EventScript_FatManAfter
 	msgbox Wasteland_Rustboro_Text_FatMan, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_FatManGivesPaperwork, MSGBOX_DEFAULT
+	setflag FLAG_HAS_MISFILED_PAPERWORK
+	release
+	end
+
+Wasteland_Rustboro_EventScript_FatManAfter::
+	msgbox Wasteland_Rustboro_Text_FatManAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -157,6 +173,19 @@ Wasteland_Rustboro_EventScript_DevonEmployee2::
 	lock
 	faceplayer
 	msgbox Wasteland_Rustboro_Text_DevonEmployee2, MSGBOX_DEFAULT
+	goto_if_set FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_DevonEmployee2Sponsored
+	goto_if_set FLAG_HAS_MISFILED_PAPERWORK, Wasteland_Rustboro_EventScript_DevonEmployee2GiveSponsorship
+	msgbox Wasteland_Rustboro_Text_DevonEmployee2AskFavor, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_DevonEmployee2GiveSponsorship::
+	msgbox Wasteland_Rustboro_Text_DevonEmployee2Thanks, MSGBOX_DEFAULT
+	setflag FLAG_HAS_GYM_SPONSORSHIP
+	release
+	end
+
+Wasteland_Rustboro_EventScript_DevonEmployee2Sponsored::
 	release
 	end
 
@@ -218,6 +247,17 @@ Wasteland_Rustboro_Text_FatMan::
 	.string "reports for this district.\p"
 	.string "Not one has ever been read, as far\l"
 	.string "as I can tell. I file them anyway.$"
+
+Wasteland_Rustboro_Text_FatManGivesPaperwork::
+	.string "…Actually, hold on.\p"
+	.string "This authorization's been sitting in\n"
+	.string "my tray for two weeks. Not mine.\l"
+	.string "Somebody in Coordination's, by the\l"
+	.string "stamp.\p"
+	.string "Here. Don't lose it a second time.$"
+
+Wasteland_Rustboro_Text_FatManAfter::
+	.string "Try not to lose it this time.$"
 
 Wasteland_Rustboro_Text_NinjaBoy::
 	.string "They test us for “aptitude” now.\n"
@@ -285,6 +325,22 @@ Wasteland_Rustboro_Text_DevonEmployee2::
 	.string "“Coordination framework.” Feels\l"
 	.string "completely different, I'm sure.$"
 
+Wasteland_Rustboro_Text_DevonEmployee2AskFavor::
+	.string "Trying to get into Assessment?\n"
+	.string "I could vouch for you - I've got the\l"
+	.string "standing.\p"
+	.string "Except my own authorization's sat\n"
+	.string "“unfiled” in Records for two weeks.\l"
+	.string "Ask for the big fellow down there.\l"
+	.string "Ironic - he's the one clerk who\l"
+	.string "actually reads what crosses his desk.$"
+
+Wasteland_Rustboro_Text_DevonEmployee2Thanks::
+	.string "There it is. Knew it wasn't lost -\n"
+	.string "just filed somewhere useless.\p"
+	.string "I'll let the door know you're\n"
+	.string "sponsored. Go on, then.$"
+
 Wasteland_Rustboro_Text_Man2::
 	.string "You get used to the drones after a\n"
 	.string "while.\p"
@@ -341,3 +397,16 @@ Wasteland_Rustboro_Text_CheckpointRoadSign::
 	.string "CHECKPOINT ROAD\n"
 	.string "South, past the marker stones -\l"
 	.string "the way back to Miller's Cut.$"
+
+@ Blocks the Gym door until FLAG_HAS_GYM_SPONSORSHIP is set (see
+@ DevonEmployee2/FatMan above) - the guard's own object_event "flag" field
+@ hides him automatically once that flag is set, same proven mechanism as
+@ the Miller's Cut blockade.
+Wasteland_Rustboro_EventScript_GymGuard::
+	msgbox Wasteland_Rustboro_Text_GymGuard, MSGBOX_NPC
+	end
+
+Wasteland_Rustboro_Text_GymGuard::
+	.string "No Assessment without sponsorship.\n"
+	.string "Talk to someone with real standing\l"
+	.string "in this city. Not me.$"

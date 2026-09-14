@@ -67,6 +67,8 @@
 #define FLAG_DEFEATED_CORP_OVERSEER 0x2D // Wasteland: Rustboro Gym boss, first proper boss fight
 #define FLAG_SEEN_RUSTBORO_ARRIVAL 0x2E // Wasteland: gates the one-time arrival narration on Wasteland_Rustboro
 #define FLAG_ITEM_WASTELAND_RUSTBORO_ITEM_1 0x2F // Wasteland: Rustboro's hidden item ball
+#define FLAG_HAS_MISFILED_PAPERWORK 0x30 // Wasteland: the FatMan gives up DevonEmployee2's misfiled sponsorship authorization
+#define FLAG_HAS_GYM_SPONSORSHIP 0x31 // Wasteland: DevonEmployee2 vouches for the player - lets the Assessment Center guard step aside
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag

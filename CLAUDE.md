@@ -3115,6 +3115,179 @@ character through several maps mid-verification.
 clean. `tools/validate_maps.py` run across every Wasteland map - zero hard
 errors, only the one expected/accepted Safe Room warning from the new check.
 
+### Thirty-first custom feature: the region's full story spine confirmed -
+### 8 controlled territories + a finale, replacing "gym badges" entirely
+### (2026-09-14, same day as the Thirtieth)
+
+Viktor asked for the overall story to be planned at a general level before
+more content gets bolted on reactively, explicitly inspired by the Fallout
+TV series (episodic personal stories that still drive the main plot,
+morally-grey factions, no clean good-guys/bad-guys split). This **replaces
+the vanilla "8 gym badges -> Pokemon League" structure**, not a reskin of
+it - confirmed via real back-and-forth, not decided unilaterally:
+
+**The throughline, confirmed**: every side quest and boss fight exists only
+in service of finding the father - no generic filler. The core justification
+for fighting through settlement after settlement, confirmed after Viktor
+pushed back on an earlier "collect network access keys" pitch as not
+creative enough and too maguffin-y: **corporate cities and warlord
+territories run on the exact same underlying logic - territorial control
+through force - just dressed differently.** A warlord's Enforcer controls
+passage through open violence; a corporate Overseer controls the exact same
+kind of passage through a "certification" that launders identical force
+through paperwork. Beating either is how you earn real standing in whoever
+currently controls the ground you need to cross - not a badge, not a key
+item, just the actual currency of authority in this world. This is meant to
+quietly unsettle the player: the "good guys" and the raiders turn out to run
+on the same fuel.
+
+**The confirmed 8-territory arc (general shape only - only the first two are
+built, the rest are name-and-theme only, not designed in detail yet):**
+
+1. **Miller's Cut / Ashband Checkpoint** *(built)* - raider warlord
+   territory. Boss: the Enforcer (Mightyena/Koffing - scrappy, toxic,
+   feral "attack dog" theme).
+2. **Rustboro** *(in progress)* - Devon Corp's regional seat. Boss: Overseer
+   Reyes (Magneton/Solrock/Porygon - clean, artificial, psychic-network
+   theme, tied directly to the setting's central conceit).
+3. **An independent trading settlement** - no warlord, no corporation, a
+   community holding itself together on its own terms. Boss is a
+   tough-but-decent local protector, not a villain - the first real
+   "Pokemon partnership is good, not just a weapon" beat, deliberate tonal
+   contrast after two "everyone's compromised" chapters. Theme: sturdy,
+   reliable working-partner Pokemon (Ground/Normal workhorse feel), not
+   military might.
+4. **A rival corporate city** - reveals Devon Corp isn't a monolithic single
+   villain; there's real infighting, a rogue faction or competitor. Boss is
+   a corporate rival, not Devon Corp itself - starts showing the
+   conspiracy has real cracks the player can use. Theme: a different,
+   more cutthroat corporate flavor than Devon Corp's clean tech -
+   predatory, profit-first (Poison/Dark).
+5. **A Pokemon-reclaimed ruin** - nature took this one back. Its
+   protector won't respect a win the way the others do - only genuine
+   demonstrated respect for Pokemon passes here, a different *kind* of
+   test, not just a harder fight. Theme: wild, untamed nature (Grass/Bug).
+6. **A militarized holdout** - old government/security remnants running
+   their own checkpoint-state, broadening collapse-blame beyond just Devon
+   Corp (the original brief already names "failed governments" alongside
+   corporate guilt). Theme: disciplined, armored, hard-line (Steel/Fighting).
+7. **A fanatic settlement** - a cult built around the control network
+   itself, either worshipping it as judgment or wanting it reactivated.
+   Deliberately the tonal home for real dark-comedy (bureaucracy fused with
+   zealotry). Theme: unsettling, otherworldly, network-adjacent
+   (Ghost/Psychic).
+8. **Devon Corp's true regional HQ** - the deepest, most guarded stop, run
+   by whoever actually authorized what happened to the player's father -
+   the direct lead-in to the finale, not a separate epilogue. Theme: the
+   fullest expression of the network-control idea, escalated past Reyes.
+
+**Finale** (shape only): confronting whatever's actually holding the
+father, and the network itself - resolved with the ending still genuinely
+open (Ashband/rebels, independent, or something else), exactly matching the
+original design brief's explicit "must not be assumed" instruction.
+
+**Not yet decided/built**: any specifics for territories 3-8 beyond the
+one-line theme above - species, maps, NPCs, exact boss teams, none of it
+exists yet. Build these the same "one chapter at a time, checked against
+the roster principles" way every other chapter in this project has been
+built - don't front-load the whole region.
+
+### Thirty-second custom feature: the Rustboro Gym locked behind a real side
+### quest, and a visible exit gate for the garden/road tunnel doors
+### (2026-09-14, same day as the Thirty-first)
+
+Two of Viktor's asks from the same message: the checkpoint-to-gym round trip
+works but the tunnel exit still has "no entrance visually," and the Gym
+should be locked behind a small side mission rather than walk-up-and-fight,
+tying back into the confirmed "same underlying force logic, dressed
+differently" throughline (Thirty-first feature entry) rather than being an
+arbitrary gate.
+
+**Visual gate fix.** Investigated by rendering the actual exit area
+(`tools/tileset_preview.py --map`, cropped around the landing spot) instead
+of guessing at "add a forest" - the crop here is a real, whole vanilla
+plaza (fenced garden plots, a decorative stream, existing lamp posts), not
+wilderness, so inventing a forest edge would have broken checklist item 1's
+"only ever copy real tile usage" rule. Used the map's own real lamp-post
+tiles instead (sourced from the existing lamp posts already on this same
+map) to flank the actual gap: top+base pairs pasted at the two columns just
+outside the landing spot, via direct raw-byte `.bin` edits (metatile+
+collision preserved from the real source, nothing invented). Re-rendered
+and visually confirmed the gate now reads as a deliberate opening rather
+than a blank gap.
+
+**Gym lock + sponsorship quest.** The Gym's only approach tile - `(27,20)`,
+confirmed the sole non-solid tile flanking the door at `(27,19)` - now holds
+a guard (`Wasteland_Rustboro_EventScript_GymGuard`) who blocks passage and
+hides on a new flag, `FLAG_HAS_GYM_SPONSORSHIP` (`0x31`). Getting it needs a
+two-NPC chain, reusing two existing Rustboro NPCs rather than inventing new
+ones: **FatMan** hands over "misfiled paperwork" on first talk (sets
+`FLAG_HAS_MISFILED_PAPERWORK`, `0x30`, bureaucratic-comedy tone matching the
+brief's tonal note - the authorization "sat in his tray for two weeks");
+**DevonEmployee2** (who already asked for a favor in existing dialogue) then
+converts that paperwork into `FLAG_HAS_GYM_SPONSORSHIP` once the player has
+it. Each NPC has a distinct repeat-visit branch so re-talking never re-gifts
+or re-grants.
+
+**A real, previously-shipped bug found and fixed while building this**:
+`OBJ_EVENT_GFX_POLICEMAN` - used for this new guard, but also already used
+for the existing `Wasteland_Rustboro` corp-gate guard (`CorpGuard`, Twenty-
+third feature entry) and `Wasteland_CorpCheckpoint`'s own guard - is exactly
+the same class of bug as the Ashband Biker sprite (Twenty-second feature
+entry): a real graphics constant with real backing data, but only ever used
+on `_Frlg` maps in vanilla, confirmed by grepping every real map that
+references it. It silently fails to render in an Emerald-mode build. This
+means **both pre-existing POLICEMAN guards had been invisible this whole
+time**, undetected until this session's own new guard hit the identical
+issue and got checked properly instead of assumed fine because "it's the
+same sprite used elsewhere already." Fixed all three at once, swapping to
+`OBJ_EVENT_GFX_DEVON_EMPLOYEE` (a real, confirmed-safe-in-Emerald asset
+already used elsewhere in this exact city, so it also reads as thematically
+appropriate corporate-uniformed security) in
+`Wasteland_Rustboro/map.json` and `Wasteland_CorpCheckpoint/map.json`.
+**New checklist-worthy lesson, generalizing the Twenty-second entry's
+finding**: an overworld sprite constant existing elsewhere in this project's
+own shipped content is not proof it renders correctly - check its real
+vanilla usage (which game version's maps actually reference it) every time
+a "reuse an existing asset" choice is made, not just the first time that
+asset type is introduced.
+
+**Confirmed via real headless gameplay, both states**: with neither flag
+set, walking up to the gym door is physically blocked at `(27,20)` and the
+guard's line displays ("No Assessment without sponsorship..."). Talking to
+FatMan sets `FLAG_HAS_MISFILED_PAPERWORK` (confirmed via a direct flag read
+after mashing through his multi-page dialogue to genuine completion, not a
+guessed press count - see below); talking to DevonEmployee2 afterward sets
+`FLAG_HAS_GYM_SPONSORSHIP` the same way. With both flags set, the same
+approach tile is now walkable straight through into the Gym's own interior
+(confirmed via `get_location()` changing to the Gym's map/group/warp).
+
+**A real, repeated self-inflicted testing artifact hit twice this session,
+worth recording since it's the exact class checklist items 12/15 already
+name, just a new specific trigger for it**: pressing one extra "just in
+case" A immediately after a flag read confirms True - reasoning it would
+"close a trailing textbox" - actually **re-triggers the entire NPC
+conversation from the top** if the real msgbox had, in fact, already fully
+closed by that point (since the player is still standing there facing
+them). This produced a second, unrelated stuck-looking state each time
+(the NPC's own *unconditional* opening line playing again, silently eating
+every later directional press as a no-op) that took real time to
+misdiagnose as a navigation bug before checking a screenshot showed the
+real cause. **Fix, and the general lesson**: once a flag-driven
+conversation's target flag reads True, immediately press a directional key
+to step away - never press one more A "to be safe." Test flags used during
+this investigation (`0x30`/`0x31`) were also directly set once via raw
+memory poke to isolate the guard's hide mechanism from the two-NPC dialogue
+chain; both were confirmed still `False` on Viktor's real save immediately
+afterward (this project's established "check the save wasn't touched"
+discipline, since a prior session's finding that flag/var writes persist to
+disk turned out not to reproduce for a raw poke that was never followed by
+an in-game Save - the emulator's SRAM flush timing, not confirmed further).
+
+**Build state**: `make DEBUG=1 -j2` and `make -j2` (the resting build) both
+rebuilt clean. `tools/validate_maps.py` run across the full project - zero
+hard errors, only pre-existing/expected warnings.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
