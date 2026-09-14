@@ -9455,6 +9455,39 @@
       "border_filepath": "data/layouts/Wasteland_RustboroGym/border.bin",
       "blockdata_filepath": "data/layouts/Wasteland_RustboroGym/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ASHBAND_HOLDING_CELL",
+      "name": "Wasteland_AshbandHoldingCell_Layout",
+      "width": 33,
+      "height": 39,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Wasteland_AshbandHoldingCell/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_AshbandHoldingCell/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ASHBAND_SUPPLY_CACHE",
+      "name": "Wasteland_AshbandSupplyCache_Layout",
+      "width": 49,
+      "height": 28,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Wasteland_AshbandSupplyCache/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_AshbandSupplyCache/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_ASHBAND_RECORDS_ROOM",
+      "name": "Wasteland_AshbandRecordsRoom_Layout",
+      "width": 60,
+      "height": 19,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Wasteland_AshbandRecordsRoom/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_AshbandRecordsRoom/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

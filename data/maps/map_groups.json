@@ -1179,6 +1179,9 @@
     "Wasteland_Rustboro",
     "Wasteland_RustboroGym",
     "Wasteland_Rustboro_PokemonCenter",
-    "Wasteland_Rustboro_Mart"
+    "Wasteland_Rustboro_Mart",
+    "Wasteland_AshbandHoldingCell",
+    "Wasteland_AshbandSupplyCache",
+    "Wasteland_AshbandRecordsRoom"
   ]
 }

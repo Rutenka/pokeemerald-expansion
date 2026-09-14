@@ -151,6 +151,9 @@
 #define VAR_ROUTE134_STATE                               0x4081 // Unused Var
 #define VAR_LITTLEROOT_HOUSES_STATE_MAY                  0x4082
 #define VAR_WASTELAND_ESTATE_GROUNDS_STATE               0x4083 // Wasteland: drives a one-shot post-arrival auto-correction for a real, reproducible rendering glitch (see the map's own scripts.inc)
+#define VAR_WASTELAND_HOLDING_CELL_STATE                 0x408B // Wasteland: drives the holding cell's one-shot arrival narration
+#define VAR_WASTELAND_SUPPLY_CACHE_STATE                 0x4091 // Wasteland: drives the supply cache's one-shot arrival narration
+#define VAR_WASTELAND_RECORDS_ROOM_STATE                 0x409B // Wasteland: drives the records room's one-shot arrival narration
 #define VAR_BIRCH_LAB_STATE                              0x4084
 #define VAR_PETALBURG_GYM_STATE                          0x4085 // 0-1: Wally tutorial, 2-6: 0-4 badges, 7: Defeated Norman, 8: Rematch Norman
 #define VAR_CONTEST_HALL_STATE                           0x4086

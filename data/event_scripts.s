@@ -1067,6 +1067,9 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_RustboroGym/scripts.inc"
 	.include "data/maps/Wasteland_Rustboro_PokemonCenter/scripts.inc"
 	.include "data/maps/Wasteland_Rustboro_Mart/scripts.inc"
+	.include "data/maps/Wasteland_AshbandHoldingCell/scripts.inc"
+	.include "data/maps/Wasteland_AshbandSupplyCache/scripts.inc"
+	.include "data/maps/Wasteland_AshbandRecordsRoom/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"

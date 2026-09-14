@@ -2697,6 +2697,66 @@ expected/accepted "closed building door" warnings on Rustboro (9 of them, matchi
 the 9 real buildings deliberately left unwired) and one pre-existing Miller's Cut
 elevation warning unrelated to this session's changes.
 
+### Twenty-fourth custom feature: the Ashband checkpoint's real dead end fixed,
+### and the first hard confirmation the corporation supplies the Ashband
+### (2026-09-14)
+
+Viktor hit a real dead end after clearing the checkpoint boss and asked directly
+what comes next and how the story should progress from there. Root cause: the
+checkpoint (a whole reused `MagmaHideout_1F`) genuinely has three more real doors
+that were simply never wired - a "closed for now" trade-off elsewhere in this
+project, but never called out for this specific map, so it read as a dead end
+rather than an intentional stopping point.
+
+**Wired all three, reusing their real vanilla destinations verbatim (per checklist
+item 11) rather than inventing new rooms**: `Wasteland_AshbandHoldingCell`
+(= `MagmaHideout_2F_1R`), `Wasteland_AshbandSupplyCache` (= `MagmaHideout_2F_2R`),
+`Wasteland_AshbandRecordsRoom` (= `MagmaHideout_2F_3R`) - each map's *own* further
+real doors (down into a real vanilla "3F" level) were deliberately left unwired,
+same accepted trade-off, one level of scope-creep prevented. Each room fires a
+one-shot arrival narration via `MAP_SCRIPT_ON_FRAME_TABLE` (the same proven-safe
+pattern as the Safe Room's cutscene - a `lockall`/`msgbox` sequence that doesn't
+depend on any specific landing/trigger tile, so it carries none of the
+"coord_event on the wrong tile" risk class that caused the softlock earlier this
+session) - three new dedicated one-shot vars added
+(`VAR_WASTELAND_HOLDING_CELL_STATE`/`_SUPPLY_CACHE_STATE`/`_RECORDS_ROOM_STATE`).
+
+**Confirmed by AskUserQuestion**: the hook these rooms build toward - the holding
+cell shows Dad was here (a torn coat), the supply cache shows unmarked-but-some-
+branded crates, and the records room's ledger explicitly reads "DEVON CORPORATION -
+LOGISTICS" on every page. This is the first hard, written confirmation (not vague
+chatter) that the corporation directly supplies the Ashband raiders - a real,
+deliberate escalation from "undecided/deniable" to "on the page," per Viktor's own
+choice when given the option to keep it softer.
+
+**The mother's post-rescue dialogue now bridges to the corporate thread
+narratively**, rather than leaving the corporate checkpoint/Rustboro path
+undiscoverable by chance: she tells the player she never saw Dad taken further
+this way, and that "another road further up the Cut... isn't the Ashband. That
+side's the company." This gives an in-fiction reason to backtrack to Miller's
+Cut's other real door (wired to `Wasteland_CorpCheckpoint`/`Wasteland_Rustboro`
+in the Twenty-third feature entry) instead of a player simply having to notice a
+second unlabeled path on their own.
+
+**Confirmed via real headless gameplay** (`tools/mgba_probe.py`, one fresh
+`MgbaSession` per room - running all three in a single session hit a real,
+unexplained `Bad file descriptor` error on the second/third `MgbaSession()`
+construction, not yet root-caused, worked around by using a separate process per
+room instead): all three doors correctly warp in from the checkpoint, each
+narration fires and clears correctly, and movement resumes afterward. One
+real, useful navigational finding along the way: `MB_NON_ANIMATED_DOOR` tiles only
+trigger `TryDoorWarp` when the player is walked *into* them from an adjacent tile
+in the correct direction - starting a test already standing exactly on the door
+tile (which is what the debug menu's warp tool does) does **not** retrigger it on
+the next press in an arbitrary direction; the player has to actually step off and
+back onto it (or approach fresh) for the door check to run. Worth remembering for
+any future headless door test that starts via a debug-menu warp landing exactly
+on a door tile, not just other maps.
+
+**Build state**: both `make -j2` (normal) and `make DEBUG=1 -j2` rebuilt clean.
+`tools/validate_maps.py` clean except the two expected/accepted "closed door"
+warnings for the deeper real vanilla connections deliberately left unwired.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

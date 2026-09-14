@@ -75,6 +75,27 @@
       "elevation": 3,
       "dest_map": "MAP_WASTELAND_MILLERS_CUT",
       "dest_warp_id": "2"
+    },
+    {
+      "x": 25,
+      "y": 34,
+      "elevation": 3,
+      "dest_map": "MAP_WASTELAND_ASHBAND_HOLDING_CELL",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 31,
+      "y": 3,
+      "elevation": 0,
+      "dest_map": "MAP_WASTELAND_ASHBAND_SUPPLY_CACHE",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 20,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_WASTELAND_ASHBAND_RECORDS_ROOM",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],
