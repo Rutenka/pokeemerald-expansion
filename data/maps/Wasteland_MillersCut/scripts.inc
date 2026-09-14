@@ -7,10 +7,15 @@
 @ exact byte-for-byte match with real VerdanturfTown data at that
 @ coordinate - never wired up before now); the real mid-map cave-mouth
 @ entrance (Magma Hideout in vanilla) now leads to Wasteland_AshbandCheckpoint.
-@ The real north door (Mt. Chimney in vanilla) is deliberately left unwired -
-@ see tools/validate_maps.py's own "door with no warp" warning for it, which
-@ is correct here: it's the physical hook for continuing Miller's Cut later,
-@ not a bug.
+@ The real north door (Mt. Chimney in vanilla) now leads to
+@ Wasteland_CorpCheckpoint / Rustboro (see the Twenty-third feature entry in
+@ CLAUDE.md) - a real MB_NORTH_ARROW_WARP tile, same mechanism as any other
+@ door, but its real vanilla tile art (a striped wooden gate/barrier graphic)
+@ reads as solid decorative fencing rather than an entrance on its own - a
+@ real discoverability bug Viktor hit directly (2026-09-14). Fixed with a
+@ sign right next to it rather than touching the tile art itself (lower
+@ risk than another hand-patch, see the softlock this session already had
+@ from exactly that kind of edit).
 Wasteland_MillersCut_MapScripts::
 	.byte 0
 
@@ -54,3 +59,12 @@ Wasteland_MillersCut_Text_LookoutIntro::
 Wasteland_MillersCut_Text_LookoutDefeat::
 	.string "Fine! Fine. I didn't see you.\n"
 	.string "You didn't see me.$"
+
+Wasteland_MillersCut_EventScript_GateSign::
+	msgbox Wasteland_MillersCut_Text_GateSign, MSGBOX_SIGN
+	end
+
+Wasteland_MillersCut_Text_GateSign::
+	.string "PRIVATE ACCESS ROAD\n"
+	.string "The barrier ahead lifts for company\l"
+	.string "traffic - the gate itself moves.$"

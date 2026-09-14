@@ -2757,6 +2757,52 @@ on a door tile, not just other maps.
 `tools/validate_maps.py` clean except the two expected/accepted "closed door"
 warnings for the deeper real vanilla connections deliberately left unwired.
 
+### Twenty-fifth custom feature: the corporate gate didn't read as a door at all
+### (2026-09-14, same day as the Twenty-fourth)
+
+Viktor still couldn't find the way to Rustboro after the mother's new dialogue
+pointed him at it. Investigated by rendering the exact tile art at the door
+coordinate rather than assuming the coordinate alone was the problem (per
+checklist item 8) - and it wasn't a placement bug this time, it was the tile
+art itself. The real vanilla graphic at this exact spot (metatile 535, a
+yellow/blue striped barrier used for Jagged Pass's own Mt. Chimney gate) renders
+as a solid-looking wooden fence with no visible gap, no dark opening, nothing
+that reads as "walk into me" the way the Ashband checkpoint's dark cave mouth
+does. This is functionally the same failure class checklist item 16 already
+covers (a real, correctly-wired warp that a player still can't distinguish from
+solid scenery) - it just wears different tile art than the "invisible trigger on
+open grass" version that rule was written for.
+
+**Fixed with a sign, not another tile edit** - deliberately the lower-risk option
+after this same session's earlier softlock came from a hand-patch to raw tile
+data (Twenty-second/current-day incident). A sign at `Wasteland_MillersCut`
+local `(12,7)` (a real solid rock tile immediately beside the open approach
+path, confirmed via collision data before placing it - a sign placed on
+*walkable* ground was tried first and doesn't work correctly, see below) reads
+"PRIVATE ACCESS ROAD - the barrier ahead lifts for company traffic," directly
+telling the player the barrier is a real passage.
+
+**One real placement mistake caught before this shipped**: the first attempt put
+the sign directly on the open path tile leading to the gate. A sign's own
+`bg_event` doesn't add collision - it only fires when the player is on an
+*adjacent* tile facing into a spot they can't walk onto, the same way every real
+vanilla sign works (always placed on an already-solid decorative tile, like a
+signpost graphic). Placed on open ground, the player just walks straight through
+the tile without ever "facing" it the way a real sign interaction needs, so it
+would have silently never fired for a player just walking past. Confirmed via a
+real headless test: standing on the open tile in front of the first (bad)
+coordinate, `A` did nothing; moved to a genuinely solid tile one further step in
+(matching a real rock tile's existing collision, not a tile the assistant made
+solid), and confirmed via screenshot that the same sign now displays correctly.
+**New checklist-worthy lesson**: a sign must be placed on ground that's already
+collision-blocked (by the tile itself, not the sign), or it silently never
+triggers for a player who just walks past it - check the tile's collision before
+placing any sign, the same way every other event placement in this file already
+requires.
+
+**Build state**: `make -j2` rebuilt clean. `tools/validate_maps.py` unaffected
+(no new warnings on `Wasteland_MillersCut`).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
