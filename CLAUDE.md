@@ -2967,6 +2967,81 @@ data, not new code paths.
 **Build state**: both `make -j2` (normal, the resting build) and
 `make DEBUG=1 -j2` rebuilt clean.
 
+### Twenty-ninth custom feature: a real physical blockade for the Lookout,
+### and a second invisible-exit bug in Rustboro (2026-09-14, same day as the
+### Twenty-eighth)
+
+Viktor reported two real, separate problems: he could reach Rustboro without
+ever having to fight the Miller's Cut Lookout (a sight-triggered ambush is
+avoidable by construction, not a real gate), and once in Rustboro there was
+no visible way back to "the second road" at all.
+
+**The Lookout is now a real, unavoidable gate, not an avoidable ambush.**
+Found the map's one genuine physical chokepoint (row 36, the only 4-tile gap
+in the mountain wall between the entrance and everything further north -
+confirmed via a full collision scan, not guessed) and placed 4
+`OBJ_EVENT_GFX_HIKER` guards shoulder to shoulder across it, sealing it
+completely. The Lookout herself is now one of the four (not a separate sight-
+ambush elsewhere) - reaching the chokepoint means fighting her, period. All 4
+share her hide-flag and are explicitly `removeobject`'d together the instant
+she's beaten (a shared flag alone only refreshes on the next map load - see
+the Twenty-second feature entry's identical lesson, applied proactively this
+time before it could ship as a bug).
+
+**Two real mistakes caught before this shipped, both through live testing,
+not just review:**
+1. **First attempt placed the blockade one row south of (before) the
+   Lookout instead of north of (past) her** - meaning the blockade would
+   have sealed her off from the player entirely, an unwinnable dead end.
+   Caught by checking the actual `y` values against this map's real
+   north-is-decreasing-`y` orientation before ever touching mgba, not
+   discovered live - but only because the fix was checked this carefully;
+   record it here since it's exactly the kind of directional mistake that's
+   easy to make again.
+2. **A duplicate leftover blocker object was left standing on the Lookout's
+   own new tile** after merging her into the blockade row - two objects on
+   one coordinate, confirmed via a real headless walk-up-and-press-A test
+   that got no response from either. Removing the stray duplicate fixed it.
+3. **A real, unrelated red herring during this same testing pass, worth
+   recording**: even after both fixes, her fight still wouldn't trigger in
+   testing - traced to `trainerbattle_single` checking its own internal,
+   automatically-managed per-trainer defeat flag (`TRAINER_FLAGS_START +
+   trainer_id`, separate from any custom flag a script sets), which reads
+   as **already true** on Viktor's real save (he'd apparently beaten her for
+   real at some point) - nothing was wrong with the new blockade at all, the
+   test needed to clear that internal engine flag too, not just the custom
+   story flag, to accurately simulate a fresh "not yet fought" state.
+   **New checklist-worthy lesson**: when a `trainerbattle_single` NPC seems
+   unresponsive in headless testing, check its real internal per-trainer
+   flag (`TRAINER_FLAGS_START + trainer_id`, from `include/constants/
+   flags.h`) before assuming the object/script is broken - a custom "hide"
+   flag and the engine's own defeat-tracking are two separate things.
+
+**The Rustboro return path was a second instance of the exact same
+discoverability bug as the corporate gate** (Twenty-fifth feature entry): the
+return warp at local `(15,59)` sits on completely plain, unmarked ground with
+zero visual cue. Fixed the same low-risk way - a sign ("CHECKPOINT ROAD -
+South, past the marker stones - the way back to Miller's Cut") placed on a
+real solid tile nearby, not a tile edit.
+
+**Also fixed while investigating**: the new `check_event_tiles_walkable`
+validator check (Twenty-second feature entry) was flagging Rustboro's real,
+already-working Gym/Mart/Pokemon Center doors as errors - a false positive,
+since real doors routinely have collision=1 on their own tile (the special
+door-behavior check bypasses ordinary collision, which is normal, not a sign
+of a hand-patch). Fixed by excluding door-behavior tiles from that specific
+check.
+
+**Confirmed via real headless gameplay**: the blockade physically stops
+movement at all 4 columns, the 3 non-Lookout guards show blocking dialogue,
+the Lookout's fight genuinely triggers and starts a real battle (screenshot:
+"You are challenged by ASHBAND LOOKOUT!"), and the Rustboro sign displays
+correctly.
+
+**Build state**: both `make -j2` (normal) and `make DEBUG=1 -j2` rebuilt
+clean. `tools/validate_maps.py` clean on both changed maps (only the same
+pre-existing, unrelated warnings as before).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

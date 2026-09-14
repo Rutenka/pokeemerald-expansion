@@ -259,7 +259,7 @@ def check_elevation_zero(map_json, layout, attrs, errors, warnings):
         )
 
 
-def check_event_tiles_walkable(map_json, layout, errors):
+def check_event_tiles_walkable(map_json, layout, attrs, errors):
     """Every warp_events and coord_events coordinate on THIS map must itself be
     collision-open in the current tile data. This exists specifically because a
     hand-patch that overwrites a region of a map's raw .bin data (e.g. pasting in
@@ -286,6 +286,10 @@ def check_event_tiles_walkable(map_json, layout, errors):
 
     for i, wv in enumerate(map_json.get("warp_events", [])):
         x, y = wv["x"], wv["y"]
+        if 0 <= x < w and 0 <= y < h and attrs.behavior(grid[y][x][0]) in DOOR_BEHAVIORS:
+            continue  # real doors routinely have collision=1 on their own tile art -
+                      # TryDoorWarp's door-behavior check bypasses ordinary collision,
+                      # so this is normal, not a sign anything was overwritten.
         if is_blocked(x, y):
             errors.append(
                 f"warp_events[{i}] at ({x},{y}) sits on a collision-blocked tile - "
@@ -396,7 +400,7 @@ def validate_one(name, maps_index):
     check_coord_event_on_landing_tile(map_json, errors)
     check_doors(map_json, layout, attrs, errors, warnings)
     check_elevation_zero(map_json, layout, attrs, errors, warnings)
-    check_event_tiles_walkable(map_json, layout, errors)
+    check_event_tiles_walkable(map_json, layout, attrs, errors)
     check_connections(name, map_json, maps_index, errors, warnings)
     return errors, warnings
 

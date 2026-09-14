@@ -304,3 +304,18 @@ Wasteland_Rustboro_Text_PassSign::
 
 Wasteland_Rustboro_Text_PrivateResidenceSign::
 	.string "PRIVATE RESIDENCE$"
+
+@ The return path to the checkpoint/Miller's Cut sits on plain, unmarked
+@ ground here (checklist item 16's exact failure class - a real, working
+@ warp a player has no way to distinguish from ordinary pavement) - Viktor
+@ hit this directly (2026-09-14), reporting no way back to "the second
+@ road" at all. Fixed with a sign, same low-risk pattern as the corporate
+@ gate fix rather than touching the tile itself.
+Wasteland_Rustboro_EventScript_CheckpointRoadSign::
+	msgbox Wasteland_Rustboro_Text_CheckpointRoadSign, MSGBOX_SIGN
+	end
+
+Wasteland_Rustboro_Text_CheckpointRoadSign::
+	.string "CHECKPOINT ROAD\n"
+	.string "South, past the marker stones -\l"
+	.string "the way back to Miller's Cut.$"

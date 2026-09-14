@@ -217,6 +217,11 @@
       "type": "sign", "x": 12, "y": 38, "elevation": 3,
       "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
       "script": "Wasteland_Rustboro_EventScript_PrivateResidenceSign"
+    },
+    {
+      "type": "sign", "x": 14, "y": 55, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_Rustboro_EventScript_CheckpointRoadSign"
     }
   ]
 }

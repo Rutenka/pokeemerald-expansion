@@ -33,11 +33,37 @@ Wasteland_MillersCut_EventScript_AshbandLookout::
 	trainerbattle_single TRAINER_ASHBAND_LOOKOUT, Wasteland_MillersCut_Text_LookoutIntro, Wasteland_MillersCut_Text_LookoutDefeat, Wasteland_MillersCut_EventScript_LookoutFlees
 	end
 
+@ The 3 blockade guards (local_id 2-4) flank the Lookout on both sides of the
+@ same row (the map's one real 4-tile chokepoint - see the checklist entry
+@ below), sealing it completely with no gap to slip through. A first attempt
+@ placed the Lookout one row south of the blockade instead of in it - which
+@ would have sealed her off from the player entirely, since the blockade sat
+@ between the entrance and her, an unwinnable dead end caught before it ever
+@ shipped. They share her own hide-flag but are separate objects, so removing
+@ just the Lookout herself wouldn't clear them until the next map reload -
+@ explicitly removed here too, so the path opens the instant she's beaten,
+@ not on the player's next visit.
 Wasteland_MillersCut_EventScript_LookoutFlees::
 	setflag FLAG_DEFEATED_ASHBAND_LOOKOUT
 	applymovement 1, Wasteland_MillersCut_Movement_LookoutFlees
 	waitmovement 0
 	removeobject 1
+	removeobject 2
+	removeobject 3
+	removeobject 4
+	end
+
+@ Real design feedback from Viktor (2026-09-14): a sight-triggered ambush
+@ alone doesn't actually gate anything - a player who avoids the Lookout's
+@ sight line can just walk past her entirely and reach the corporate
+@ checkpoint/Rustboro without ever fighting her. Fixed with a real physical
+@ blockade: 4 guards standing shoulder to shoulder across the map's one
+@ genuine chokepoint (row 36, the only 4-tile gap in the mountain wall
+@ separating the Lookout's post from everything further north), sharing her
+@ own defeat flag so all 4 vanish together, immediately, the moment she's
+@ beaten (see above) - not on next map load.
+Wasteland_MillersCut_EventScript_Blockade::
+	msgbox Wasteland_MillersCut_Text_Blockade, MSGBOX_NPC
 	end
 
 Wasteland_MillersCut_Movement_LookoutFlees:
@@ -59,6 +85,10 @@ Wasteland_MillersCut_Text_LookoutIntro::
 Wasteland_MillersCut_Text_LookoutDefeat::
 	.string "Fine! Fine. I didn't see you.\n"
 	.string "You didn't see me.$"
+
+Wasteland_MillersCut_Text_Blockade::
+	.string "Not past this point. Not till our\n"
+	.string "lookout says it's clear.$"
 
 Wasteland_MillersCut_EventScript_GateSign::
 	msgbox Wasteland_MillersCut_Text_GateSign, MSGBOX_SIGN
