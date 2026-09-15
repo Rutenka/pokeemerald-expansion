@@ -558,24 +558,28 @@ Wasteland_Rustboro_Text_GymGuard::
 	.string "Talk to someone with real standing\l"
 	.string "in this city. Not me.$"
 
-@ Incident site 3 of 3, the capstone (2026-09-14) - Selin's own Natu, the
-@ one living creature in this incident rather than a drone or an artifact,
-@ deliberately given more weight - and the one the player can keep
-@ afterward (Viktor's ask: a catchable reward that fits the story and the
-@ early game). A real `wildbattle`, same reasoning as the other two sites -
-@ if the player catches it themselves during the fight, no separate gift is
-@ needed; if they win without catching it, Selin gives it to them directly
-@ afterward via `givemon`, using the same party/PC/no-room branching as the
-@ Safe Room's own starter gift.
+@ Incident site 3 of 3, the capstone (2026-09-14, species swapped to Elgyem
+@ 2026-09-15 per Viktor's request for something more exotic) - Selin's own
+@ Elgyem, the one living creature in this incident rather than a drone or
+@ an artifact, deliberately given more weight - and the one the player can
+@ keep afterward (Viktor's ask: a catchable reward that fits the story and
+@ the early game). Elgyem's own real Pokédex lore (telepathy triggered by
+@ radio-wave/antenna exposure) is a near-literal match for "affected by the
+@ control network," which is why it replaced Natu. A real `wildbattle`,
+@ same reasoning as the other two sites - if the player catches it
+@ themselves during the fight, no separate gift is needed; if they win
+@ without catching it, Selin gives it to them directly afterward via
+@ `givemon`, using the same party/PC/no-room branching as the Safe Room's
+@ own starter gift.
 Wasteland_Rustboro_EventScript_Selin::
 	lock
 	faceplayer
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_SelinNormal
 	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_SelinAfter
 	msgbox Wasteland_Rustboro_Text_SelinAlert, MSGBOX_DEFAULT
-	setwildbattle SPECIES_NATU, 13, ITEM_NONE
+	setwildbattle SPECIES_ELGYEM, 13, ITEM_NONE
 	waitse
-	playmoncry SPECIES_NATU, CRY_MODE_ENCOUNTER
+	playmoncry SPECIES_ELGYEM, CRY_MODE_ENCOUNTER
 	delay 40
 	waitmoncry
 	dowildbattle
@@ -598,24 +602,24 @@ Wasteland_Rustboro_EventScript_SelinCaught::
 
 Wasteland_Rustboro_EventScript_SelinWonNotCaught::
 	msgbox Wasteland_Rustboro_Text_SelinWonNotCaught, MSGBOX_DEFAULT
-	givemon SPECIES_NATU, 13
-	goto_if_eq VAR_RESULT, 0, Wasteland_Rustboro_EventScript_SelinGaveNatuParty
-	goto_if_eq VAR_RESULT, 1, Wasteland_Rustboro_EventScript_SelinGaveNatuPC
-	goto_if_eq VAR_RESULT, 2, Wasteland_Rustboro_EventScript_SelinNoRoomForNatu
+	givemon SPECIES_ELGYEM, 13
+	goto_if_eq VAR_RESULT, 0, Wasteland_Rustboro_EventScript_SelinGaveElgyemParty
+	goto_if_eq VAR_RESULT, 1, Wasteland_Rustboro_EventScript_SelinGaveElgyemPC
+	goto_if_eq VAR_RESULT, 2, Wasteland_Rustboro_EventScript_SelinNoRoomForElgyem
 	end
 
-Wasteland_Rustboro_EventScript_SelinGaveNatuParty::
+Wasteland_Rustboro_EventScript_SelinGaveElgyemParty::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
 	release
 	end
 
-Wasteland_Rustboro_EventScript_SelinGaveNatuPC::
+Wasteland_Rustboro_EventScript_SelinGaveElgyemPC::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
-	msgbox Wasteland_Rustboro_Text_SelinNatuSentToPC, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_SelinElgyemSentToPC, MSGBOX_DEFAULT
 	release
 	end
 
-Wasteland_Rustboro_EventScript_SelinNoRoomForNatu::
+Wasteland_Rustboro_EventScript_SelinNoRoomForElgyem::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
 	msgbox gText_NoMoreRoomForPokemon, MSGBOX_DEFAULT
 	release
@@ -627,8 +631,9 @@ Wasteland_Rustboro_EventScript_SelinAfter::
 	end
 
 Wasteland_Rustboro_Text_Selin::
-	.string "She won't come down off the awning\n"
-	.string "today. Won't even look at me.\p"
+	.string "She won't come out from under the\n"
+	.string "porch today. Won't even look at\l"
+	.string "me.\p"
 	.string "It's been like this since the\n"
 	.string "alarm.$"
 
@@ -658,9 +663,10 @@ Wasteland_Rustboro_Text_SelinWonNotCaught::
 	.string "think I'm the one she trusts to\l"
 	.string "stop it next time.$"
 
-Wasteland_Rustboro_Text_SelinNatuSentToPC::
+Wasteland_Rustboro_Text_SelinElgyemSentToPC::
 	.string "There was no room in your party,\n"
-	.string "so NATU was sent to a Box at home.$"
+	.string "so ELGYEM was sent to a Box at\l"
+	.string "home.$"
 
 Wasteland_Rustboro_Text_SelinAfter::
 	.string "She's sleeping better with you\n"

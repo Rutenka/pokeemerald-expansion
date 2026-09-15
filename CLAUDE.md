@@ -3422,6 +3422,26 @@ both rebuilt clean. `tools/validate_maps.py` run across the full project -
 zero hard errors, only the same pre-existing/expected warnings as before
 (no new ones from the new Selin object or the script changes).
 
+**Update 2026-09-15: Selin's pet swapped from Natu to Elgyem**, at Viktor's
+request for something more "exotic but still early-game" - offered 10
+candidates, he picked Elgyem. A pure species/text swap, no structural
+change: `SPECIES_NATU` -> `SPECIES_ELGYEM` in the `setwildbattle`/
+`playmoncry`/`givemon` calls, matching labels/text renamed
+(`SelinGaveNatuParty` -> `SelinGaveElgyemParty` etc.), and the one
+bird-specific dialogue line ("won't come down off the awning") reworded to
+"won't come out from under the porch" since Elgyem doesn't perch.
+`docs/roster.md` updated to match, with a note on why Elgyem fits even
+better than Natu did: its own real Pokédex lore (telepathy triggered by
+radio-wave/antenna exposure) is a near-literal match for "affected by the
+control network." Both builds (`make -j2`, `make DEBUG=1 -j2`) rebuilt
+clean and `tools/validate_maps.py` shows no new warnings on
+`Wasteland_Rustboro`. **Not independently re-verified live this round** -
+structurally identical to the already-tested Natu version (same script
+shape, same `wildbattle`/`givemon` pattern proven working in the Thirty-
+third feature entry above), so treated as low-risk per this file's own
+established disclosure standard for this class of change, not re-claimed
+as freshly confirmed in-game.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
