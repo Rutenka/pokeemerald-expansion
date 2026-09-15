@@ -3442,6 +3442,97 @@ third feature entry above), so treated as low-risk per this file's own
 established disclosure standard for this class of change, not re-claimed
 as freshly confirmed in-game.
 
+### Update 2026-09-15: Selin never actually worked - a real, engine-level
+### object-event limit, root-caused and fixed, plus a stale-save-cache trap
+### worth knowing about
+
+Went to headlessly verify the Elgyem swap before telling Viktor it was safe
+to test, and found Selin's NPC doesn't spawn at all - walked straight
+through her tile with zero collision, zero interaction, confirmed against a
+clean control test (a different, already-proven NPC on the same map, which
+worked correctly the same way). This means **the whole Selin encounter has
+likely never actually worked in-game, on any save, since she was added in
+the Thirty-third feature entry** - whatever "confirmed working" testing
+happened there must not have actually reached her.
+
+**Root cause**: `Wasteland_Rustboro` had grown to **17 object events**
+(Woman, FatMan, NinjaBoy, Twin, Boy2, Man1, LittleBoy, LittleGirl,
+DevonEmployee1, CorpGuard, DevonEmployee2, the item ball, Man2, Scientist,
+Boy1, GymGuard, Selin) - one over the engine's hard, global
+`OBJECT_EVENTS_COUNT` limit of 16 concurrent object event slots
+(`include/constants/global.h`). Selin, added last, is the 17th and never
+gets a slot. **Fixed per Viktor's own choice (offered "cut a decorative
+NPC" vs. "raise the engine limit" vs. "test first"; he picked cutting one)**
+by removing Twin (`OBJ_EVENT_GFX_TWIN` at (21,46)) - her dialogue was the
+most thematically redundant with Boy2/LittleBoy/LittleGirl's similar
+"restriction, as experienced by a kid" beats, so the least narrative cost
+to cut. Removed her `object_events` entry from `map.json` and her orphaned
+script/text from `scripts.inc`; `events.inc`/`header.inc` regenerate
+automatically from `map.json` at build time (confirmed via `grep -n
+"events.inc|header.inc" Makefile` - they're deleted and rebuilt by the
+`mapjson` tool every `make`, not hand-maintained), so no separate edit was
+needed there.
+
+**A real, costly false start while diagnosing this, worth remembering for
+any future headless test that reuses a copy of Viktor's actual save file**:
+after cutting Twin and rebuilding, the exact same "walks straight through
+Selin" symptom persisted in headless testing, seemingly disproving the
+16-slot theory entirely. The real explanation took real digging: `struct
+SaveBlock1`'s `objectEventTemplates[]` array (`include/global.h`, offset
+`0xC70`) is **serialized into the save file itself**, and
+`LoadObjEventTemplatesFromHeader()` - the function that refreshes it from
+the currently-compiled ROM's map data - is only called from
+`LoadMapFromWarp`/`LoadMapFromCameraTransition` (a genuine map transition),
+**not** from a plain "Continue Game." A save that was last written while
+already positioned in/near a map keeps that map's *old* object-event
+snapshot baked in indefinitely across saves and ROM rebuilds, until the
+player actually leaves and genuinely re-enters that specific map via a real
+warp or connection. Since the scratch test copy was cloned from Viktor's
+actual save (last written in Rustboro before tonight's fix), every
+"Continue and check Selin" headless test kept reading that stale,
+pre-fix snapshot no matter how many times the ROM was rebuilt underneath
+it - it looked exactly like the fix wasn't working. **Confirmed by forcing
+a real transition** (walked the player out through the Rustboro-Checkpoint
+connection and back in) - Selin spawned, blocked movement, and her dialogue
+fired correctly immediately afterward, on the very same save file, same
+ROM, no other change.
+
+**This matters for Viktor's own real save, not just the test copy**: his
+save has also been in Rustboro before today's fix, so it almost certainly
+carries the same stale object-event snapshot. **The first time he tests
+this, if Selin still isn't there, the fix isn't broken - he needs to leave
+Rustboro through a real transition (the Checkpoint gate south, or any other
+real warp/connection) and walk back in once**, which will force a genuine
+reload and should make her appear correctly from then on. Worth
+proactively mentioning rather than waiting for a confused bug report.
+
+**New checklist-worthy lesson**: a map's total `object_events` count is
+capped at 16 system-wide (`OBJECT_EVENTS_COUNT`), not just per-map by
+convention - adding a 17th silently drops the last one with no build error
+and no obvious symptom short of walking into empty space where it should
+be. Before adding a new NPC/item-ball/object event to any map, count the
+existing ones first; if already at 16, cut or merge one before adding
+another rather than discovering this after shipping. **Second lesson**:
+when headlessly testing against a copy of a real player's save file (not a
+fresh one), a fix that touches object/NPC data on a map that save has
+already visited will not show up until a genuine map transition is forced
+in the test - a plain `boot_to_overworld()` "Continue" alone is not enough
+to prove or disprove a fix of this class; don't trust a negative result
+from continue-only testing without first forcing a real leave-and-return.
+
+**Build state**: `make -j2` (normal, resting) and `make DEBUG=1 -j2` both
+rebuilt clean. `tools/validate_maps.py` shows no new warnings on
+`Wasteland_Rustboro` (same pre-existing closed-door warnings as before).
+Confirmed via real headless gameplay (forced transition + walk-up +
+interaction, screenshotted) that Selin now spawns, blocks movement
+correctly, and her pre-incident dialogue displays. The actual Elgyem
+`wildbattle` encounter itself (requires first talking to FatMan to set
+`FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED`) was not separately re-walked
+this round - low risk given the spawn/collision/interaction path proven
+above is the part that was actually broken, and the encounter script logic
+itself is unchanged from the already-reasoned-through Elgyem swap earlier
+in this entry.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

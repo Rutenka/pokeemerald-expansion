@@ -127,13 +127,6 @@ Wasteland_Rustboro_EventScript_NinjaBoy::
 	release
 	end
 
-Wasteland_Rustboro_EventScript_Twin::
-	lock
-	faceplayer
-	msgbox Wasteland_Rustboro_Text_Twin, MSGBOX_DEFAULT
-	release
-	end
-
 Wasteland_Rustboro_EventScript_Boy2::
 	lock
 	faceplayer
@@ -375,12 +368,6 @@ Wasteland_Rustboro_Text_NinjaBoy::
 	.string "I scored high in obedience.\p"
 	.string "I'm still not sure that's supposed\l"
 	.string "to be a compliment.$"
-
-Wasteland_Rustboro_Text_Twin::
-	.string "My sister and I get the same\n"
-	.string "rations. The same schooling.\p"
-	.string "It's supposed to feel fair.\l"
-	.string "Mostly it just feels counted.$"
 
 Wasteland_Rustboro_Text_Boy2::
 	.string "Dad says it's worse out past the\n"
