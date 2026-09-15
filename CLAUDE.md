@@ -4032,6 +4032,112 @@ their real vanilla upstairs staircase, deliberately left unwired (same
 "closed for now" trade-off as every other unbuilt upper floor in this
 project); every other new map reports clean.
 
+### Thirty-fourth custom feature: the two Rustboro flats' upper floors wired,
+### a project-wide HM-teaching rule change, and the incident crowd disperses
+### (2026-09-15, same day as the Thirty-third)
+
+Viktor's 4-part follow-up: confirm Poochyena is catchable before the Absol
+trade, fix the previously-unwired upstairs floors on the two Rustboro flats
+(the Thirty-third feature entry's own "closed for now" trade-off), change
+how field moves (HMs) work project-wide, and make the incident crowd
+disperse after the Reyes cutscene rather than stand frozen forever.
+
+**Poochyena confirmed catchable well before the Trader.** `docs/roster.md`
+and `src/data/wild_encounters.json` both confirm it's a real wild encounter
+on `Wasteland_Road` (levels 2-5, Route101's reused table) - the very first
+route in the game, long before Rustboro exists as a destination. No fix
+needed, just confirmation.
+
+**Three new upper-floor maps wired in**: `Wasteland_Rustboro_Flat1_2F` (the
+real vanilla Walda wallpaper-naming minigame, kept ~verbatim),
+`Wasteland_Rustboro_Flat2_2F` (an Old Man plus a Ninja Boy who gives
+`ITEM_PREMIER_BALL`), `Wasteland_Rustboro_Flat2_3F` (two NPCs, reworked
+flavor about leadership not rationing). Each is a real, whole vanilla
+layout for the same tileset pair, reskin only (per checklist item 11) - no
+new tile art invented. `Wasteland_Rustboro_Flat1`/`_Flat2`'s own real
+vanilla stairwell tiles (previously present but unwired) now have real
+`warp_events` targeting these new maps.
+
+**Confirmed via real headless gameplay, all three floors, both flats**:
+warped into each ground floor, walked the real (sometimes furniture-
+obstructed) path to the stairwell, and confirmed landing on the correct
+upper-floor map each time - `Wasteland_Rustboro_Flat1`'s stairwell
+specifically needed a dogleg around a 2x2 topiary-plant decoration blocking
+the direct column, not a straight walk-up, which a live test caught (a
+static collision dump alone would have said "looks open" without showing
+the furniture was in the way of the *obvious* path a player would try
+first). `Wasteland_Rustboro_Flat2_2F` was confirmed to have its own second
+stairwell (to 3F) working correctly too, chaining all the way up.
+
+**Field moves (HMs) no longer require a party Pokémon to know the move -
+a deliberate project-wide design change, not a bugfix.** Viktor's explicit
+ask: once a field move is unlocked (badge-gated access), the player should
+be able to use it directly, without needing to have actually taught it to
+one of their own Pokémon first. `ScrCmd_checkfieldmove` (`src/scrcmd.c`) -
+the single shared entry point every field-move trigger in the game calls
+through (`checkfieldmove FIELD_MOVE_CUT, TRUE` etc., per
+`data/scripts/field_move_scripts.inc`) - had its `MonKnowsMove()` check
+removed, so it now only checks the existing badge-flag unlock condition
+(`gFieldMoveInfo[]`'s `.unlockType`/`.arg`). Compiles clean in both builds.
+**Honest gap**: no Wasteland map currently has a cuttable tree (or any
+other field-move trigger) wired anywhere yet, so this mechanism has
+nothing in-game to actually demonstrate against - the engine-level change
+is real and correct by inspection, but not exercisable until a future map
+adds one.
+
+**The incident crowd (LittleBoy/LittleGirl/Man2/Scientist) now disperses
+after Reyes's cutscene ends**, instead of standing frozen at their
+gathering spots forever - `Wasteland_Rustboro_EventScript_
+SelinReyesArrives` (`data/maps/Wasteland_Rustboro/scripts.inc`) now runs
+four more `applymovement`/`waitmovement` pairs after `removeobject 16`:
+LittleBoy/LittleGirl walk away first (clearing their own tiles), then the
+Scientist steps down, then Man2 steps into the tile the Scientist just
+vacated (they're stacked vertically with no other free tile, so this order
+is load-bearing, not arbitrary). Selin stays put - it's still her home.
+
+**Verified via real headless gameplay, with a genuine false start worth
+recording**: the first live test set every incident flag `True` via memory
+poke, including `FLAG_HAS_GYM_SPONSORSHIP`, and talking to Selin jumped
+straight to her post-quest "after" line with no cutscene at all - a real
+finding, not a test bug: **Viktor's own real save already has this
+sponsorship flag set**, meaning he's already completed this quest live.
+Re-ran with only the sponsorship flag forced back to `False` (the other
+three incident-resolved flags left `True`, to skip straight to Reyes's
+arrival without re-fighting the three wild battles) to force a genuine
+fresh run. Confirmed via a direct `gObjectEvents` memory read after the
+scene completed that all four NPCs ended up at exactly their scripted
+dispersal coordinates (LittleBoy (12,39)->(9,39), LittleGirl
+(15,39)->(18,39), Scientist (14,39)->(14,41), Man2 (14,38)->(15,39)) -
+not inferred from a screenshot, read directly off the object-event
+struct's own `currentCoords` field. Also hit the project's own documented
+"re-triggering an already-finished NPC conversation by pressing one extra
+A while still facing them" trap (checklist items 12/32) repeatedly while
+trying to get a clean post-scene screenshot - didn't block the actual
+verification (the memory read doesn't care about dialogue state), but
+worth remembering again since it cost real time here too.
+
+**Also confirmed harmless while investigating**: the Reyes cutscene's
+`addobject`/`removeobject 16` toggle a real, permanent `map.json` object
+(`ReyesArrivalDummy`, gated on `FLAG_WASTELAND_REYES_HIDDEN`) rather than
+spawning something from nothing - this project's `addobject`/`removeobject`
+usage generally works this way, worth remembering for any future cutscene
+that seems to "create" an NPC. The object's own `flag` field
+(`FLAG_WASTELAND_REYES_HIDDEN`, kept permanently set via
+`Wasteland_Rustboro_OnTransition`) is what actually keeps her invisible
+outside the cutscene - confirmed correct, not a bug, despite the object's
+internal "active" state reading as loaded even when hidden.
+
+**Verified Viktor's real save was left untouched**: all testing used
+scratch copies (`test9.gba`/`.sav`) copied from the real files at session
+start, no automated in-game Save was ever attempted, matching this
+project's standing rule.
+
+**Build state**: `make -j2` (the resting build) rebuilt clean.
+`tools/validate_maps.py` run across the full project - every new/touched
+map (`Wasteland_Rustboro_Flat1_2F`/`_Flat2_2F`/`_Flat2_3F`,
+`Wasteland_Rustboro_Flat1`/`_Flat2`, `Wasteland_Rustboro`) reports `[OK]`
+or only the same pre-existing warnings as before this round.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

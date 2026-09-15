@@ -1077,6 +1077,9 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_Rustboro_House2/scripts.inc"
 	.include "data/maps/Wasteland_Rustboro_House3/scripts.inc"
 	.include "data/maps/Wasteland_Rustboro_PokemonSchool/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Flat1_2F/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Flat2_2F/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Flat2_3F/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"

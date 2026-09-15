@@ -693,8 +693,47 @@ Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	applymovement 16, Wasteland_Rustboro_Movement_ReyesLeave
 	waitmovement 16
 	removeobject 16
+	@ The crowd disperses once it's over, per Viktor's ask - so the scene
+	@ reads as "things going back to normal" instead of everyone standing
+	@ frozen here forever. Sequenced one step at a time (not all four at
+	@ once) specifically because Man2 and the Scientist are stacked
+	@ vertically (14,38)/(14,39) with no free tile of their own to step
+	@ into except each other's - LittleBoy/LittleGirl clear out first
+	@ (they're not blocking anyone), then the Scientist steps down and
+	@ away, and only then does Man2 have a clear tile to walk into.
+	@ Selin stays put - this is still her home.
+	applymovement 6, Wasteland_Rustboro_Movement_CrowdDisperseLeft
+	applymovement 7, Wasteland_Rustboro_Movement_CrowdDisperseRight
+	waitmovement 6
+	waitmovement 7
+	applymovement 12, Wasteland_Rustboro_Movement_ScientistDisperse
+	waitmovement 12
+	applymovement 11, Wasteland_Rustboro_Movement_Man2Disperse
+	waitmovement 11
 	releaseall
 	end
+
+Wasteland_Rustboro_Movement_CrowdDisperseLeft:
+	walk_left
+	walk_left
+	walk_left
+	step_end
+
+Wasteland_Rustboro_Movement_CrowdDisperseRight:
+	walk_right
+	walk_right
+	walk_right
+	step_end
+
+Wasteland_Rustboro_Movement_ScientistDisperse:
+	walk_down
+	walk_down
+	step_end
+
+Wasteland_Rustboro_Movement_Man2Disperse:
+	walk_down
+	walk_right
+	step_end
 
 Wasteland_Rustboro_Movement_CrowdNotices:
 	face_right

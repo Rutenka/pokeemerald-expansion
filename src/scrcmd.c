@@ -2295,7 +2295,6 @@ bool8 ScrCmd_checkfieldmove(struct ScriptContext *ctx)
 {
     enum FieldMove fieldMove = ScriptReadByte(ctx);
     bool32 doUnlockedCheck = ScriptReadByte(ctx);
-    enum Move move;
 
     Script_RequestEffects(SCREFF_V1);
 
@@ -2303,13 +2302,16 @@ bool8 ScrCmd_checkfieldmove(struct ScriptContext *ctx)
     if (doUnlockedCheck && !IsFieldMoveUnlocked(fieldMove))
         return FALSE;
 
-    move = FieldMove_GetMoveId(fieldMove);
+    // Wasteland (2026-09-15, Viktor's design call): field moves don't
+    // require any party Pokémon to actually know the move - only the
+    // unlock check above (badge flag) matters. Once unlocked, any real
+    // (non-egg) party Pokémon can perform it - no MonKnowsMove check.
     for (u32 i = 0; i < PARTY_SIZE; i++)
     {
         enum Species species = GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES);
         if (!species)
             break;
-        if (!GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_IS_EGG) && MonKnowsMove(&gParties[B_TRAINER_PLAYER][i], move) == TRUE)
+        if (!GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_IS_EGG))
         {
             gSpecialVar_Result = i;
             gSpecialVar_0x8004 = species;

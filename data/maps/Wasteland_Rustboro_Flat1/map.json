@@ -34,7 +34,8 @@
   ],
   "warp_events": [
     { "x": 6, "y": 7, "elevation": 0, "dest_map": "MAP_WASTELAND_RUSTBORO", "dest_warp_id": "4" },
-    { "x": 7, "y": 7, "elevation": 0, "dest_map": "MAP_WASTELAND_RUSTBORO", "dest_warp_id": "4" }
+    { "x": 7, "y": 7, "elevation": 0, "dest_map": "MAP_WASTELAND_RUSTBORO", "dest_warp_id": "4" },
+    { "x": 2, "y": 1, "elevation": 0, "dest_map": "MAP_WASTELAND_RUSTBORO_FLAT1_2F", "dest_warp_id": "0" }
   ],
   "coord_events": [],
   "bg_events": []
