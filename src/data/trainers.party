@@ -16995,3 +16995,25 @@ Level: 19
 - Agility
 - Recover
 - Conversion
+
+=== TRAINER_HAVERBROOK_PROTECTOR ===
+Name: GARRICK
+Class: Pkmn Ranger
+Pic: Pokemon Ranger M
+Gender: Male
+Double Battle: No
+AI: Basic Trainer / Check Bad Move / Try To Faint / Smart Switching
+
+Miltank
+Level: 18
+- Stomp
+- Rollout
+- Defense Curl
+- Growl
+
+Mudbray
+Level: 20
+- Strength
+- Bulldoze
+- Double Kick
+- Iron Defense

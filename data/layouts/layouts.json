@@ -9479,6 +9479,39 @@
       "layout_version": "emerald"
     },
     {
+      "id": "LAYOUT_WASTELAND_HAVERBROOK_PROVING_GROUNDS",
+      "name": "Wasteland_Haverbrook_ProvingGrounds_Layout",
+      "width": 12,
+      "height": 8,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_GenericBuilding",
+      "border_filepath": "data/layouts/Wasteland_Haverbrook_ProvingGrounds/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Haverbrook_ProvingGrounds/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_SOUTH_ROAD",
+      "name": "Wasteland_SouthRoad_Layout",
+      "width": 40,
+      "height": 80,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Wasteland_SouthRoad/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_SouthRoad/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_HAVERBROOK",
+      "name": "Wasteland_Haverbrook_Layout",
+      "width": 30,
+      "height": 30,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Wasteland_Haverbrook/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Haverbrook/map.bin",
+      "layout_version": "emerald"
+    },
+    {
       "id": "LAYOUT_WASTELAND_ASHBAND_RECORDS_ROOM",
       "name": "Wasteland_AshbandRecordsRoom_Layout",
       "width": 60,

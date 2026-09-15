@@ -36619,6 +36619,27 @@
               { "min_level": 11, "max_level": 12, "species": "SPECIES_KOFFING" }
             ]
           }
+        },
+        {
+          "map": "MAP_WASTELAND_SOUTH_ROAD",
+          "base_label": "gWastelandSouthRoad",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              { "min_level": 12, "max_level": 13, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 12, "max_level": 13, "species": "SPECIES_WURMPLE" },
+              { "min_level": 12, "max_level": 13, "species": "SPECIES_TAILLOW" },
+              { "min_level": 13, "max_level": 14, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 13, "max_level": 14, "species": "SPECIES_TAILLOW" },
+              { "min_level": 13, "max_level": 14, "species": "SPECIES_WURMPLE" },
+              { "min_level": 14, "max_level": 15, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 14, "max_level": 15, "species": "SPECIES_TAILLOW" },
+              { "min_level": 15, "max_level": 16, "species": "SPECIES_TAILLOW" },
+              { "min_level": 15, "max_level": 16, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 16, "max_level": 17, "species": "SPECIES_TAILLOW" },
+              { "min_level": 16, "max_level": 17, "species": "SPECIES_POOCHYENA" }
+            ]
+          }
         }
       ]
     },

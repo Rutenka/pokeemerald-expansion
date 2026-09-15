@@ -4138,6 +4138,149 @@ map (`Wasteland_Rustboro_Flat1_2F`/`_Flat2_2F`/`_Flat2_3F`,
 `Wasteland_Rustboro_Flat1`/`_Flat2`, `Wasteland_Rustboro`) reports `[OK]`
 or only the same pre-existing warnings as before this round.
 
+### Thirty-fifth custom feature: territory 3 - Haverbrook and the road south,
+### built overnight per Viktor's explicit go-ahead (2026-09-15/16 overnight)
+
+Viktor asked to start the next area while he slept, specifically that it
+"demand HM Cut to enter," and left the choice of what to build open. Picked
+territory 3 from the already-confirmed 8-territory story spine (Thirty-
+first feature entry): an independent trading settlement, no warlord, no
+corporation - the first "Pokemon partnership is good, not a weapon" beat
+after two "everyone's compromised" chapters.
+
+**A genuinely low-risk way to build the connection, found before writing
+anything**: `Wasteland_Rustboro` = vanilla RustboroCity reused whole, and
+RustboroCity's own real vanilla `connections` array already names its real
+neighbors - Route104 south, Route116 east. Reusing Route104 **whole**
+(not a crop) for the new route means the connection seam is the *exact*
+real vanilla border, already proven to line up (confirmed via a direct
+collision dump on both sides before wiring anything, per checklist item 2)
+- and Route104 already has a real, pre-placed `OBJ_EVENT_GFX_CUTTABLE_TREE`
+object blocking part of its own layout, which became the HM Cut gate
+Viktor asked for without inventing anything. Route104's own real "right"
+connection leads to PetalburgCity in vanilla, which became Haverbrook -
+also reused whole, also a real, already-proven vanilla connection pairing.
+Both `Wasteland_SouthRoad` (=Route104) and `Wasteland_Rustboro` share the
+same secondary tileset (Rustboro), so this specific seam carries zero risk
+of the tileset-mismatch rendering corruption documented in the Eleventh
+feature entry - confirmed by construction, not just hoped.
+
+**What shipped**:
+- `Wasteland_SouthRoad` (=Route104 whole) - a real one-shot arrival
+  narration; all ~15 named NPCs reflavored as travelers between Rustboro
+  and Haverbrook (berry trees/item balls/hidden items kept as pure
+  mechanics, unchanged); the Rival cutscene pair and Mr. Briney's boat
+  dropped (not relevant); Mr. Briney's House and the Flower Shop doors left
+  unwired for now, same "closed for now" trade-off used throughout this
+  project. New wild encounters (Poochyena/Wurmple/Taillow, Lv12-17) - the
+  first genuinely new roster addition (Taillow) since the Ashband
+  checkpoint.
+- `Wasteland_Haverbrook` (=PetalburgCity whole) - Wally's own cutscene pair
+  and Scott dropped (vanilla-specific, not relevant); 3 of PetalburgCity's
+  6 real doors built (the rest deliberately closed for now): a small
+  `Wasteland_Haverbrook_ProvingGrounds` (=vanilla Route110's
+  TrickHouseEntrance, a real small single-room interior - deliberately NOT
+  a Gym-scale building, matching Haverbrook's own unpolished identity) for
+  the boss fight, plus a real, working Pokemon Center and Mart (same
+  proven `lock`/`faceplayer`/Yes-No/heal and `pokemart` patterns already
+  used at Brightwell/Rustboro).
+- **Garrick**, territory 3's boss (`TRAINER_HAVERBROOK_PROTECTOR`, id 863 -
+  **the last of the engine's 9 available custom trainer slots**, see the
+  correction below) - `TRAINER_CLASS_PKMN_RANGER` (a real, non-corporate,
+  non-raider class; "Pokemon Ranger M" battle pic), team Miltank Lv18 +
+  Mudbray Lv20. Both species picked specifically for the confirmed
+  territory-3 theme ("sturdy, reliable working-partner Pokemon, not a
+  weapon") - Mudbray in particular is a real plow/draft-animal Pokemon by
+  its own Pokedex identity, about as direct a fit as this roster has ever
+  had for a theme. Framed as "prove yourself, not a villain fight" - his
+  own post-battle line explicitly acknowledges the player isn't here for a
+  badge, just passage toward their father.
+
+**A real counting error in `docs/roster.md` caught and fixed while adding
+Garrick**: that file previously stated all 9 custom trainer slots were
+already spent after the Rustboro Gym boss - actually only 8 were used
+(855-862); 863 was free. Confirmed directly from
+`include/constants/opponents.h`'s own definitions before trusting the
+doc's claim, per this file's own "verify before recommending from memory"
+discipline. Garrick now genuinely is the 9th and last slot - `TRAINERS_
+COUNT_EMERALD` bumped from 863 to 864 to include it (confirmed this
+doesn't collide with `TRAINER_PARTNER()`'s own use of `MAX_TRAINERS_COUNT`
+as a base offset, which was already 864).
+
+**A real, distinct build error caught immediately, not guessed**: hidden-
+item `bg_events` require a flag from the engine's own dedicated
+`FLAG_HIDDEN_ITEMS_START` range - a plain arbitrary flag number (which
+works fine for item balls and one-shot narration/quest flags, used
+throughout this project) fails a real assembler check
+(`asm/macros/map.inc`) for this specific event type. Fixed by moving the 6
+new hidden-item flags into that reserved range instead (right after the
+real range's own last used offset) - the underlying `.map.json` files
+needed no changes, since only the flag *values* moved, not their names.
+**New checklist-worthy lesson**: a `hidden_item` bg_event's flag must come
+from `FLAG_HIDDEN_ITEMS_START`'s own range specifically - this is a
+different, stricter rule than every other flag use in this project so far,
+caught by the build (a real assembler error), not by testing.
+
+**Confirmed via real headless gameplay, methodically, after two real
+navigation problems that turned out to be measurement/tooling issues, not
+map bugs, worth recording for future headless work on any large route:**
+1. **`tools/smart_walk.py`'s BFS treats all `collision == 0` tiles as
+   walkable, including deep water** - it has no elevation model, so it can
+   compute a "shortest path" straight through a pond that a real player
+   physically cannot walk into without Surf, then report "stuck" when the
+   chosen direction doesn't actually move the player (confirmed by
+   manually pressing the same direction, which worked fine one tile over,
+   proving the tool's pathing - not the map - was wrong). Worked around
+   this session with a one-off elevation-aware BFS (allowing only
+   elevation 0/3) computed directly against the raw layout data; if this
+   recurs on a future large outdoor map, extend `smart_walk.py` itself
+   with the same elevation check rather than re-deriving one from scratch
+   each time.
+2. **Standing exactly on Rustboro's own `(15,59)` (the checkpoint's real
+   exit-trigger tile, per the Thirtieth feature entry) and then pressing
+   *any* direction retriggers its `warp` coord_event**, even a direction
+   that doesn't obviously "step onto" the tile again - cost real time when
+   an innocent-looking pathfinding waypoint landed a test exactly there.
+   Worked around by routing test walks through an adjacent open column
+   instead; worth remembering for any future test route through Rustboro's
+   south edge.
+3. **`FLAG_BADGE01_GET`'s real value is `SYSTEM_FLAGS + 0x7` (`0x867`), not
+   a small flat number** - a first test poked the wrong address (`0x820`)
+   and produced a confusing false negative (the cut-tree gate looked stuck
+   in "blocked" no matter what). Re-derived the real value directly from
+   `include/constants/flags.h` before concluding anything was broken,
+   confirming the actual mechanism: with the correct flag set, the tree's
+   `Text_WantToCut`/Yes-No/cut-down sequence played correctly and the
+   player walked through the now-clear tile - the first real, live
+   confirmation of this session's earlier project-wide "Cut doesn't
+   require teaching the move" engine change (`src/scrcmd.c`), which had
+   only compiled clean until now with nothing in-game to test it against.
+4. Garrick's fight was confirmed real and correctly leveled (a live
+   screenshot: "Miltank Lv18" on the actual battle screen, Houndoom
+   genuinely fainting to it and the game correctly prompting a party
+   switch to Elgyem) - the fight was not played to a final win/loss this
+   session (battling further got tangled in the standard party-switch
+   menu's own navigation, not anything this session built), matching this
+   file's established disclosure standard for this class of gap. The
+   Pokemon Center (heal confirmed via the real "Good as new" message) and
+   Mart (a real shop screen showing the exact configured item list and
+   prices) were both confirmed working end-to-end.
+
+**Not independently re-verified this round**: walking the full South
+Road -> Haverbrook connection on foot with real input (the debug menu was
+used for the Haverbrook-side maps once the connection itself and the Cut
+gate were already proven) - low risk, since it's the same real, unmodified
+vanilla connection mechanism already proven earlier in this same entry.
+Mr. Briney's House and the Flower Shop on South Road, and the 3 still-
+closed Haverbrook buildings (House1, House2, Wally's House), remain
+deliberately unopened - same accepted "closed for now" trade-off as every
+other partially-built town in this project.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` run across every new map - all
+report `[OK]` or only expected "closed for now" door/seam warnings, no
+hard errors.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

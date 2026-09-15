@@ -22,7 +22,8 @@ u32 GetCurrentLevelCap(void)
         {FLAG_DEFEATED_ASHBAND_CHECKPOINT_GRUNT, 16},   // Checkpoint grunt, Lv11 Poochyena
         {FLAG_DEFEATED_ASHBAND_ENFORCER, 18},           // Checkpoint boss, Lv14 Mightyena/Lv13 Koffing
         {FLAG_DEFEATED_CORP_OVERSEER, 22},              // Rustboro Gym boss, team Lv17-19
-        {FLAG_SYS_GAME_CLEAR, 27},                      // No further story beat exists yet - placeholder ceiling, raise as new chapters ship
+        {FLAG_DEFEATED_HAVERBROOK_PROTECTOR, 26},       // Haverbrook's Proving Grounds boss, team Lv18-20
+        {FLAG_SYS_GAME_CLEAR, 30},                      // No further story beat exists yet - placeholder ceiling, raise as new chapters ship
     };
 
     u32 i;

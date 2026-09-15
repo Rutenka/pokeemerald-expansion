@@ -367,6 +367,12 @@
       "map": "MAP_WASTELAND_RUSTBORO",
       "x": 16,
       "y": 38
+    },
+    {
+      "id": "HEAL_LOCATION_WASTELAND_HAVERBROOK",
+      "map": "MAP_WASTELAND_HAVERBROOK",
+      "x": 20,
+      "y": 16
     }
   ]
 }

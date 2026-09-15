@@ -1,0 +1,102 @@
+{
+  "id": "MAP_WASTELAND_HAVERBROOK",
+  "name": "Wasteland_Haverbrook",
+  "layout": "LAYOUT_WASTELAND_HAVERBROOK",
+  "music": "MUS_PETALBURG",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_NONE",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_TOWN",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": [
+    { "map": "MAP_WASTELAND_SOUTH_ROAD", "offset": -50, "direction": "left" }
+  ],
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_4",
+      "x": 16, "y": 18, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_Haverbrook_EventScript_Mara", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BOY_1",
+      "x": 8, "y": 22, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_Haverbrook_EventScript_Boy", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_GENTLEMAN",
+      "x": 20, "y": 10, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_Haverbrook_EventScript_Trader", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 19, "y": 2, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_GREAT_BALL",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_HAVERBROOK_ITEM_1"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 3, "y": 28, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_FULL_HEAL",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_HAVERBROOK_ITEM_2"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BOY_2",
+      "x": 12, "y": 15, "elevation": 0,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_Haverbrook_EventScript_ProvingGroundsGuide", "flag": "0"
+    }
+  ],
+  "warp_events": [
+    { "x": 15, "y": 8, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_PROVING_GROUNDS", "dest_warp_id": "0" },
+    { "x": 20, "y": 16, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_POKEMON_CENTER", "dest_warp_id": "0" },
+    { "x": 25, "y": 12, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_MART", "dest_warp_id": "0" }
+  ],
+  "coord_events": [
+    {
+      "type": "trigger",
+      "x": 17, "y": 17, "elevation": 0,
+      "var": "FLAG_SEEN_HAVERBROOK_ARRIVAL", "var_value": "0",
+      "script": "Wasteland_Haverbrook_EventScript_Arrival"
+    }
+  ],
+  "bg_events": [
+    {
+      "type": "sign", "x": 17, "y": 10, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_Haverbrook_EventScript_ProvingGroundsSign"
+    },
+    {
+      "type": "sign", "x": 26, "y": 12, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "Common_EventScript_ShowPokemartSign"
+    },
+    {
+      "type": "sign", "x": 21, "y": 16, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "Common_EventScript_ShowPokemonCenterSign"
+    },
+    {
+      "type": "sign", "x": 17, "y": 16, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_Haverbrook_EventScript_CitySign"
+    },
+    {
+      "type": "hidden_item", "x": 11, "y": 29, "elevation": 3,
+      "item": "ITEM_RARE_CANDY", "flag": "FLAG_WASTELAND_HAVERBROOK_HIDDEN_1"
+    }
+  ]
+}

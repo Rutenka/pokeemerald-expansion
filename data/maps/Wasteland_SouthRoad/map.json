@@ -1,0 +1,220 @@
+{
+  "id": "MAP_WASTELAND_SOUTH_ROAD",
+  "name": "Wasteland_SouthRoad",
+  "layout": "LAYOUT_WASTELAND_SOUTH_ROAD",
+  "music": "MUS_ROUTE101",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_NONE",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_ROUTE",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": [
+    { "map": "MAP_WASTELAND_RUSTBORO", "offset": 0, "direction": "up" },
+    { "map": "MAP_WASTELAND_HAVERBROOK", "offset": 50, "direction": "right" }
+  ],
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BUG_CATCHER",
+      "x": 15, "y": 60, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND", "movement_range_x": 2, "movement_range_y": 2,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_BugCatcher", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_GIRL_2",
+      "x": 25, "y": 49, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Girl1", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_LASS",
+      "x": 31, "y": 24, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Haley", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BOY_1",
+      "x": 27, "y": 63, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_UP", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Boy1", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_2",
+      "x": 30, "y": 50, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Woman", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_GIRL_3",
+      "x": 28, "y": 74, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_UP", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Girl2", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_FISHERMAN",
+      "x": 29, "y": 8, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Ivan", "flag": "0"
+    },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 34, "y": 6, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 35, "y": 6, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "1", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 36, "y": 6, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "2", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 22, "y": 41, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "3", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 23, "y": 41, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "4", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 24, "y": 41, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "5", "script": "BerryTreeScript", "flag": "0" },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_EXPERT_F",
+      "x": 37, "y": 8, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_ExpertF", "flag": "0"
+    },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 3, "y": 22, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "6", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 3, "y": 23, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "7", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 3, "y": 24, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "8", "script": "BerryTreeScript", "flag": "0" },
+    { "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE", "x": 3, "y": 25, "elevation": 3, "movement_type": "MOVEMENT_TYPE_NONE", "movement_range_x": 0, "movement_range_y": 0, "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "9", "script": "BerryTreeScript", "flag": "0" },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 39, "y": 15, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_PP_UP",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_SOUTH_ROAD_ITEM_PP_UP"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 29, "y": 53, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_POKE_BALL",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_SOUTH_ROAD_ITEM_POKE_BALL"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 37, "y": 22, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_X_ACCURACY",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_SOUTH_ROAD_ITEM_X_ACCURACY"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 5, "y": 8, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "ITEM_POTION",
+      "script": "Common_EventScript_FindItem", "flag": "FLAG_WASTELAND_SOUTH_ROAD_ITEM_POTION"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_5",
+      "x": 8, "y": 19, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Florist", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_TWIN",
+      "x": 27, "y": 15, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Gina", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_TWIN",
+      "x": 28, "y": 15, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Mia", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_RICH_BOY",
+      "x": 21, "y": 25, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Winston", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_2",
+      "x": 11, "y": 44, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Cindy", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_YOUNGSTER",
+      "x": 18, "y": 67, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Billy", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_CUTTABLE_TREE",
+      "x": 35, "y": 22, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND", "movement_range_x": 1, "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "EventScript_CutTree", "flag": "FLAG_TEMP_11"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_BOY_2",
+      "x": 5, "y": 26, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Boy2", "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_FISHERMAN",
+      "x": 15, "y": 59, "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN", "movement_range_x": 0, "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE", "trainer_sight_or_berry_tree_id": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Darian", "flag": "0"
+    }
+  ],
+  "warp_events": [],
+  "coord_events": [
+    {
+      "type": "trigger",
+      "x": 20, "y": 3, "elevation": 0,
+      "var": "FLAG_SEEN_SOUTH_ROAD_ARRIVAL", "var_value": "0",
+      "script": "Wasteland_SouthRoad_EventScript_Arrival"
+    }
+  ],
+  "bg_events": [
+    {
+      "type": "sign", "x": 20, "y": 50, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_SouthRoad_EventScript_CottageSign"
+    },
+    {
+      "type": "sign", "x": 27, "y": 66, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_SouthRoad_EventScript_SignHaverbrook"
+    },
+    {
+      "type": "sign", "x": 23, "y": 5, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_SouthRoad_EventScript_SignRustboro"
+    },
+    {
+      "type": "sign", "x": 7, "y": 20, "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_SouthRoad_EventScript_FlowerShopSign"
+    },
+    {
+      "type": "sign", "x": 17, "y": 23, "elevation": 3,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Wasteland_SouthRoad_EventScript_TipsSign"
+    },
+    { "type": "hidden_item", "x": 7, "y": 6, "elevation": 3, "item": "ITEM_SUPER_POTION", "flag": "FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_1" },
+    { "type": "hidden_item", "x": 3, "y": 9, "elevation": 3, "item": "ITEM_POKE_BALL", "flag": "FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_2" },
+    { "type": "hidden_item", "x": 14, "y": 55, "elevation": 3, "item": "ITEM_POTION", "flag": "FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_3" },
+    { "type": "hidden_item", "x": 16, "y": 72, "elevation": 3, "item": "ITEM_ANTIDOTE", "flag": "FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_4" },
+    { "type": "hidden_item", "x": 16, "y": 64, "elevation": 3, "item": "ITEM_HEART_SCALE", "flag": "FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_5" }
+  ]
+}
