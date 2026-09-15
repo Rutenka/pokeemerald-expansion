@@ -3849,6 +3849,66 @@ images, not inferred from flag state alone.
 rebuilt clean. `tools/validate_maps.py` shows no new warnings on
 `Wasteland_Rustboro`.
 
+### Thirty-seventh custom feature: Reyes's own gender mismatch, and a full
+### overworld-vs-battle-pic audit across every custom trainer (2026-09-15,
+### same day as the Thirty-sixth)
+
+Viktor immediately caught a real continuity bug from the Thirty-sixth
+entry's own fix: Reyes's new outdoor sprite (`OBJ_EVENT_GFX_WOMAN_4`) read
+as a woman, but her Gym-interior overworld sprite was still
+`OBJ_EVENT_GFX_SCIENTIST_1` - inherited unmodified from directly reusing
+real vanilla `RustboroCity_Gym`'s own Roxanne object data (a genuine real
+vanilla design quirk: Roxanne's real overworld sprite doesn't match her
+own battle art either) - explicitly flagged as an accepted tradeoff in
+that entry's own writeup, which in hindsight wasn't good enough - Viktor
+noticed it immediately in actual play. Fixed by changing
+`Wasteland_RustboroGym`'s own Overseer object to `OBJ_EVENT_GFX_WOMAN_4`
+too, matching her outdoor appearance - confirmed her battle Pic
+(`Leader Roxanne`, in `src/data/trainers.party`) was already correctly
+female, so all three depictions (outdoor overworld, Gym overworld, battle
+portrait) are now consistent.
+
+**Viktor then asked for a full audit - every custom trainer's overworld
+sprite checked against its battle Pic for the same class of mismatch, not
+just Reyes.** Checked all 8 (the entire custom trainer roster - see
+`include/constants/opponents.h`, 855-862): Scout, Checkpoint Grunt,
+Lookout (all `OBJ_EVENT_GFX_HIKER` / "Aqua Grunt M" - matched), Kessler
+(`MAN_2` / "Expert M" - matched), Priya (`WOMAN_5` / "Expert F" -
+matched), Drummond (`MAN_3` / "Expert M" - matched), Overseer (fixed
+above). **Found one more real mismatch**: the Ashband Enforcer
+(`Wasteland_AshbandCheckpoint`) used `OBJ_EVENT_GFX_HIKER` (male) in the
+overworld but her battle Pic is "Aqua Grunt F" (female) - the exact same
+bug class, just not yet noticed since nobody had compared the two
+systematically before. Fixed by switching her to
+`OBJ_EVENT_GFX_PICNICKER` - the real female counterpart to Hiker (same
+rugged/outdoors archetype the whole Ashband roster already uses),
+confirmed via real non-FRLG map usage (`BattleFrontier_BattleFactoryLobby`,
+`FortreeCity_Gym`, etc.) before picking it, per this file's own standing
+rule.
+
+**New checklist-worthy lesson**: whenever a Trainer's overworld sprite is
+picked independently of its battle Pic (which is normal - they're two
+separate asset choices in this engine, and reusing real vanilla map data
+wholesale, as this project does throughout, can silently import a
+mismatch from the source map, same as this entry's Reyes case), do a
+direct side-by-side check of the two, not just "does this sprite look
+reasonable in isolation." This project now has two confirmed real
+instances of this exact bug (Reyes, the Enforcer) out of 8 trainers total
+- a genuinely common mistake, not a one-off, worth checking explicitly
+any time a new custom trainer is added rather than assuming visual
+consistency by default.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` reports `[OK]` on both
+`Wasteland_RustboroGym` and `Wasteland_AshbandCheckpoint`. **Not
+independently re-verified via a live headless screenshot this round** -
+`OBJ_EVENT_GFX_WOMAN_4` was already visually confirmed rendering
+correctly in the Thirty-sixth entry's own testing, and
+`OBJ_EVENT_GFX_PICNICKER`'s safety here rests on the same real-map-usage
+verification method already proven reliable throughout this project, not
+a fresh screenshot - flagged honestly rather than claimed as freshly
+confirmed in-game.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
