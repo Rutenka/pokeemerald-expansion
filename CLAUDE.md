@@ -3669,6 +3669,83 @@ before concluding anything is broken.
 rebuilt clean. `tools/validate_maps.py` shows no new warnings on
 `Wasteland_Rustboro`.
 
+### Thirty-fifth custom feature: a real save-corruption incident, a bigger
+### crowd, and an unresolved "lag" report (2026-09-15, same day as the
+### Thirty-fourth)
+
+Viktor tested the Thirty-fourth entry's rework and reported two things:
+the Reyes cutscene "doesn't work, some lag" after winning, and he wants
+the crowd to feel bigger - genuinely "what is going on here???", not just
+3 people.
+
+**A real incident happened trying to fix the arrival-flag problem from the
+previous entry, worth recording in full since it's a first for this
+project.** `FLAG_SEEN_RUSTBORO_ARRIVAL` was already `True` on Viktor's real
+save (spent in earlier testing, before the Thirty-fourth entry's Arrival4/5
+existed), so the new "someone explains" cutscene could never fire for him.
+A raw WRAM `set_flag()` poke doesn't persist to the actual `.sav` file by
+itself (confirmed by writing, then re-reading with a **separate** fresh
+session - it read back unchanged) - the fix requires the flag change to
+flow through the game's own real Save routine. Drove this headlessly
+(Start menu -> SAVE -> confirm -> confirm overwrite, screenshotting every
+page per checklist item 15) with Viktor's explicit go-ahead. **The write
+corrupted the save's active slot** - next boot showed the real in-game
+"The save file is corrupted. The previous save file will be loaded."
+message. The GBA Pokémon engine's own dual-slot save redundancy (exactly
+the safety net it exists for) caught this and fell back to the previous
+slot automatically - confirmed via a real boot that Viktor's save is fully
+intact, same position/flags as before, no data lost. A safety backup of
+the file was taken immediately after discovering the corruption, before
+any further action. **Root cause not fully pinned down** (plausibly
+multiple overlapping `MgbaSession` processes writing near-simultaneously,
+though not proven) - not reattempted. **Known ongoing consequence**: the
+corrupted slot is still sitting on disk, so Viktor will see the same real
+"save file is corrupted" message on his very next boot too (harmless -
+falls back correctly every time) until he does one normal in-game Save
+himself, which will overwrite the bad slot for good. **New standing
+lesson**: don't attempt automated writes to Viktor's real save file via
+the in-game Save menu again without a very specific reason and his
+explicit go-ahead each time - a raw flag poke for testing (reversible,
+memory-only) is a completely different risk class from an actual Save
+(persisted, and demonstrably capable of corrupting the active slot).
+
+**Bigger crowd, done by relocating two more existing flavor NPCs, not
+adding new ones** - the object budget is still exactly 16 (see the
+Thirty-fourth entry's Reyes accounting) with zero room to spare. LittleBoy
+and LittleGirl (formerly at (24,51)/(25,51), generic ambient flavor) moved
+to (12,39)/(15,39), flanking the existing Selin/Man2/Scientist cluster.
+Both got the same three-state treatment as Man2/Scientist (normal /
+in-incident reaction / after), and LittleBoy's reaction line
+("What is even GOING ON?! First the drone, then the display, now this?!")
+was woven into the forced `lockall` cutscene itself, not just left as an
+optional walk-up - now 5 NPCs total stand together, confirmed via a real
+screenshot after the now-standard fresh-re-entry-to-refresh-cache step.
+
+**The "lag" report was investigated at length but not reproduced.**
+Fought through the full real sequence twice headlessly (guard -> crowd ->
+all 3 real `wildbattle`s, not skipping any this time, unlike the
+Thirty-fourth entry's verification) and separately did a tight frame-by-
+frame sweep specifically around the `addobject`/`applymovement` handoff
+right after a real battle's return-to-overworld. In both cases the
+sequence completed correctly with no hang, no repeated/stuck frame, and no
+missing text - Reyes's own sprite was never directly visible in a
+screenshot (the dialogue box consistently covers her position one tile
+below the player), which limits how much this can rule out, but nothing
+resembling a freeze showed up across either test. **Shipped a best-effort
+defensive fix anyway**: a `delay 30` inserted right before `addobject 16`,
+in case reaching this point immediately after a real battle transition
+(rather than a direct script jump, which never showed any issue) leaves
+the camera/object system mid-settle for a few frames. **Explicitly not
+claimed as a confirmed fix** - real-time rendering hitches during
+`applymovement` are exactly the kind of thing headless frame-stepping
+can't measure, so if Viktor still sees the same lag after this, the delay
+alone probably isn't it and this needs a real screenshot/video from his
+side of the actual moment, not another headless sweep.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` shows no new warnings on
+`Wasteland_Rustboro`.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

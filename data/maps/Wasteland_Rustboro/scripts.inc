@@ -51,6 +51,8 @@ Wasteland_Rustboro_EventScript_Arrival::
 	closemessage
 	msgbox Wasteland_Rustboro_Text_Arrival4, MSGBOX_DEFAULT
 	closemessage
+	msgbox Wasteland_Rustboro_Text_Arrival5, MSGBOX_DEFAULT
+	closemessage
 	setflag FLAG_SEEN_RUSTBORO_ARRIVAL
 	releaseall
 	end
@@ -77,17 +79,27 @@ Wasteland_Rustboro_Text_Arrival3::
 	.string "why they're arming the people who\l"
 	.string "took DAD, it's someone in here.$"
 
-@ Added 2026-09-15 per Viktor's ask for an unmissable, up-front explanation
-@ of why the Gym even matters, rather than the player discovering the lock
-@ only once they walk up to it cold.
+@ Rewritten 2026-09-15 (v2, same day) per Viktor's ask for an unmissable,
+@ up-front explanation of why the Gym even matters, delivered by an actual
+@ person rather than disembodied narration - "someone who explains how the
+@ town works." Still the same coord_event-triggered arrival narration (no
+@ new object budget spent, and guaranteed to fire once, unlike a walk-up
+@ NPC the player could simply avoid), just voiced as a specific local
+@ stopping the player rather than third-person text.
 Wasteland_Rustboro_Text_Arrival4::
-	.string "The building they call the Gym isn't\n"
-	.string "really a gym here - it's clearance.\p"
-	.string "Nobody gets answers, or trust, or\n"
-	.string "even through half these doors,\l"
-	.string "without it.\p"
-	.string "If you want anyone here to talk,\n"
-	.string "you'll have to earn that first.$"
+	.string "“You're not from here,” a woman\n"
+	.string "minding a supply cart says, not\l"
+	.string "really asking.\p"
+	.string "“This city runs because the\n"
+	.string "Overseer's people say it runs.”$"
+
+Wasteland_Rustboro_Text_Arrival5::
+	.string "“You want to go anywhere that\n"
+	.string "matters in this city, you clear\l"
+	.string "Assessment first. That's not a\l"
+	.string "suggestion.”\p"
+	.string "She's already looking past you\n"
+	.string "before you can ask anything else.$"
 
 Wasteland_Rustboro_EventScript_Woman::
 	lock
@@ -133,17 +145,45 @@ Wasteland_Rustboro_EventScript_Man1::
 	release
 	end
 
+@ Relocated 2026-09-15 (v3, same day) to stand with the rest of the crowd
+@ per Viktor's ask for it to really read as "what is going on here???" -
+@ a bigger cluster than just Selin/Man2/Scientist. Woven into the group
+@ cutscene too, see Wasteland_Rustboro_Text_LittleBoyReaction below.
 Wasteland_Rustboro_EventScript_LittleBoy::
 	lock
 	faceplayer
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_LittleBoyNormal
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_LittleBoyAfter
+	msgbox Wasteland_Rustboro_Text_LittleBoyReaction, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_LittleBoyNormal::
 	msgbox Wasteland_Rustboro_Text_LittleBoy, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_LittleBoyAfter::
+	msgbox Wasteland_Rustboro_Text_LittleBoyAfter, MSGBOX_DEFAULT
 	release
 	end
 
 Wasteland_Rustboro_EventScript_LittleGirl::
 	lock
 	faceplayer
+	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_LittleGirlNormal
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_LittleGirlAfter
+	msgbox Wasteland_Rustboro_Text_LittleGirlReaction, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_LittleGirlNormal::
 	msgbox Wasteland_Rustboro_Text_LittleGirl, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_LittleGirlAfter::
+	msgbox Wasteland_Rustboro_Text_LittleGirlAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -182,16 +222,18 @@ Wasteland_Rustboro_EventScript_DevonEmployee2::
 	release
 	end
 
-@ Rewritten 2026-09-15 - no longer hosts its own wild battle. Points the
-@ player toward Selin's place instead, where the whole incident is now
-@ converging (see the design note above Wasteland_Rustboro_EventScript_FatMan).
-@ Man2's own original line ("You get used to the drones... they're not even
-@ armed. Probably.") is what foreshadowed this drone in the first place.
+@ Rewritten 2026-09-15 (v2, same day) - relocated to stand next to Selin as
+@ part of the crowd Viktor asked for, rather than a separate NPC pointing
+@ the player elsewhere. Man2's own original line ("You get used to the
+@ drones... they're not even armed. Probably.") is what foreshadowed this
+@ drone in the first place, and his relocated position is also what makes
+@ his reaction line during the fight land.
 Wasteland_Rustboro_EventScript_Man2::
 	lock
 	faceplayer
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_Man2Normal
-	msgbox Wasteland_Rustboro_Text_Man2Redirect, MSGBOX_DEFAULT
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_Man2After
+	msgbox Wasteland_Rustboro_Text_Man2Reaction, MSGBOX_DEFAULT
 	release
 	end
 
@@ -200,19 +242,30 @@ Wasteland_Rustboro_EventScript_Man2Normal::
 	release
 	end
 
-@ Rewritten 2026-09-15 - same treatment as Man2 above. The Scientist's own
-@ original line ("Please don't touch the equipment. It remembers.") is what
-@ foreshadowed this.
+Wasteland_Rustboro_EventScript_Man2After::
+	msgbox Wasteland_Rustboro_Text_Man2After, MSGBOX_DEFAULT
+	release
+	end
+
+@ Rewritten 2026-09-15 (v2, same day) - same treatment as Man2 above. The
+@ Scientist's own original line ("Please don't touch the equipment. It
+@ remembers.") is what foreshadowed this.
 Wasteland_Rustboro_EventScript_Scientist::
 	lock
 	faceplayer
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_ScientistNormal
-	msgbox Wasteland_Rustboro_Text_ScientistRedirect, MSGBOX_DEFAULT
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_ScientistAfter
+	msgbox Wasteland_Rustboro_Text_ScientistReaction, MSGBOX_DEFAULT
 	release
 	end
 
 Wasteland_Rustboro_EventScript_ScientistNormal::
 	msgbox Wasteland_Rustboro_Text_Scientist, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_Rustboro_EventScript_ScientistAfter::
+	msgbox Wasteland_Rustboro_Text_ScientistAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -292,6 +345,24 @@ Wasteland_Rustboro_Text_LittleGirl::
 	.string "for exactly the right amount of\l"
 	.string "time.$"
 
+Wasteland_Rustboro_Text_LittleBoyReaction::
+	.string "What is even GOING ON?! First the\n"
+	.string "drone, then the display, now this?!\p"
+	.string "I'm not scared. I'm just… taking\n"
+	.string "notes. For later.$"
+
+Wasteland_Rustboro_Text_LittleBoyAfter::
+	.string "Best day ever. Don't tell my mom I\n"
+	.string "said that.$"
+
+Wasteland_Rustboro_Text_LittleGirlReaction::
+	.string "Is this normal?! Nobody said this\n"
+	.string "was normal!$"
+
+Wasteland_Rustboro_Text_LittleGirlAfter::
+	.string "My teacher's going to have SO many\n"
+	.string "questions tomorrow.$"
+
 Wasteland_Rustboro_Text_DevonEmployee1::
 	.string "Badge in, badge out. If your badge\n"
 	.string "doesn't scan, you were never here\l"
@@ -326,22 +397,31 @@ Wasteland_Rustboro_Text_Man2::
 	.string "while.\p"
 	.string "They're not even armed. Probably.$"
 
-Wasteland_Rustboro_Text_Man2Redirect::
-	.string "That drone took off down toward the\n"
-	.string "private residence on the corner -\l"
-	.string "the one with the flower boxes.\p"
-	.string "If it's still causing trouble,\n"
-	.string "that's where it'll be.$"
+Wasteland_Rustboro_Text_Man2Reaction::
+	.string "That's MY drone! Well - not mine,\n"
+	.string "but I'm the one who reports it\l"
+	.string "missing every week.\p"
+	.string "Never thought I'd see it do THAT.$"
+
+Wasteland_Rustboro_Text_Man2After::
+	.string "Still can't believe it. Six years\n"
+	.string "on this block, never seen one go\l"
+	.string "like that before today.$"
 
 Wasteland_Rustboro_Text_Scientist::
 	.string "Please don't touch the equipment.\n"
 	.string "It remembers.$"
 
-Wasteland_Rustboro_Text_ScientistRedirect::
-	.string "It finally went still - but not\n"
-	.string "before it wandered off toward the\l"
-	.string "residence down south.\p"
-	.string "I'd go check, if I were you.$"
+Wasteland_Rustboro_Text_ScientistReaction::
+	.string "I told them not to put unsupervised\n"
+	.string "hardware in a public display case!\p"
+	.string "Nobody ever listens to the guy\n"
+	.string "who's right.$"
+
+Wasteland_Rustboro_Text_ScientistAfter::
+	.string "Back in its case. Bolted down,\n"
+	.string "this time.\p"
+	.string "That's the whole fix, apparently.$"
 
 Wasteland_Rustboro_Text_Boy1::
 	.string "It's not really a gym. It's an\n"
@@ -444,7 +524,19 @@ Wasteland_Rustboro_EventScript_Selin::
 	goto_if_set FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_SelinAfter
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_SelinNormal
 	goto_if_set FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_SelinCheckArtifact
-	msgbox Wasteland_Rustboro_Text_SelinConverge, MSGBOX_DEFAULT
+	@ Rewritten 2026-09-15 (v3, same day) into a real multi-voice cutscene
+	@ per Viktor's ask - `lockall` freezes Man2, the Scientist, LittleBoy
+	@ and LittleGirl too (all four relocated to stand right here, see the
+	@ map.json notes above their own scripts) so their reaction lines read
+	@ as part of one frozen scene, not separate conversations. LittleBoy's
+	@ line added this round specifically to sell the "what is even going
+	@ on?!" chaos Viktor asked for with a bigger-feeling crowd.
+	lockall
+	msgbox Wasteland_Rustboro_Text_SelinConverge1, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_Man2Reaction, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_ScientistReaction, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_LittleBoyReaction, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_SelinConverge2, MSGBOX_DEFAULT
 Wasteland_Rustboro_EventScript_SelinDroneBattle::
 	setwildbattle SPECIES_VOLTORB, 16, ITEM_EVIOLITE
 	waitse
@@ -455,7 +547,7 @@ Wasteland_Rustboro_EventScript_SelinDroneBattle::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinDroneWon
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinDroneWon
-	release
+	releaseall
 	end
 
 Wasteland_Rustboro_EventScript_SelinDroneWon::
@@ -473,7 +565,7 @@ Wasteland_Rustboro_EventScript_SelinArtifactBattle::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinArtifactWon
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinArtifactWon
-	release
+	releaseall
 	end
 
 Wasteland_Rustboro_EventScript_SelinArtifactWon::
@@ -492,7 +584,7 @@ Wasteland_Rustboro_EventScript_SelinPetBattle::
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinCaught
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinWonNotCaught
-	release
+	releaseall
 	end
 
 Wasteland_Rustboro_EventScript_SelinNormal::
@@ -543,6 +635,13 @@ Wasteland_Rustboro_EventScript_SelinAfter::
 @ player's own position at (13,39) rather than overlapping it.
 Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	msgbox Wasteland_Rustboro_Text_SelinThatsAllThree, MSGBOX_DEFAULT
+	@ Added 2026-09-15 (v3) - a short settling delay before spawning Reyes,
+	@ in case reaching this point right after a real wild battle transition
+	@ (rather than a direct script jump, which never showed any issue in
+	@ testing) leaves the camera/object system mid-settle. Cheap, safe,
+	@ best-effort defensive fix for the "animation doesn't work, some lag"
+	@ report - not independently confirmed as the root cause.
+	delay 30
 	addobject 16
 	applymovement 16, Wasteland_Rustboro_Movement_ReyesApproach
 	waitmovement 0
@@ -555,7 +654,7 @@ Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	applymovement 16, Wasteland_Rustboro_Movement_ReyesLeave
 	waitmovement 0
 	removeobject 16
-	release
+	releaseall
 	end
 
 Wasteland_Rustboro_Movement_ReyesApproach:
@@ -577,16 +676,18 @@ Wasteland_Rustboro_Text_Selin::
 	.string "It's been like this since the\n"
 	.string "alarm.$"
 
-Wasteland_Rustboro_Text_SelinConverge::
+Wasteland_Rustboro_Text_SelinConverge1::
 	.string "By the time you reach the house, a\n"
-	.string "small crowd's already gathered.\p"
-	.string "A maintenance drone circling low.\n"
-	.string "Some kind of display twitching in\l"
-	.string "a shop window down the block. And\l"
-	.string "in the middle of it, Selin can't\l"
-	.string "get her ELGYEM to stop screeching.\p"
-	.string "“About time,” someone mutters.\n"
-	.string "“Well? Do something!”$"
+	.string "small crowd's already gathered - a\l"
+	.string "maintenance drone circling low,\l"
+	.string "some kind of display twitching in\l"
+	.string "a shop window down the block.\p"
+	.string "In the middle of it, Selin can't\n"
+	.string "get her ELGYEM to stop screeching.$"
+
+Wasteland_Rustboro_Text_SelinConverge2::
+	.string "“About time,” Selin says. “Well?\n"
+	.string "Do something!”$"
 
 Wasteland_Rustboro_Text_SelinOneDown::
 	.string "The drone drops out of the air,\n"
@@ -664,8 +765,9 @@ Wasteland_Rustboro_Text_ReyesArrival4::
 Wasteland_Rustboro_Text_ReyesArrival5::
 	.string "REYES: That's easy enough to\n"
 	.string "arrange.\p"
-	.string "Consider yourself cleared. I'll be\n"
-	.string "waiting, whenever you're ready.$"
+	.string "Consider Assessment open for you -\n"
+	.string "I'll clear it with the door myself.\l"
+	.string "Go whenever you're ready.$"
 
 Wasteland_Rustboro_Text_SelinAfter::
 	.string "She's sleeping better with you\n"
