@@ -21,6 +21,8 @@ enum InGameTradeID
     INGAME_TRADE_ELECTRODE,
     INGAME_TRADE_TANGELA,
     INGAME_TRADE_SEEL,
+    // Wasteland
+    INGAME_TRADE_WASTELAND_ABSOL,
 };
 
 // Return values for CanTradeSelectedMon and CanSpinTradeMon

@@ -1211,6 +1211,22 @@ static const struct InGameTrade sIngameTrades[] =
         .otGender = MALE,
         .sheen = 10,
         .requestedSpecies = SPECIES_PONYTA
+    },
+    [INGAME_TRADE_WASTELAND_ABSOL] =
+    {
+        .nickname = _("OMEN"),
+        .species = SPECIES_ABSOL,
+        .ivs = {20, 25, 20, 15, 15, 25},
+        .abilityNum = 0,
+        .otId = 15208,
+        .conditions = {5, 5, 5, 5, 20},
+        .personality = 0x1A2B,
+        .heldItem = ITEM_NONE,
+        .mailNum = -1,
+        .otName = _("RENA"),
+        .otGender = FEMALE,
+        .sheen = 10,
+        .requestedSpecies = SPECIES_POOCHYENA
     }
 };
 

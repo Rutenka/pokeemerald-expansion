@@ -15,6 +15,16 @@ Wasteland_RustboroGym_EventScript_Overseer::
 Wasteland_RustboroGym_EventScript_OverseerDefeated::
 	msgbox Wasteland_RustboroGym_Text_OverseerCertify, MSGBOX_DEFAULT
 	setflag FLAG_DEFEATED_CORP_OVERSEER
+	@ Added 2026-09-15 alongside opening Rustboro's remaining houses: HM
+	@ field moves (Cut, etc.) are gated on the matching real badge flag
+	@ (src/field_move.c; FLAG_BADGE01_GET for Cut specifically) regardless
+	@ of whether this story uses gym badges - without this, the free HM
+	@ Cut from Wasteland_Rustboro_CuttersHouse would be permanently
+	@ unusable in the field. Tied to actually winning this fight (not
+	@ merely being granted clearance to challenge it), matching real
+	@ vanilla's own logic: the badge comes from beating the Gym Leader,
+	@ not from being let through the door.
+	setflag FLAG_BADGE01_GET
 	giveitem ITEM_TM_SHOCK_WAVE
 	goto_if_eq VAR_RESULT, FALSE, Common_EventScript_ShowBagIsFull
 	msgbox Wasteland_RustboroGym_Text_OverseerGiveTM, MSGBOX_DEFAULT

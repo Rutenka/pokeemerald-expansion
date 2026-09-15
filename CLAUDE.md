@@ -3909,6 +3909,129 @@ verification method already proven reliable throughout this project, not
 a fresh screenshot - flagged honestly rather than claimed as freshly
 confirmed in-game.
 
+### Thirty-eighth custom feature: Rustboro's remaining 7 buildings opened,
+### each researched against its own real vanilla content rather than
+### invented from scratch (2026-09-15, same day)
+
+Viktor asked to open the rest of Rustboro's closed buildings, explicitly
+asking for research into what each real building actually contains and
+creative suggestions tied to the story/town/characters - not just "an NPC
+saying nothing interesting" everywhere. Devon Corp (2 door tiles) stays
+closed on purpose - it's a real future story beat already set up by the
+Corp Guard's own dialogue (Twenty-seventh feature entry), not just an
+unbuilt building. The other 7 real vanilla buildings (verified via
+`tools/validate_maps.py`'s own "door with no warp" warnings, cross-checked
+against RustboroCity's real `warp_events`) were opened, each as its own
+new map reusing the exact real vanilla layout and NPC positions verbatim
+(per checklist item 11) with only dialogue reflavored - except where the
+real vanilla script had a genuine mechanic worth keeping, which all three
+of Viktor's asks (an item, a move, a trade) came from directly rather
+than being invented:
+
+- **`Wasteland_Rustboro_Flat1`** (= `RustboroCity_Flat1_1F`) - pure
+  flavor. A Devon Corp employee and his wife, written as a small,
+  deliberately understated hint that the company isn't a monolith its own
+  workers feel safe inside - seeds the Thirty-first feature entry's
+  "rival corporate city" thread without naming anything.
+- **`Wasteland_Rustboro_Flat2`** (= `RustboroCity_Flat2_1F`) - kept the
+  real vanilla line ("Devon Corp's workers live here") as the building's
+  own framing, then built on it: a retired Devon worker gives the player
+  a Full Heal as thanks, framed as "my husband still keeps supplies
+  around out of habit." The real vanilla Skitty NPC stays as pure
+  decoration.
+- **`Wasteland_Rustboro_CuttersHouse`** (= `RustboroCity_CuttersHouse`) -
+  kept the real mechanic (a free HM CUT) since it's genuinely useful, not
+  just flavor, reframed as a practical salvage tool rather than vanilla's
+  decorative hedge-trimming. **Found and fixed a real, would-be-silent
+  bug while researching this**: HM field moves are gated on a matching
+  badge flag (`src/field_move.c`; `FLAG_BADGE01_GET` for Cut) regardless
+  of setting - this story has no gym badges, so that flag would never
+  have been set naturally, meaning the HM would have been permanently
+  unusable in the field despite being correctly given. Fixed by granting
+  `FLAG_BADGE01_GET` alongside `FLAG_DEFEATED_CORP_OVERSEER` in
+  `Wasteland_RustboroGym_EventScript_OverseerDefeated` - tied to actually
+  *winning* the fight, matching real vanilla's own logic (the badge comes
+  from beating the Gym Leader, not from being let through the door), not
+  to the earlier "granted clearance to challenge her" moment.
+- **`Wasteland_Rustboro_Trader`** (= `RustboroCity_House1`) - kept the
+  real `ingame_trade` mechanic, reframed around a brand new trade
+  (`INGAME_TRADE_WASTELAND_ABSOL`, `src/data/trade.h`,
+  `include/constants/trade.h`) instead of vanilla's Seedot-for-Ralts.
+  Absol picked by Viktor after being offered and rejecting several rounds
+  of options (Corphish/Shroomish/Wingull/Slakoth as "boring," then
+  Absol/Shuppet/Torkoal/Relicanth pitched with direct story ties) -
+  its real Pokédex premise (senses disaster, tries to warn people, gets
+  blamed for causing it instead) is a near-literal mirror of this story's
+  own premise. Requests a Poochyena in return - guaranteed to be
+  something any player has a spare of by this point
+  (`Wasteland_Road`'s own wild encounter table). Added to
+  `docs/roster.md` with a note on why the shared Dark-typing with
+  Houndoom/Mightyena is acceptable (distinct battle role: fast physical
+  glass cannon vs. their special-sweeper/balanced-attacker roles).
+- **`Wasteland_Rustboro_House2`** (= `RustboroCity_House2`) - pure
+  flavor, reworked from vanilla's "the Gym Leader is great" lines into
+  deliberately naive "Assessment is fair" civic pride - dramatic irony,
+  since the player already has the checkpoint ledger proving Devon Corp
+  arms the Ashband.
+- **`Wasteland_Rustboro_House3`** (= `RustboroCity_House3`) - reworked
+  from vanilla's Pikachu-nickname joke into a small "hope alongside
+  institutional cruelty" beat (the design brief's own stated principle):
+  an elderly couple who took in a Pokémon whose family didn't survive the
+  collapse. The decorative pet uses `OBJ_EVENT_GFX_ZIGZAGOON_2` (confirmed
+  real non-FRLG usage in `FortreeCity_House1`) instead of Pikachu, both
+  for safety and to match a species already on this project's own roster.
+- **`Wasteland_Rustboro_PokemonSchool`** (= `RustboroCity_PokemonSchool`)
+  - all 7 real NPCs, the blackboard, and the student notebook sign kept
+  at their real positions. The genuinely useful mechanic explanations
+  (status conditions, held items) were kept close to their real vanilla
+  wording since they're accurate regardless of setting; only flavor lines
+  changed. The Teacher still gives a QUICK CLAW as a reward. **Scott -
+  vanilla's own Battle Frontier recruiter, not relevant to this story's
+  actual plans - reskinned into a nameless traveling "Scout"** who, once
+  the Overseer is defeated, hints at the confirmed 8-territory story
+  spine (Thirty-first feature entry) without naming anything specific:
+  "there's more out there than Rustboro and the Cut - other territories,
+  other people running things their own way."
+
+**Technical notes, worth recording since this is the first time this
+project has added brand new interior maps built from scratch rather than
+extending existing ones:**
+- **Two real mistakes caught by the build itself, not by testing**: every
+  new map's `scripts.inc` needs both (a) its own `_MapScripts::` label
+  (even a bare `.byte 0` stub, matching the established "layout only, no
+  scripted behavior" pattern) and (b) an explicit `.include` line in
+  `data/event_scripts.s` - map `scripts.inc` files are never
+  auto-included. Missing either produces a real linker error
+  (`undefined reference`), not a silent bug - this project has hit this
+  exact mistake before (Second and Twenty-third feature entries) and hit
+  it again here, caught immediately by `make` rather than by playtesting.
+- **All 7 buildings' doors verified single-tile, not the usual real
+  2-tile door pattern**, by comparing each door's own metatile ID against
+  its immediate left/right neighbors before wiring anything (checklist
+  item 9) - all 7 neighbors matched each other and differed from the door
+  tile itself, confirming no second door tile was being missed.
+- **Confirmed via real headless gameplay** (debug-menu warp navigation,
+  screenshotted): the Trader's dialogue correctly interpolates the
+  requested species name ("Poochyena, if you want..."), proving the new
+  trade struct's species fields are wired correctly; the Cutter's HM Cut
+  hand-off was confirmed via a direct flag read
+  (`FLAG_RECEIVED_HM_CUT` = True) after mashing through his dialogue for
+  real, not assumed from script logic alone. **Not independently
+  re-verified**: completing an actual trade end-to-end (would need a
+  Poochyena already in the test save's box, not set up this round), and
+  the other 5 buildings' pure-flavor dialogue - lower risk given they're
+  simple `lock`/`faceplayer`/`msgbox`/`release` scripts identical in
+  shape to dozens of already-proven NPCs elsewhere in this project.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` run across every affected map -
+`Wasteland_Rustboro` shows only Devon Corp's 2 intentionally-unwired
+doors plus the same pre-existing checkpoint-road warning as before;
+`Wasteland_Rustboro_Flat1`/`_Flat2` each show one expected warning for
+their real vanilla upstairs staircase, deliberately left unwired (same
+"closed for now" trade-off as every other unbuilt upper floor in this
+project); every other new map reports clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

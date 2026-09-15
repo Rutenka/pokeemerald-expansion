@@ -31,6 +31,7 @@ Tera are disabled project-wide), progressive reveal tied to exploration.
 | Solrock | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's team (Lv18) | Bulky psychic/rock, sets up with Cosmic Power | Direct thematic tie to the setting's psychic-control-network premise - a "surveillance eye" read |
 | Porygon | Catchable (trainer-only for now) | `Wasteland_RustboroGym` boss, Overseer's ace (Lv19) | Recovery + Agility stall/sweeper, all-type coverage via Conversion | Literally an artificial/digital Pokémon - the single best-fitting species in the whole roster for "a corporation that builds Pokémon-derived control tech," used deliberately as the boss's ace |
 | Elgyem | Catchable | `Wasteland_Rustboro`, wild encounter via a single scripted `wildbattle` (Lv13, Selin's pet, part of the pre-Gym incident quest) - guaranteed to end up on the player's team one way or another (catch it in the fight, or Selin gives it to you afterward if you don't) | Early pure Psychic utility, sets up for Beheeyem later | First living (not artificial) "network-affected" Pokémon - deliberately contrasts the Gym's mechanical Magnemite/Baltoy/Voltorb with something the network can hurt too, not just power; its own real Pokédex lore (telepathy from radio-wave/antenna exposure) is a near-literal match for the control-network premise, picked 2026-09-15 to replace an earlier Natu placeholder for exactly that reason |
+| Absol | Catchable (trade only) | `Wasteland_Rustboro_Trader`, in-game trade (`INGAME_TRADE_WASTELAND_ABSOL`, src/data/trade.h) for a Poochyena | Fast physical sweeper, Dark-type glass cannon | Picked by Viktor 2026-09-15 for its real Pokédex premise (senses disaster, tries to warn people, gets blamed for causing it instead) - a direct mirror of this story's own premise (Pokémon panicking when the network failed, then blamed for a collapse humans caused). Distinct battle role from the existing Dark-types (Houndoom's a special sweeper, Mightyena's a balanced physical attacker), so kept despite the shared typing per the "distinct roles over headcount" principle |
 
 **Trainer roster so far**: the Ashband (all `TRAINER_CLASS_ASHBAND`, reusing the
 vanilla Aqua Grunt battle sprite purely as art - see the Twentieth feature entry in
@@ -47,9 +48,11 @@ used (see `include/constants/opponents.h`) - no more custom trainers can be adde
 without freeing flag space (see that file's own comment for how).
 
 **Open**: Brightwell's own non-service buildings and Grayford are still
-unconnected/undeveloped. Most of Rustboro's real buildings (Devon Corp, the Pokémon
-School, several houses/flats) are deliberately left closed for now - see the
-Twenty-third feature entry in CLAUDE.md.
+unconnected/undeveloped. Devon Corp specifically is still deliberately left closed (a
+real future story beat, not just an unbuilt building - see the Twenty-seventh feature
+entry) - the rest of Rustboro's real buildings (2 flats, the Cutter's house, the
+trader's house, 2 plain houses, the Pokémon School) were opened 2026-09-15, see the
+Thirty-eighth feature entry in CLAUDE.md.
 
 **The pre-Gym "incident" side quest** (see CLAUDE.md's Thirty-third feature entry, and
 the "real happening" rebuild in the entry after it, 2026-09-15) uses `wildbattle`/

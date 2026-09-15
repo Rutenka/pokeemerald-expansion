@@ -1070,6 +1070,13 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_AshbandHoldingCell/scripts.inc"
 	.include "data/maps/Wasteland_AshbandSupplyCache/scripts.inc"
 	.include "data/maps/Wasteland_AshbandRecordsRoom/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Flat1/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Flat2/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_CuttersHouse/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_Trader/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_House2/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_House3/scripts.inc"
+	.include "data/maps/Wasteland_Rustboro_PokemonSchool/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"

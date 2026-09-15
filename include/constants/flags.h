@@ -73,6 +73,8 @@
 #define FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED 0x33 // Wasteland: Man2's patrol drone (wild Voltorb) calmed
 #define FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED 0x34 // Wasteland: the Scientist's animated effigy (wild Baltoy) calmed
 #define FLAG_WASTELAND_RUSTBORO_PET_RESOLVED 0x35 // Wasteland: the resident's pet (wild Elgyem) calmed - also gates the gift-mon fallback if not caught in battle
+#define FLAG_WASTELAND_RUSTBORO_FLAT2_GAVE_ITEM 0x36 // Wasteland: the retired Devon worker in Wasteland_Rustboro_Flat2 already gave her one-time item
+#define FLAG_WASTELAND_RUSTBORO_TRADE_COMPLETED 0x37 // Wasteland: the Absol-for-Poochyena trade in Wasteland_Rustboro_Trader is done
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag
