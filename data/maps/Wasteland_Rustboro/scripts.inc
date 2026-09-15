@@ -624,27 +624,66 @@ Wasteland_Rustboro_EventScript_SelinAfter::
 	release
 	end
 
-@ Reyes' outdoor cutscene, new 2026-09-15. Object 16 in map.json
-@ (Wasteland_Rustboro_EventScript_ReyesArrivalDummy) is permanently hidden
-@ via FLAG_WASTELAND_REYES_HIDDEN (set every map load by
-@ Wasteland_Rustboro_OnTransition above) so she never passively spawns;
-@ `addobject` here forces her in for this one scripted appearance
+@ Reyes' outdoor cutscene, new 2026-09-15, reworked same day (v4) after
+@ Viktor reported her sprite looking broken/invisible and her exit walking
+@ the wrong way. Two real problems, both fixed:
+@ 1. She originally reused OBJ_EVENT_GFX_SCIENTIST_1 - the exact same
+@    graphic the Scientist NPC (now standing right in this same crowd,
+@    see the map.json note above his own script) uses, both on screen at
+@    once. Switched to OBJ_EVENT_GFX_WOMAN_4 instead - confirmed via real
+@    vanilla Emerald map usage (LilycoveCity_ContestHall, FortreeCity_
+@    House4, etc. - not an FRLG-only sprite) and not used by anyone else
+@    anywhere on this map, so there's no risk of two instances of the same
+@    graphic being visible together again.
+@ 2. The crowd (Selin/Man2/Scientist/LittleBoy/LittleGirl) packs the small
+@    area right around the player too tightly for anyone else to walk
+@    through cleanly - there was nowhere for her to arrive from or leave
+@    toward without cutting through occupied tiles. Fixed by staging her
+@    on the wide open street one row further south (confirmed via a full
+@    collision dump: row 40, columns 9-21, is completely open) - she now
+@    walks in from the east and leaves back east, which also reads as
+@    "heading back toward the rest of the city" (the Gym itself is
+@    further east) instead of vanishing south into nothing.
+@ Object 16 in map.json (Wasteland_Rustboro_EventScript_ReyesArrivalDummy)
+@ is permanently hidden via FLAG_WASTELAND_REYES_HIDDEN (set every map
+@ load by Wasteland_Rustboro_OnTransition above) so she never passively
+@ spawns; `addobject` here forces her in for this one scripted appearance
 @ regardless of that flag - same one-shot-appearance idiom as Dad's own
-@ exit sequence in the Safe Room. She's placed 2 tiles south of Selin
-@ (local (13,41)) and walks up 1 tile to (13,40), stopping short of the
-@ player's own position at (13,39) rather than overlapping it.
+@ exit sequence in the Safe Room.
 Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	msgbox Wasteland_Rustboro_Text_SelinThatsAllThree, MSGBOX_DEFAULT
-	@ Added 2026-09-15 (v3) - a short settling delay before spawning Reyes,
-	@ in case reaching this point right after a real wild battle transition
-	@ (rather than a direct script jump, which never showed any issue in
-	@ testing) leaves the camera/object system mid-settle. Cheap, safe,
-	@ best-effort defensive fix for the "animation doesn't work, some lag"
-	@ report - not independently confirmed as the root cause.
+	@ Settling delay before spawning Reyes, in case reaching this point
+	@ right after a real wild battle transition (rather than a direct
+	@ script jump, which never showed any issue in testing) leaves the
+	@ camera/object system mid-settle. Cheap, safe, best-effort defensive
+	@ addition, not confirmed as the root cause of anything on its own.
 	delay 30
+	@ The crowd turns to look before she arrives - a small "everyone
+	@ notices" flourish using objects already on screen, no extra object
+	@ budget spent. Local IDs from events.inc: 6=LittleBoy, 7=LittleGirl,
+	@ 11=Man2, 12=Scientist.
+	@ IMPORTANT: `waitmovement 0` does NOT mean "wait for everyone" - per
+	@ its own macro doc (asm/macros/event.inc), localId 0/LOCALID_NONE
+	@ means "wait for whichever object was MOST RECENTLY applymovement'd."
+	@ Calling applymovement 4 times then a single `waitmovement 0` only
+	@ ever actually waited for the last one (LittleGirl) - the script was
+	@ racing ahead of Reyes's own walk-in every time, which is almost
+	@ certainly why her arrival looked broken/invisible: the dialogue box
+	@ (covering the same screen area she walks through) was popping up
+	@ before her movement had actually finished playing out, hiding it
+	@ entirely. Fixed by waiting for each object explicitly by its own
+	@ localId, never the ambiguous 0/"last-moved" shorthand.
+	applymovement 11, Wasteland_Rustboro_Movement_CrowdNotices
+	applymovement 12, Wasteland_Rustboro_Movement_CrowdNotices
+	applymovement 6, Wasteland_Rustboro_Movement_CrowdNotices
+	applymovement 7, Wasteland_Rustboro_Movement_CrowdNotices
+	waitmovement 11
+	waitmovement 12
+	waitmovement 6
+	waitmovement 7
 	addobject 16
 	applymovement 16, Wasteland_Rustboro_Movement_ReyesApproach
-	waitmovement 0
+	waitmovement 16
 	msgbox Wasteland_Rustboro_Text_ReyesArrival1, MSGBOX_DEFAULT
 	msgbox Wasteland_Rustboro_Text_ReyesArrival2, MSGBOX_DEFAULT
 	msgbox Wasteland_Rustboro_Text_ReyesArrival3, MSGBOX_DEFAULT
@@ -652,18 +691,41 @@ Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	setflag FLAG_HAS_GYM_SPONSORSHIP
 	msgbox Wasteland_Rustboro_Text_ReyesArrival5, MSGBOX_DEFAULT
 	applymovement 16, Wasteland_Rustboro_Movement_ReyesLeave
-	waitmovement 0
+	waitmovement 16
 	removeobject 16
 	releaseall
 	end
 
-Wasteland_Rustboro_Movement_ReyesApproach:
-	walk_up
+Wasteland_Rustboro_Movement_CrowdNotices:
+	face_right
 	step_end
 
+@ From (20,40) - the open street east of the crowd, confirmed clear via a
+@ full collision dump - to (13,40), directly south of the player, facing
+@ up toward the group. 7 tiles, matching the reverse exit below.
+Wasteland_Rustboro_Movement_ReyesApproach:
+	walk_left
+	walk_left
+	walk_left
+	walk_left
+	walk_left
+	walk_left
+	walk_left
+	face_up
+	step_end
+
+@ Retraces the same open street east, back the way she came - reads as
+@ heading back toward the rest of the city (the Gym is further east),
+@ not vanishing off in a random direction.
 Wasteland_Rustboro_Movement_ReyesLeave:
-	walk_down
-	walk_down
+	face_right
+	walk_right
+	walk_right
+	walk_right
+	walk_right
+	walk_right
+	walk_right
+	walk_right
 	step_end
 
 Wasteland_Rustboro_EventScript_ReyesArrivalDummy::

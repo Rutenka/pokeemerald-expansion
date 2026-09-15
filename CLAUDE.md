@@ -3746,6 +3746,109 @@ side of the actual moment, not another headless sweep.
 rebuilt clean. `tools/validate_maps.py` shows no new warnings on
 `Wasteland_Rustboro`.
 
+### Thirty-sixth custom feature: Reyes's cutscene actually root-caused and
+### fixed - a duplicate on-screen sprite, not the "lag" it first looked
+### like (2026-09-15, same day as the Thirty-fifth)
+
+Viktor confirmed the "lag" from the Thirty-fifth entry more precisely:
+Reyes's sprite looked bad or was invisible on arrival, and her exit walked
+south instead of toward the Gym. He also asked whether too many NPCs was
+the cause (offering to let some go), and asked for the scene to feel more
+alive - maybe another NPC, maybe a calmed Voltorb prop lying around.
+
+**Real root cause, found this time via a live headless walkthrough with
+raw object-memory tracking, not another blind frame sweep.** Reyes's
+outdoor object reused `OBJ_EVENT_GFX_SCIENTIST_1` - the *exact* same
+graphic the Scientist NPC (relocated into this same crowd in the
+Thirty-fifth entry) uses, both rendering on screen simultaneously the
+moment she appeared. That's almost certainly what "looks bad / can't see
+him" was - not a hang, a real visual conflict from two live instances of
+the same sprite graphic overlapping in view. Fixed by switching her
+outdoor appearance to `OBJ_EVENT_GFX_WOMAN_4` - confirmed via real vanilla
+Emerald map usage (LilycoveCity_ContestHall, FortreeCity_House4, etc., not
+an FRLG-only sprite - checked before picking it, per this file's own
+standing rule after the Biker/Policeman incidents) and confirmed not used
+by any other NPC anywhere on this map, so there's no way for this specific
+conflict to recur. Her Gym-interior appearance is intentionally left as
+`OBJ_EVENT_GFX_SCIENTIST_1`, unchanged - a minor visual inconsistency
+between her two appearances, accepted rather than risking a change to
+already-working Gym content for a cosmetic-only fix.
+
+**A real, separate scripting bug found and fixed along the way, even
+though it turned out not to be the actual root cause of the visual
+report**: `waitmovement 0` does not mean "wait for every object" - per its
+own documented macro semantics (`asm/macros/event.inc`), a
+localId of 0/`LOCALID_NONE` means "wait for whichever object was most
+recently `applymovement`'d." The crowd-notice flourish called
+`applymovement` on 4 different NPCs (Man2/Scientist/LittleBoy/LittleGirl)
+then a single `waitmovement 0`, which only ever actually waited for the
+last one. Fixed by waiting on each object's real localId explicitly.
+Kept even after confirming it wasn't the visual bug's cause, since it's
+objectively more correct regardless.
+
+**Investigated and ruled out, worth recording since it looked very
+promising for a while**: a first pass at diagnosing this tracked Reyes's
+raw position in `gObjectEvents` memory frame-by-frame and seemed to show
+her covering all 7 tiles of her approach in under 20 frames - way faster
+than a normal walk animation, which looked like a real "movement resolves
+almost instantly, invisible to a human" bug. **This turned out to be a
+measurement artifact, not a real one**: the test's own button-press
+batches used large frame gaps (30-35 frames per press) that were
+themselves long enough to hide an entire 7-tile walk between two
+consecutive screenshots. Redone with small, tight per-press frame gaps
+(~12 frames), the walk showed up as a completely normal ~60-frame, 7-tile
+animation, and a screenshot taken mid-walk showed her sprite rendering
+correctly, clearly visible, approaching from the open street - proving
+the actual walk animation was never broken. **Lesson for any future
+frame-by-frame investigation**: coarse per-press frame gaps can hide an
+entire short animation between two samples just as easily as they can
+hide a hang - both look like "nothing changed between my screenshots."
+Always drop to small, tight frame steps before concluding either one.
+
+**Staging redesigned for room to move, not just to fix a bug.** The
+Selin/Man2/Scientist/LittleBoy/LittleGirl cluster (Thirty-fifth entry)
+packs a small area too tightly for a 6th character to walk cleanly in and
+out. Found (via a full collision dump, columns 9-21 rows 36-43) a
+completely open, 13-tile-wide street one row south of the cluster - Reyes
+now spawns at local (20,40), well down that street, and walks 7 tiles
+west to (13,40), directly south of the player, facing up. Her exit
+retraces the same path east - which also directly fixes Viktor's "walks
+down, not toward the Gym" complaint, since the Gym is further east on
+this map; she's now visibly heading back toward the rest of the city
+instead of vanishing south into nothing. Added a small "the crowd turns
+to look" flourish (Man2/Scientist/LittleBoy/LittleGirl all `face_right`
+just before she arrives) using objects already on screen - no new object
+budget spent, and it directly serves the "more alive" ask.
+
+**Investigated adding a calmed Voltorb as a decorative prop, per Viktor's
+own suggestion - deliberately not shipped.** `OBJ_EVENT_GFX_VOLTORB`
+exists as a real overworld sprite constant, but checking its actual real
+map usage found it's used in exactly one place, `FuchsiaCity_Frlg` - the
+same FRLG-only-sprite failure class that silently broke the Ashband
+Biker and both POLICEMAN guards earlier in this project (Twenty-second
+and Thirty-second feature entries). `OBJ_EVENT_GFX_BALTOY_DOLL` is worse -
+zero real map usage anywhere, completely unverified. Given the object
+budget is also already exactly full (16, no room for a 17th object
+regardless), and given this exact risk category has already caused two
+real shipped bugs this project, this was left out rather than risking a
+third repeat of the same mistake. If a prop like this is wanted later,
+it needs a confirmed-safe non-FRLG real usage found first, the same
+standing rule as every other asset-reuse decision in this file - the
+generic `OBJ_EVENT_GFX_SPECIES(name)` macro form is a possible avenue but
+has zero real static map.json usage anywhere to check against, so it
+would need to be verified some other way (e.g. tracing its use in
+scripted wild-encounter/roamer code) before trusting it either.
+
+**Confirmed via real headless gameplay, precisely this time**: the full
+approach (screenshotted mid-walk, sprite clean and clearly visible,
+approaching from the open street) and the full exit (screenshotted
+mid-walk, heading east/right, sprite clean) both verified with actual
+images, not inferred from flag state alone.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` shows no new warnings on
+`Wasteland_Rustboro`.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
