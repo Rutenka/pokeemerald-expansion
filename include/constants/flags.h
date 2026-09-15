@@ -66,13 +66,13 @@
 #define FLAG_DEFEATED_CORP_TRAINER_3 0x2C // Wasteland: Rustboro Gym gauntlet trainer 3
 #define FLAG_DEFEATED_CORP_OVERSEER 0x2D // Wasteland: Rustboro Gym boss, first proper boss fight
 #define FLAG_SEEN_RUSTBORO_ARRIVAL 0x2E // Wasteland: gates the one-time arrival narration on Wasteland_Rustboro
-#define FLAG_ITEM_WASTELAND_RUSTBORO_ITEM_1 0x2F // Wasteland: Rustboro's hidden item ball
-#define FLAG_HAS_MISFILED_PAPERWORK 0x30 // Wasteland: the FatMan gives up DevonEmployee2's misfiled sponsorship authorization
-#define FLAG_HAS_GYM_SPONSORSHIP 0x31 // Wasteland: DevonEmployee2 vouches for the player - lets the Assessment Center guard step aside
-#define FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED 0x32 // Wasteland: set when FatMan's dismissal is interrupted by the network-glitch incident - gates all 3 incident encounters and blocks paperwork until they're resolved
+#define FLAG_ITEM_WASTELAND_RUSTBORO_ITEM_1 0x2F // Wasteland: unused as of 2026-09-15 - the item ball this gated was removed to free an object-event slot for Reyes's outdoor cutscene (see the object-budget note on FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED below)
+#define FLAG_WASTELAND_REYES_HIDDEN 0x30 // Wasteland: reused 2026-09-15 (was FLAG_HAS_MISFILED_PAPERWORK, obsolete once the paperwork fetch-quest was replaced) - kept permanently set via Wasteland_Rustboro_OnTransition so Reyes's outdoor object never passively spawns; only ever shown via explicit addobject in her post-incident cutscene
+#define FLAG_HAS_GYM_SPONSORSHIP 0x31 // Wasteland: granted directly by Reyes after the group incident is resolved (2026-09-15) - lets the Assessment Center guard step aside
+#define FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED 0x32 // Wasteland: set on first talking to the Gym guard (2026-09-15 - previously FatMan) - gates all 3 incident encounters, now all fought in one sequence via Selin. Rustboro is at exactly OBJECT_EVENTS_COUNT (16) object_events - see CLAUDE.md's "a real, engine-level object-event limit" entry before adding another
 #define FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED 0x33 // Wasteland: Man2's patrol drone (wild Voltorb) calmed
 #define FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED 0x34 // Wasteland: the Scientist's animated effigy (wild Baltoy) calmed
-#define FLAG_WASTELAND_RUSTBORO_PET_RESOLVED 0x35 // Wasteland: the resident's pet (wild Natu) calmed - also gates the gift-mon fallback if not caught in battle
+#define FLAG_WASTELAND_RUSTBORO_PET_RESOLVED 0x35 // Wasteland: the resident's pet (wild Elgyem) calmed - also gates the gift-mon fallback if not caught in battle
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag

@@ -3533,6 +3533,142 @@ above is the part that was actually broken, and the encounter script logic
 itself is unchanged from the already-reasoned-through Elgyem swap earlier
 in this entry.
 
+### Thirty-fourth custom feature: the Rustboro incident rebuilt into a real
+### "happening," with an outdoor Reyes cutscene (2026-09-15)
+
+Viktor tested the incident quest live and asked for real staging, not a
+scattered fetch-quest: an unmissable cutscene on arrival explaining *why*
+the Gym is locked, a guard who turns the player away and points them at
+the trouble, a single "group of people standing together" whose
+interaction runs all 3 fights back to back, and - the actual payoff - the
+Gym's own boss walking out in person afterward to thank the player and
+grant clearance. He also asked for the two non-Elgyem fights to be a real
+tactical step up, not just re-skinned copies of the same easy fight.
+
+**Structural rework, replacing the Thirty-third entry's fetch-quest
+plumbing entirely:**
+- **Arrival cutscene extended** (`Wasteland_Rustboro_Text_Arrival4`, a 4th
+  page on the existing, already-unmissable arrival narration) to state
+  outright that the "Gym" is really a clearance gate nobody gets past
+  without earning it - answers Viktor's "explain why" ask before the
+  player ever reaches the door, not after.
+- **FatMan demoted to pure flavor** - no longer sets or gates anything;
+  his two old lines were merged into one standalone conversation.
+- **The Gym guard is now the actual front door of the mechanic**: first
+  talk sets `FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED` and tells the
+  player to go sort out "half the city calling in about Pokémon acting
+  wrong" - directly matching Viktor's "walk to the gym, guard says not
+  allowed" beat.
+- **Man2 and the Scientist no longer host their own fights** - stripped
+  down to flavor NPCs that redirect the player toward Selin's ("that's
+  where it'll be"), rather than each requiring a separate errand.
+- **Selin's location is the "happening"** - a single interaction
+  (`Wasteland_Rustboro_EventScript_Selin`) now runs Voltorb, then Baltoy,
+  then Elgyem in one uninterrupted sequence via `goto_if_set`-gated
+  fall-through blocks, each already-won fight skipped so a loss mid-
+  sequence can be resumed by re-talking to her rather than losing
+  progress - this is the actual mechanism satisfying "3 battles in a row,"
+  not 3 separate map errands. New connective narration
+  (`Text_SelinConverge`, describing a crowd gathered around a
+  malfunctioning drone, a twitching display, and Selin's own panicking
+  Elgyem, all in one place) sells the "one dramatic incident" framing even
+  though only Selin's own sprite is physically present - the object budget
+  (still exactly 16, see the entry above) didn't allow for literal extra
+  crowd sprites.
+- **DevonEmployee2 demoted to pure flavor** too - the sponsorship-granting
+  role moves to Reyes below.
+
+**New: Reyes's outdoor cutscene, the actual technical novelty this entry
+adds.** No engine mechanism in this project had previously spawned a
+character outdoors for a one-off scripted appearance outside their "home"
+map. Solved with:
+- A 16th object_events entry (`Wasteland_Rustboro_EventScript_
+  ReyesArrivalDummy`, `OBJ_EVENT_GFX_SCIENTIST_1` - the same sprite she
+  already uses as the Gym boss, so it's the same character, not a
+  coincidence) placed 2 tiles south of Selin, at local (13,41) - this
+  fills the object slot freed by removing the item ball (see the entry
+  above; Rustboro is at exactly `OBJECT_EVENTS_COUNT` again).
+- **Permanently hidden by default**, not shown-until-flag - the engine's
+  per-object `flag` field only supports "hide once set," so the only way
+  to get "hidden until an event happens" is to invert it: a new flag
+  (`FLAG_WASTELAND_REYES_HIDDEN`, reusing the numeric slot freed by
+  `FLAG_HAS_MISFILED_PAPERWORK`'s removal) gets `setflag`'d unconditionally
+  every map load via `Wasteland_Rustboro_OnTransition`, and her object's
+  own template `flag` field is set to it - so she never passively spawns
+  no matter how close the camera gets.
+- **Forced into the scene explicitly** via `addobject 16` inside Selin's
+  post-battle script once all 3 fights resolve, regardless of the passive
+  hide flag - the standard technique for a one-shot scripted appearance,
+  confirmed real and simple (`addobject`/`removeobject` script commands
+  already exist in this engine, just never previously used in this
+  project). `applymovement` walks her 1 tile up to (13,40), stopping short
+  of the player's own tile at (13,39) rather than overlapping it; 5
+  dialogue pages (introduction, praise, an offer, the player's own stated
+  ask, her granting clearance) run before `setflag FLAG_HAS_GYM_
+  SPONSORSHIP`, then she walks back out and `removeobject`s cleanly.
+
+**Difficulty**: Selin's Voltorb and Baltoy raised from Lv13 to Lv16 and
+given `ITEM_EVIOLITE` each - both are unevolved species, so the +50%
+Def/SpDef is a real, thematically-grounded toughening, not just a stat
+pad. Elgyem stays at Lv13/no item since it's the catchable reward, not
+part of the difficulty ask. Checked the actual learnsets before compiling
+this file's own record of it (`src/data/pokemon/level_up_learnsets/
+gen_9.h`): Voltorb has Screech (Lv13) and Charge Beam (unlocks exactly at
+Lv16) together, Baltoy already had Rock Tomb (genuinely super-effective
+against Fire, Lv9) well before this change - the level bump means both
+now reliably have their real threat online, not just a bigger number.
+
+**Confirmed via real headless gameplay, methodically, after several
+self-inflicted false alarms from the exact over/under-mashing failure
+class checklist items 12/15 already name** (worth recording again since it
+struck three separate times this session, always the same root cause -
+mashing a fixed press count near a live NPC instead of checking a
+screenshot):
+1. The Gym guard's first-talk conversation correctly sets
+   `FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED` and delivers the new
+   redirect dialogue (screenshotted mid-print, then confirmed closed).
+2. Walking to Selin and clearing the (long, multi-page) converge
+   narration correctly starts a real wild battle - screenshotted, showing
+   "Voltorb Lv16" on the actual battle screen, confirming the level change
+   took.
+3. A real, unstrategic loss against that Voltorb (blind-mashed FIGHT/move-
+   1, no real strategy) - `FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED` stayed
+   unset and the game correctly fell through to its existing loss/
+   whiteout handling, unchanged from before. Given this was blind mashing,
+   not a considered loss, it isn't proof the fight is *well-tuned*, but it
+   is real, first-hand confirmation the fight is no longer a guaranteed
+   win the way the Lv13/no-item version was.
+4. **The new, previously-unproven Reyes cutscene specifically** - tested
+   directly by setting all 3 resolved flags and re-approaching Selin
+   (skipping the battles themselves, already proven by point 2/3 above, to
+   target the actually-new code): `addobject`, the approach movement, all
+   5 dialogue pages, `setflag FLAG_HAS_GYM_SPONSORSHIP`, the exit
+   movement, and `removeobject` all ran cleanly with no hang, no crash, no
+   leftover sprite - confirmed via a screenshot immediately after showing
+   a completely clean overworld scene.
+5. **The actual payoff, walked for real**: with sponsorship granted, the
+   Gym guard's tile is open (walked straight through her former position
+   at (27,20)), and stepping onto the real door tile at (27,19) correctly
+   warps into `Wasteland_RustboroGym` (confirmed via `get_location()`
+   changing to map group 75 / map 14).
+
+**Not independently re-verified this round**: the Baltoy and Elgyem
+fights specifically (only Voltorb was fought for real) - low risk, same
+proven `setwildbattle` pattern already exercised twice elsewhere this
+session; and Man2/the Scientist's new redirect dialogue - a simple text-
+only change with no new logic, lowest risk item in this whole entry.
+
+**Reminder for Viktor's own testing, carried over from the entry above**:
+his real save has already been positioned inside Rustboro before this
+build, so the same stale-object-template-cache issue applies here too -
+if Reyes doesn't appear, or the item ball is still there, leave Rustboro
+through the checkpoint gate and walk back in once to force a refresh
+before concluding anything is broken.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` shows no new warnings on
+`Wasteland_Rustboro`.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

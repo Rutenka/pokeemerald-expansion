@@ -51,8 +51,13 @@ unconnected/undeveloped. Most of Rustboro's real buildings (Devon Corp, the Pok√
 School, several houses/flats) are deliberately left closed for now - see the
 Twenty-third feature entry in CLAUDE.md.
 
-**The pre-Gym "incident" side quest** (see CLAUDE.md's Thirty-third feature entry)
-uses `wildbattle`/`givemon` instead of new Trainers specifically because all 9 custom
-trainer slots are already spent (above) - Voltorb and Baltoy reuse the exact species
-already fighting for the Gym itself (a deliberate small "preview of what's coming"),
-Elgyem is the one new addition, picked to be the quest's single catchable reward.
+**The pre-Gym "incident" side quest** (see CLAUDE.md's Thirty-third feature entry, and
+the "real happening" rebuild in the entry after it, 2026-09-15) uses `wildbattle`/
+`givemon` instead of new Trainers specifically because all 9 custom trainer slots are
+already spent (above) - Voltorb and Baltoy reuse the exact species already fighting for
+the Gym itself (a deliberate small "preview of what's coming"), Elgyem is the one new
+addition, picked to be the quest's single catchable reward. As of 2026-09-15, Selin's
+Voltorb and Baltoy are Lv16 (up from Lv13) and both hold `ITEM_EVIOLITE` - a real
+tactical step up per Viktor's request, since both are unevolved species and the +50%
+Def/SpDef genuinely toughens them against an early Houndour. Elgyem stays at Lv13/no
+item, since it's the catchable reward rather than part of the difficulty ask.

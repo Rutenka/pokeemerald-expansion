@@ -13,6 +13,10 @@ Wasteland_Rustboro_MapScripts::
 
 Wasteland_Rustboro_OnTransition:
 	setrespawn HEAL_LOCATION_WASTELAND_RUSTBORO
+	@ Idempotent - keeps Reyes's outdoor cutscene object permanently hidden
+	@ from the passive per-map spawn check on every load; she only ever
+	@ appears via the explicit `addobject` in her cutscene below.
+	setflag FLAG_WASTELAND_REYES_HIDDEN
 	end
 
 @ The actual return path to Miller's Cut - real bug found and fixed
@@ -45,6 +49,8 @@ Wasteland_Rustboro_EventScript_Arrival::
 	closemessage
 	msgbox Wasteland_Rustboro_Text_Arrival3, MSGBOX_DEFAULT
 	closemessage
+	msgbox Wasteland_Rustboro_Text_Arrival4, MSGBOX_DEFAULT
+	closemessage
 	setflag FLAG_SEEN_RUSTBORO_ARRIVAL
 	releaseall
 	end
@@ -71,6 +77,18 @@ Wasteland_Rustboro_Text_Arrival3::
 	.string "why they're arming the people who\l"
 	.string "took DAD, it's someone in here.$"
 
+@ Added 2026-09-15 per Viktor's ask for an unmissable, up-front explanation
+@ of why the Gym even matters, rather than the player discovering the lock
+@ only once they walk up to it cold.
+Wasteland_Rustboro_Text_Arrival4::
+	.string "The building they call the Gym isn't\n"
+	.string "really a gym here - it's clearance.\p"
+	.string "Nobody gets answers, or trust, or\n"
+	.string "even through half these doors,\l"
+	.string "without it.\p"
+	.string "If you want anyone here to talk,\n"
+	.string "you'll have to earn that first.$"
+
 Wasteland_Rustboro_EventScript_Woman::
 	lock
 	faceplayer
@@ -78,45 +96,19 @@ Wasteland_Rustboro_EventScript_Woman::
 	release
 	end
 
-@ Side quest, first version (2026-09-14): the Gym is locked behind a
-@ sponsorship a guard checks for, earned from FatMan/DevonEmployee2. Viktor
-@ asked for more weight than a plain fetch-quest - "help them with
-@ something... get ignored, then something happens, then earn their trust" -
-@ so this is now the front door of a 3-part incident (see the drone/
-@ artifact/pet encounters below) rather than a single conversation. FatMan
-@ dismisses the player outright on first talk; that dismissal is what the
-@ incident interrupts. No new map, no new trainer (the 9-slot custom
-@ trainer budget is fully spent - see docs/roster.md) - three real
-@ `wildbattle` encounters instead, which don't touch that budget at all.
+@ Rebuilt 2026-09-15 per Viktor's ask for a real "happening" - a single
+@ dramatic incident with weight, not an item-fetch quest. FatMan is now pure
+@ flavor (no mechanic tied to him); the Gym guard is the front door that
+@ sends the player looking for the trouble (see GymGuard below); Man2 and
+@ the Scientist point toward it without fighting it themselves; Selin's
+@ location is where it's all converging, and talking to her runs all 3
+@ `wildbattle` encounters back to back; beating the last one brings Reyes
+@ herself out to grant clearance directly. No new Trainer, no new map - see
+@ docs/roster.md, the custom Trainer ID budget is fully spent.
 Wasteland_Rustboro_EventScript_FatMan::
 	lock
 	faceplayer
-	goto_if_set FLAG_HAS_MISFILED_PAPERWORK, Wasteland_Rustboro_EventScript_FatManAfter
-	goto_if_set FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_FatManIncidentCheck
 	msgbox Wasteland_Rustboro_Text_FatMan, MSGBOX_DEFAULT
-	msgbox Wasteland_Rustboro_Text_FatManDismissal, MSGBOX_DEFAULT
-	setflag FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED
-	msgbox Wasteland_Rustboro_Text_IncidentAlarm, MSGBOX_DEFAULT
-	release
-	end
-
-Wasteland_Rustboro_EventScript_FatManIncidentCheck::
-	goto_if_unset FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
-	goto_if_unset FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
-	goto_if_unset FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_FatManStillBusy
-	msgbox Wasteland_Rustboro_Text_FatManImpressed, MSGBOX_DEFAULT
-	msgbox Wasteland_Rustboro_Text_FatManGivesPaperwork, MSGBOX_DEFAULT
-	setflag FLAG_HAS_MISFILED_PAPERWORK
-	release
-	end
-
-Wasteland_Rustboro_EventScript_FatManStillBusy::
-	msgbox Wasteland_Rustboro_Text_FatManStillBusy, MSGBOX_DEFAULT
-	release
-	end
-
-Wasteland_Rustboro_EventScript_FatManAfter::
-	msgbox Wasteland_Rustboro_Text_FatManAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -181,45 +173,25 @@ Wasteland_Rustboro_EventScript_CorpGuardCleared::
 	release
 	end
 
+@ Simplified 2026-09-15 - no longer part of the sponsorship mechanic (Reyes
+@ grants that directly now, see Selin's script below). Pure flavor.
 Wasteland_Rustboro_EventScript_DevonEmployee2::
 	lock
 	faceplayer
 	msgbox Wasteland_Rustboro_Text_DevonEmployee2, MSGBOX_DEFAULT
-	goto_if_set FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_DevonEmployee2Sponsored
-	goto_if_set FLAG_HAS_MISFILED_PAPERWORK, Wasteland_Rustboro_EventScript_DevonEmployee2GiveSponsorship
-	msgbox Wasteland_Rustboro_Text_DevonEmployee2AskFavor, MSGBOX_DEFAULT
 	release
 	end
 
-Wasteland_Rustboro_EventScript_DevonEmployee2GiveSponsorship::
-	msgbox Wasteland_Rustboro_Text_DevonEmployee2Thanks, MSGBOX_DEFAULT
-	setflag FLAG_HAS_GYM_SPONSORSHIP
-	release
-	end
-
-Wasteland_Rustboro_EventScript_DevonEmployee2Sponsored::
-	release
-	end
-
-@ Incident site 1 of 3 (2026-09-14) - Man2's own original line ("You get used
-@ to the drones... they're not even armed. Probably.") already foreshadowed
-@ this. A real `wildbattle` (Voltorb), not a trainer - the custom trainer ID
-@ budget is fully spent (docs/roster.md).
+@ Rewritten 2026-09-15 - no longer hosts its own wild battle. Points the
+@ player toward Selin's place instead, where the whole incident is now
+@ converging (see the design note above Wasteland_Rustboro_EventScript_FatMan).
+@ Man2's own original line ("You get used to the drones... they're not even
+@ armed. Probably.") is what foreshadowed this drone in the first place.
 Wasteland_Rustboro_EventScript_Man2::
 	lock
 	faceplayer
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_Man2Normal
-	goto_if_set FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_Man2AfterDrone
-	msgbox Wasteland_Rustboro_Text_Man2DroneAlert, MSGBOX_DEFAULT
-	setwildbattle SPECIES_VOLTORB, 13, ITEM_NONE
-	waitse
-	playmoncry SPECIES_VOLTORB, CRY_MODE_ENCOUNTER
-	delay 40
-	waitmoncry
-	dowildbattle
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_Man2DroneWon
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_Man2DroneWon
+	msgbox Wasteland_Rustboro_Text_Man2Redirect, MSGBOX_DEFAULT
 	release
 	end
 
@@ -228,51 +200,19 @@ Wasteland_Rustboro_EventScript_Man2Normal::
 	release
 	end
 
-Wasteland_Rustboro_EventScript_Man2DroneWon::
-	setflag FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED
-	msgbox Wasteland_Rustboro_Text_Man2DroneWon, MSGBOX_DEFAULT
-	release
-	end
-
-Wasteland_Rustboro_EventScript_Man2AfterDrone::
-	msgbox Wasteland_Rustboro_Text_Man2AfterDrone, MSGBOX_DEFAULT
-	release
-	end
-
-@ Incident site 2 of 3 (2026-09-14) - the Scientist's own original line
-@ ("Please don't touch the equipment. It remembers.") already foreshadowed
-@ this directly. A real `wildbattle` (Baltoy), same reasoning as Man2 above.
+@ Rewritten 2026-09-15 - same treatment as Man2 above. The Scientist's own
+@ original line ("Please don't touch the equipment. It remembers.") is what
+@ foreshadowed this.
 Wasteland_Rustboro_EventScript_Scientist::
 	lock
 	faceplayer
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_ScientistNormal
-	goto_if_set FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED, Wasteland_Rustboro_EventScript_ScientistAfterArtifact
-	msgbox Wasteland_Rustboro_Text_ScientistArtifactAlert, MSGBOX_DEFAULT
-	setwildbattle SPECIES_BALTOY, 13, ITEM_NONE
-	waitse
-	playmoncry SPECIES_BALTOY, CRY_MODE_ENCOUNTER
-	delay 40
-	waitmoncry
-	dowildbattle
-	specialvar VAR_RESULT, GetBattleOutcome
-	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_ScientistArtifactWon
-	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_ScientistArtifactWon
+	msgbox Wasteland_Rustboro_Text_ScientistRedirect, MSGBOX_DEFAULT
 	release
 	end
 
 Wasteland_Rustboro_EventScript_ScientistNormal::
 	msgbox Wasteland_Rustboro_Text_Scientist, MSGBOX_DEFAULT
-	release
-	end
-
-Wasteland_Rustboro_EventScript_ScientistArtifactWon::
-	setflag FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED
-	msgbox Wasteland_Rustboro_Text_ScientistArtifactWon, MSGBOX_DEFAULT
-	release
-	end
-
-Wasteland_Rustboro_EventScript_ScientistAfterArtifact::
-	msgbox Wasteland_Rustboro_Text_ScientistAfterArtifact, MSGBOX_DEFAULT
 	release
 	end
 
@@ -282,9 +222,6 @@ Wasteland_Rustboro_EventScript_Boy1::
 	msgbox Wasteland_Rustboro_Text_Boy1, MSGBOX_DEFAULT
 	release
 	end
-
-Wasteland_Rustboro_EventScript_ItemFullRestore::
-	finditem ITEM_FULL_RESTORE
 
 Wasteland_Rustboro_EventScript_GymSign::
 	msgbox Wasteland_Rustboro_Text_GymSign, MSGBOX_SIGN
@@ -319,49 +256,10 @@ Wasteland_Rustboro_Text_FatMan::
 	.string "Thirty years I've filed compliance\n"
 	.string "reports for this district.\p"
 	.string "Not one has ever been read, as far\l"
-	.string "as I can tell. I file them anyway.$"
-
-Wasteland_Rustboro_Text_FatManDismissal::
-	.string "And no, I can't help you. I don't\n"
-	.string "have clearance to help people who\l"
-	.string "just “wandered in.”\p"
-	.string "Take it up with Coordination. Or\n"
-	.string "don't. Not my problem either way.$"
-
-Wasteland_Rustboro_Text_IncidentAlarm::
-	.string "Somewhere across the district, an\n"
-	.string "alarm starts - short, rising, cut\l"
-	.string "off mid-note.\p"
-	.string "Nobody in the office even looks\n"
-	.string "up. Like they were waiting for it.$"
-
-Wasteland_Rustboro_Text_FatManStillBusy::
-	.string "Still can't help you. District's a\n"
-	.string "mess right now - people all over the\l"
-	.string "block reporting Pokémon behaving\l"
-	.string "wrong, and nobody up top's saying\l"
-	.string "why.\p"
-	.string "Sort that out first. Then we'll\n"
-	.string "talk.$"
-
-Wasteland_Rustboro_Text_FatManImpressed::
-	.string "Word travels. Drone on Ash Row, the\n"
-	.string "Study Hall thing, and now Selin's\l"
-	.string "bird.\p"
-	.string "Didn't expect an outsider to\n"
-	.string "actually deal with any of it.\l"
-	.string "Didn't expect anyone to, honestly.$"
-
-Wasteland_Rustboro_Text_FatManGivesPaperwork::
-	.string "…Actually, hold on.\p"
-	.string "This authorization's been sitting in\n"
-	.string "my tray for two weeks. Not mine.\l"
-	.string "Somebody in Coordination's, by the\l"
-	.string "stamp.\p"
-	.string "Here. Don't lose it a second time.$"
-
-Wasteland_Rustboro_Text_FatManAfter::
-	.string "Try not to lose it this time.$"
+	.string "as I can tell. I file them anyway.\p"
+	.string "And no, before you ask - I can't\n"
+	.string "help you with anything. Take it up\l"
+	.string "with Coordination.$"
 
 Wasteland_Rustboro_Text_NinjaBoy::
 	.string "They test us for “aptitude” now.\n"
@@ -423,66 +321,27 @@ Wasteland_Rustboro_Text_DevonEmployee2::
 	.string "“Coordination framework.” Feels\l"
 	.string "completely different, I'm sure.$"
 
-Wasteland_Rustboro_Text_DevonEmployee2AskFavor::
-	.string "Trying to get into Assessment?\n"
-	.string "I could vouch for you - I've got the\l"
-	.string "standing.\p"
-	.string "Except my own authorization's sat\n"
-	.string "“unfiled” in Records for two weeks.\l"
-	.string "Ask for the big fellow down there.\l"
-	.string "Ironic - he's the one clerk who\l"
-	.string "actually reads what crosses his desk.$"
-
-Wasteland_Rustboro_Text_DevonEmployee2Thanks::
-	.string "There it is. Knew it wasn't lost -\n"
-	.string "just filed somewhere useless.\p"
-	.string "I'll let the door know you're\n"
-	.string "sponsored. Go on, then.$"
-
 Wasteland_Rustboro_Text_Man2::
 	.string "You get used to the drones after a\n"
 	.string "while.\p"
 	.string "They're not even armed. Probably.$"
 
-Wasteland_Rustboro_Text_Man2DroneAlert::
-	.string "That drone's not on its usual\n"
-	.string "loop.\p"
-	.string "Its eye just… locked on you.\n"
-	.string "Get ready!$"
-
-Wasteland_Rustboro_Text_Man2DroneWon::
-	.string "It just… stopped. Like someone cut\n"
-	.string "the signal mid-command.\p"
-	.string "Six years on this block. Never\n"
-	.string "seen one do that before today.$"
-
-Wasteland_Rustboro_Text_Man2AfterDrone::
-	.string "Maintenance hauled it off this\n"
-	.string "morning.\p"
-	.string "Nobody's explaining anything.\n"
-	.string "Same as always.$"
+Wasteland_Rustboro_Text_Man2Redirect::
+	.string "That drone took off down toward the\n"
+	.string "private residence on the corner -\l"
+	.string "the one with the flower boxes.\p"
+	.string "If it's still causing trouble,\n"
+	.string "that's where it'll be.$"
 
 Wasteland_Rustboro_Text_Scientist::
 	.string "Please don't touch the equipment.\n"
 	.string "It remembers.$"
 
-Wasteland_Rustboro_Text_ScientistArtifactAlert::
-	.string "I told you - it remembers!\p"
-	.string "It's not supposed to move on its\n"
-	.string "own. Someone's still transmitting\l"
-	.string "to it - !$"
-
-Wasteland_Rustboro_Text_ScientistArtifactWon::
-	.string "Whatever was steering it let go\n"
-	.string "the second you won.\p"
-	.string "I should write this up. I already\n"
-	.string "know nobody upstairs wants it\l"
-	.string "written up.$"
-
-Wasteland_Rustboro_Text_ScientistAfterArtifact::
-	.string "Back in its case. Bolted down,\n"
-	.string "this time.\p"
-	.string "That's the whole fix, apparently.$"
+Wasteland_Rustboro_Text_ScientistRedirect::
+	.string "It finally went still - but not\n"
+	.string "before it wandered off toward the\l"
+	.string "residence down south.\p"
+	.string "I'd go check, if I were you.$"
 
 Wasteland_Rustboro_Text_Boy1::
 	.string "It's not really a gym. It's an\n"
@@ -532,37 +391,97 @@ Wasteland_Rustboro_Text_CheckpointRoadSign::
 	.string "South, past the marker stones -\l"
 	.string "the way back to Miller's Cut.$"
 
-@ Blocks the Gym door until FLAG_HAS_GYM_SPONSORSHIP is set (see
-@ DevonEmployee2/FatMan above) - the guard's own object_event "flag" field
-@ hides him automatically once that flag is set, same proven mechanism as
-@ the Miller's Cut blockade.
+@ Rebuilt 2026-09-15 into the actual front door of the incident, replacing
+@ the old sponsorship-fetch mechanic. First talk sends the player looking
+@ for the trouble in the city (see Selin's script below); the guard's own
+@ object_event "flag" field still hides him automatically once
+@ FLAG_HAS_GYM_SPONSORSHIP is set (now granted by Reyes directly), same
+@ proven mechanism as the Miller's Cut blockade.
 Wasteland_Rustboro_EventScript_GymGuard::
-	msgbox Wasteland_Rustboro_Text_GymGuard, MSGBOX_NPC
+	lock
+	faceplayer
+	goto_if_set FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_GymGuardStillWaiting
+	msgbox Wasteland_Rustboro_Text_GymGuardFirst, MSGBOX_DEFAULT
+	setflag FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED
+	release
 	end
 
-Wasteland_Rustboro_Text_GymGuard::
-	.string "No Assessment without sponsorship.\n"
-	.string "Talk to someone with real standing\l"
-	.string "in this city. Not me.$"
+Wasteland_Rustboro_EventScript_GymGuardStillWaiting::
+	msgbox Wasteland_Rustboro_Text_GymGuardStillWaiting, MSGBOX_DEFAULT
+	release
+	end
 
-@ Incident site 3 of 3, the capstone (2026-09-14, species swapped to Elgyem
-@ 2026-09-15 per Viktor's request for something more exotic) - Selin's own
-@ Elgyem, the one living creature in this incident rather than a drone or
-@ an artifact, deliberately given more weight - and the one the player can
-@ keep afterward (Viktor's ask: a catchable reward that fits the story and
-@ the early game). Elgyem's own real Pokédex lore (telepathy triggered by
-@ radio-wave/antenna exposure) is a near-literal match for "affected by the
-@ control network," which is why it replaced Natu. A real `wildbattle`,
-@ same reasoning as the other two sites - if the player catches it
-@ themselves during the fight, no separate gift is needed; if they win
-@ without catching it, Selin gives it to them directly afterward via
-@ `givemon`, using the same party/PC/no-room branching as the Safe Room's
-@ own starter gift.
+Wasteland_Rustboro_Text_GymGuardFirst::
+	.string "Nobody challenges Assessment\n"
+	.string "without clearance. That's not new.\p"
+	.string "What IS new is half the city\n"
+	.string "calling in about Pokémon acting\l"
+	.string "wrong.\p"
+	.string "Sort that out, and maybe someone\n"
+	.string "with real standing will vouch for\l"
+	.string "you.$"
+
+Wasteland_Rustboro_Text_GymGuardStillWaiting::
+	.string "Still no clearance.\p"
+	.string "Whatever's going on out there, it\n"
+	.string "isn't finished yet.$"
+
+@ Rebuilt 2026-09-15 - the incident's finale. Talking to Selin once the
+@ guard has sent the player looking runs all 3 `wildbattle` encounters back
+@ to back (Voltorb, then Baltoy, then Elgyem), skipping any already won so a
+@ loss mid-sequence can be resumed by talking to her again rather than
+@ losing progress. Beating the last one brings Reyes herself out for a
+@ short cutscene that grants FLAG_HAS_GYM_SPONSORSHIP directly - see
+@ Wasteland_Rustboro_EventScript_SelinReyesArrives below.
+@ Voltorb/Baltoy raised to level 16 with Eviolite (2026-09-15, per Viktor's
+@ ask for a real tactical step up from the starter Houndour) - both are
+@ unevolved species, so Eviolite's +50% Def/SpDef genuinely toughens them
+@ up rather than just padding a stat total. Elgyem stays at its original
+@ level/no item - it's the catchable reward, not part of the difficulty ask.
 Wasteland_Rustboro_EventScript_Selin::
 	lock
 	faceplayer
+	goto_if_set FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_SelinAfter
 	goto_if_unset FLAG_WASTELAND_RUSTBORO_INCIDENT_STARTED, Wasteland_Rustboro_EventScript_SelinNormal
-	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_SelinAfter
+	goto_if_set FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED, Wasteland_Rustboro_EventScript_SelinCheckArtifact
+	msgbox Wasteland_Rustboro_Text_SelinConverge, MSGBOX_DEFAULT
+Wasteland_Rustboro_EventScript_SelinDroneBattle::
+	setwildbattle SPECIES_VOLTORB, 16, ITEM_EVIOLITE
+	waitse
+	playmoncry SPECIES_VOLTORB, CRY_MODE_ENCOUNTER
+	delay 40
+	waitmoncry
+	dowildbattle
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinDroneWon
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinDroneWon
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinDroneWon::
+	setflag FLAG_WASTELAND_RUSTBORO_DRONE_RESOLVED
+	msgbox Wasteland_Rustboro_Text_SelinOneDown, MSGBOX_DEFAULT
+Wasteland_Rustboro_EventScript_SelinCheckArtifact::
+	goto_if_set FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED, Wasteland_Rustboro_EventScript_SelinCheckPet
+Wasteland_Rustboro_EventScript_SelinArtifactBattle::
+	setwildbattle SPECIES_BALTOY, 16, ITEM_EVIOLITE
+	waitse
+	playmoncry SPECIES_BALTOY, CRY_MODE_ENCOUNTER
+	delay 40
+	waitmoncry
+	dowildbattle
+	specialvar VAR_RESULT, GetBattleOutcome
+	goto_if_eq VAR_RESULT, B_OUTCOME_WON, Wasteland_Rustboro_EventScript_SelinArtifactWon
+	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, Wasteland_Rustboro_EventScript_SelinArtifactWon
+	release
+	end
+
+Wasteland_Rustboro_EventScript_SelinArtifactWon::
+	setflag FLAG_WASTELAND_RUSTBORO_ARTIFACT_RESOLVED
+	msgbox Wasteland_Rustboro_Text_SelinTwoDown, MSGBOX_DEFAULT
+Wasteland_Rustboro_EventScript_SelinCheckPet::
+	goto_if_set FLAG_WASTELAND_RUSTBORO_PET_RESOLVED, Wasteland_Rustboro_EventScript_SelinReyesArrives
+Wasteland_Rustboro_EventScript_SelinPetBattle::
 	msgbox Wasteland_Rustboro_Text_SelinAlert, MSGBOX_DEFAULT
 	setwildbattle SPECIES_ELGYEM, 13, ITEM_NONE
 	waitse
@@ -584,8 +503,7 @@ Wasteland_Rustboro_EventScript_SelinNormal::
 Wasteland_Rustboro_EventScript_SelinCaught::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
 	msgbox Wasteland_Rustboro_Text_SelinCaught, MSGBOX_DEFAULT
-	release
-	end
+	goto Wasteland_Rustboro_EventScript_SelinReyesArrives
 
 Wasteland_Rustboro_EventScript_SelinWonNotCaught::
 	msgbox Wasteland_Rustboro_Text_SelinWonNotCaught, MSGBOX_DEFAULT
@@ -597,24 +515,59 @@ Wasteland_Rustboro_EventScript_SelinWonNotCaught::
 
 Wasteland_Rustboro_EventScript_SelinGaveElgyemParty::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
-	release
-	end
+	goto Wasteland_Rustboro_EventScript_SelinReyesArrives
 
 Wasteland_Rustboro_EventScript_SelinGaveElgyemPC::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
 	msgbox Wasteland_Rustboro_Text_SelinElgyemSentToPC, MSGBOX_DEFAULT
-	release
-	end
+	goto Wasteland_Rustboro_EventScript_SelinReyesArrives
 
 Wasteland_Rustboro_EventScript_SelinNoRoomForElgyem::
 	setflag FLAG_WASTELAND_RUSTBORO_PET_RESOLVED
 	msgbox gText_NoMoreRoomForPokemon, MSGBOX_DEFAULT
-	release
-	end
+	goto Wasteland_Rustboro_EventScript_SelinReyesArrives
 
 Wasteland_Rustboro_EventScript_SelinAfter::
 	msgbox Wasteland_Rustboro_Text_SelinAfter, MSGBOX_DEFAULT
 	release
+	end
+
+@ Reyes' outdoor cutscene, new 2026-09-15. Object 16 in map.json
+@ (Wasteland_Rustboro_EventScript_ReyesArrivalDummy) is permanently hidden
+@ via FLAG_WASTELAND_REYES_HIDDEN (set every map load by
+@ Wasteland_Rustboro_OnTransition above) so she never passively spawns;
+@ `addobject` here forces her in for this one scripted appearance
+@ regardless of that flag - same one-shot-appearance idiom as Dad's own
+@ exit sequence in the Safe Room. She's placed 2 tiles south of Selin
+@ (local (13,41)) and walks up 1 tile to (13,40), stopping short of the
+@ player's own position at (13,39) rather than overlapping it.
+Wasteland_Rustboro_EventScript_SelinReyesArrives::
+	msgbox Wasteland_Rustboro_Text_SelinThatsAllThree, MSGBOX_DEFAULT
+	addobject 16
+	applymovement 16, Wasteland_Rustboro_Movement_ReyesApproach
+	waitmovement 0
+	msgbox Wasteland_Rustboro_Text_ReyesArrival1, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_ReyesArrival2, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_ReyesArrival3, MSGBOX_DEFAULT
+	msgbox Wasteland_Rustboro_Text_ReyesArrival4, MSGBOX_DEFAULT
+	setflag FLAG_HAS_GYM_SPONSORSHIP
+	msgbox Wasteland_Rustboro_Text_ReyesArrival5, MSGBOX_DEFAULT
+	applymovement 16, Wasteland_Rustboro_Movement_ReyesLeave
+	waitmovement 0
+	removeobject 16
+	release
+	end
+
+Wasteland_Rustboro_Movement_ReyesApproach:
+	walk_up
+	step_end
+
+Wasteland_Rustboro_Movement_ReyesLeave:
+	walk_down
+	walk_down
+	step_end
+
+Wasteland_Rustboro_EventScript_ReyesArrivalDummy::
 	end
 
 Wasteland_Rustboro_Text_Selin::
@@ -623,6 +576,26 @@ Wasteland_Rustboro_Text_Selin::
 	.string "me.\p"
 	.string "It's been like this since the\n"
 	.string "alarm.$"
+
+Wasteland_Rustboro_Text_SelinConverge::
+	.string "By the time you reach the house, a\n"
+	.string "small crowd's already gathered.\p"
+	.string "A maintenance drone circling low.\n"
+	.string "Some kind of display twitching in\l"
+	.string "a shop window down the block. And\l"
+	.string "in the middle of it, Selin can't\l"
+	.string "get her ELGYEM to stop screeching.\p"
+	.string "“About time,” someone mutters.\n"
+	.string "“Well? Do something!”$"
+
+Wasteland_Rustboro_Text_SelinOneDown::
+	.string "The drone drops out of the air,\n"
+	.string "dead - whatever was driving it\l"
+	.string "just... stopped.$"
+
+Wasteland_Rustboro_Text_SelinTwoDown::
+	.string "Two down. The crowd's gone quiet,\n"
+	.string "watching.$"
 
 Wasteland_Rustboro_Text_SelinAlert::
 	.string "There - ! That's not her. She's\n"
@@ -654,6 +627,45 @@ Wasteland_Rustboro_Text_SelinElgyemSentToPC::
 	.string "There was no room in your party,\n"
 	.string "so ELGYEM was sent to a Box at\l"
 	.string "home.$"
+
+Wasteland_Rustboro_Text_SelinThatsAllThree::
+	.string "The crowd doesn't cheer, exactly.\n"
+	.string "But nobody's panicking anymore\l"
+	.string "either.\p"
+	.string "Then you hear it - measured\n"
+	.string "footsteps, cutting straight through\l"
+	.string "the gathering.$"
+
+Wasteland_Rustboro_Text_ReyesArrival1::
+	.string "REYES: I heard that alarm cut out\n"
+	.string "three times in under ten minutes.\l"
+	.string "Had a guess who was behind it.$"
+
+Wasteland_Rustboro_Text_ReyesArrival2::
+	.string "Overseer Reyes. I run Assessment,\n"
+	.string "for what that's worth today.\p"
+	.string "Whatever's glitching the local\n"
+	.string "relay, you handled it better than\l"
+	.string "my own people did out there. That's\l"
+	.string "not nothing.$"
+
+Wasteland_Rustboro_Text_ReyesArrival3::
+	.string "“Is there something Devon\n"
+	.string "Corporation can do for you?” she\l"
+	.string "asks. Not quite warmth. Not quite\l"
+	.string "obligation either.$"
+
+Wasteland_Rustboro_Text_ReyesArrival4::
+	.string "You tell her all you want is a real\n"
+	.string "shot at Assessment - the chance to\l"
+	.string "challenge it properly, not talk\l"
+	.string "your way past a guard.$"
+
+Wasteland_Rustboro_Text_ReyesArrival5::
+	.string "REYES: That's easy enough to\n"
+	.string "arrange.\p"
+	.string "Consider yourself cleared. I'll be\n"
+	.string "waiting, whenever you're ready.$"
 
 Wasteland_Rustboro_Text_SelinAfter::
 	.string "She's sleeping better with you\n"
