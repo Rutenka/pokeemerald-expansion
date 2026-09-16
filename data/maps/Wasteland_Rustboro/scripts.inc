@@ -9,6 +9,7 @@
 @ why (restricted access), rather than silently doing nothing.
 Wasteland_Rustboro_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, Wasteland_Rustboro_OnTransition
+	map_script MAP_SCRIPT_ON_FRAME_TABLE, Wasteland_Rustboro_OnFrame
 	.byte 0
 
 Wasteland_Rustboro_OnTransition:
@@ -17,6 +18,41 @@ Wasteland_Rustboro_OnTransition:
 	@ from the passive per-map spawn check on every load; she only ever
 	@ appears via the explicit `addobject` in her cutscene below.
 	setflag FLAG_WASTELAND_REYES_HIDDEN
+	end
+
+Wasteland_Rustboro_OnFrame:
+	map_script_2 VAR_WASTELAND_RUSTBORO_CROWD_STATE, 0, Wasteland_Rustboro_EventScript_FixCrowdDispersal
+	.2byte 0
+
+@ 2026-09-16: a real correction, not a new feature - Viktor's own save had
+@ already completed the incident quest (FLAG_HAS_GYM_SPONSORSHIP set)
+@ *before* the crowd-dispersal movement sequence was added to the live
+@ cutscene, so that one-shot script (gated on the same flag) will never
+@ run again to move them - the crowd was permanently stuck. This silently
+@ snaps LittleBoy/LittleGirl/Man2/Scientist to their real dispersed
+@ coordinates (matching the live cutscene's own movement targets exactly)
+@ the moment the flag says the quest is already done but they haven't
+@ been moved yet - harmless no-op for anyone who experiences the real
+@ animated dispersal instead, since FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED
+@ gets set either way.
+Wasteland_Rustboro_EventScript_FixCrowdDispersal::
+	setvar VAR_WASTELAND_RUSTBORO_CROWD_STATE, 1
+	goto_if_unset FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_FixCrowdDispersalDone
+	goto_if_set FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED, Wasteland_Rustboro_EventScript_FixCrowdDispersalDone
+	@ setobjectxy moves the already-visible sprite immediately (no need to
+	@ leave and re-enter the map to see the fix); setobjectxyperm updates
+	@ the template too, so a future respawn/re-entry doesn't snap them
+	@ back to the original crowd position.
+	setobjectxy 6, 9, 39
+	setobjectxyperm 6, 9, 39
+	setobjectxy 7, 18, 39
+	setobjectxyperm 7, 18, 39
+	setobjectxy 12, 14, 41
+	setobjectxyperm 12, 14, 41
+	setobjectxy 11, 15, 39
+	setobjectxyperm 11, 15, 39
+	setflag FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED
+Wasteland_Rustboro_EventScript_FixCrowdDispersalDone::
 	end
 
 @ The actual return path to Miller's Cut - real bug found and fixed
@@ -710,6 +746,7 @@ Wasteland_Rustboro_EventScript_SelinReyesArrives::
 	waitmovement 12
 	applymovement 11, Wasteland_Rustboro_Movement_Man2Disperse
 	waitmovement 11
+	setflag FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED
 	releaseall
 	end
 

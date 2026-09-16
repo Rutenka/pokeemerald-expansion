@@ -4442,6 +4442,171 @@ code issue.
 **Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
 rebuilt clean. `tools/validate_maps.py` clean on `Wasteland_EastRoad`.
 
+### Thirty-eighth custom feature: the Rustboro incident crowd disperses on
+### already-progressed saves, Reyes's fight is now a real 3-mon party
+### gate, and a self-inflicted build-breaking syntax bug (2026-09-16, same
+### day as the Thirty-seventh)
+
+Viktor reported two more real, separate issues in one message: (1) the
+incident crowd (LittleBoy/LittleGirl/Man2/Scientist) never spread out
+after the Reyes cutscene on his own save, and (2) he wants gym-style boss
+fights capped to the number of Pokémon the boss themselves fields - Reyes
+has 3, so the player should only get to use 3 - explicitly leaving the
+exact mechanism up to the assistant ("or if you have some other solution
+feel free").
+
+**Crowd dispersal, root cause: a real one-shot flag ordering gap, not a
+logic bug.** The live dispersal movement sequence was added to
+`Wasteland_Rustboro_EventScript_SelinReyesArrives` in the Thirty-fourth
+feature entry - but Viktor's own save had already completed the incident
+quest (`FLAG_HAS_GYM_SPONSORSHIP` set) *before* that entry shipped, so the
+one-shot cutscene that does the moving will never run again for him; the
+crowd was permanently stuck at their gathering-spot coordinates. Fixed
+with the same proven-safe pattern used for the Estate Grounds rendering
+fix (Eighteenth feature entry) and the checkpoint side-rooms (Twenty-
+fourth): a `MAP_SCRIPT_ON_FRAME_TABLE` one-shot
+(`Wasteland_Rustboro_OnFrame`, gated on a new
+`VAR_WASTELAND_RUSTBORO_CROWD_STATE`) that silently snaps the 4 NPCs to
+their real dispersed coordinates - `setobjectxy` for the already-visible
+sprite, `setobjectxyperm` so the template doesn't snap back on a future
+re-entry - the instant it sees the quest already finished but
+`FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED` still unset. A no-op for anyone
+who experiences the real animated dispersal instead, since that flag now
+gets set at the end of the live cutscene too. **Not independently
+re-verified live this round** (see the "not yet done" note below) - low
+risk given it reuses an already-proven pattern exactly.
+
+**Reyes's fight, decided: a party-size gate, not a live "choose 3 of 6"
+selection screen.** Researched the engine's real Battle-Frontier-style
+party-reduction machinery
+(`ChooseHalfPartyForBattle`/`ChoosePartyForBattleFrontier` +
+`ReducePlayerPartyToSelectedMons()` + `SavePlayerParty()`/
+`LoadPlayerParty()` + `HandleBattleVariantEndParty()` in
+`src/script_pokemon_util.c`/`src/load_save.c`/`src/battle_setup.c`) -
+it's real and it exists, but it temporarily rewrites `gParties[
+B_TRAINER_PLAYER]` in place and only reliably restores it via hooks deep
+in Battle-Frontier-specific code (level caps, frontier-banned-species
+checks) this project doesn't otherwise touch, with no way to guarantee a
+clean restore-on-loss without exercising a lot of code this project has
+never used. Judged too risky to Viktor's real save data for a one-time
+story gate. Shipped the simpler of his own two suggested options instead:
+`Wasteland_RustboroGym_EventScript_Overseer` now calls the existing,
+already-registered `CalculatePlayerPartyCount` special
+(`data/specials.inc`) before starting the fight and, if the party isn't
+exactly 3, redirects to a new
+`Wasteland_RustboroGym_EventScript_OverseerWrongPartySize` line
+("Sort your team down to exactly three, then come find me.") instead of
+starting the battle. Documented in-code as the reusable pattern for any
+future territory boss with a fixed-size team, per the Thirty-first
+feature entry's confirmed 8-territory spine.
+
+**A real, self-inflicted, build-breaking bug found and fixed while
+picking a new flag number for the dispersal flag.** Wrote the flag's
+explanatory comment in `include/constants/flags.h` - a **C header** -
+using `@`-prefixed comment syntax, the convention this project's actual
+assembly `.inc` script files use, but invalid in C. Apostrophes in words
+like "Viktor's" were read by the C preprocessor as starting unterminated
+character literals, silently corrupting preprocessing for every file that
+transitively includes `flags.h` (almost the whole codebase, via
+`global.h`'s own early include of it). This produced `enum Species has
+incomplete type` errors on a seemingly-random, build-order-dependent set
+of unrelated files across several build attempts - initially misdiagnosed
+as memory-pressure flakiness (which was also independently real: a stale
+leftover build process and genuine desktop memory contention on this
+7.7GB machine did cause real OOM-kills of parallel builds this round) -
+before being correctly isolated by manually running the `cpp` preprocess
+stage alone and reading its own stderr, which pointed directly at the
+`@`-comment lines ("warning: missing terminating ' character"). Fixed by
+converting to `//` comments; verified via an isolated single-file
+recompile, then a full clean rebuild. **New checklist-worthy lesson**:
+`@` is only a valid comment marker in this project's assembly-script
+`.inc` files - never in a `.h`/`.c` file, where it can silently corrupt
+preprocessing project-wide in a way that looks exactly like random
+flakiness rather than a syntax error, especially once real, independently-
+true memory pressure is also in the picture to blame it on instead.
+
+**A related discovery worth remembering for any future "reuse an unused
+flag slot" pick**: several low-numbered `FLAG_UNUSED_0x0XX` slots are not
+actually always-clear on a real save - `0x50`
+(`FLAG_HIDE_SKY_PILLAR_TOP_RAYQUAZA_STILL`) and `0x56`
+(`FLAG_HIDE_CONTEST_POKE_BALL`) are real vanilla flags documented as
+"Always set after new game," and `0x47` was also empirically pre-set on
+Viktor's real save for an undetermined reason. The dispersal flag ended up
+at `0x60`, verified `False` on Viktor's actual save before being picked -
+**new standing rule**: verify a candidate "unused" flag genuinely reads
+`False` on a real save before reusing it, don't trust the auto-generated
+"Unused Flag" name alone.
+
+**Also confirmed, per a direct question from Viktor**: the chapter-based
+level-cap system (Twenty-eighth feature entry) is completely untouched by
+any of this - it's a separate mechanism (`src/caps.c`'s
+`sLevelCapFlagMap`, `include/config/caps.h`) from the obedience-disable
+fix from the Thirty-seventh feature entry, verified via a direct grep, not
+memory, before answering him.
+
+**A separate, unrelated build-tooling issue found and fixed this round,
+not caused by any of the above**: a `DEBUG=1` rebuild hit a wall of
+undefined references (`gAIScriptPtr`, `Ai_InitPartyStruct`,
+`ResetDynamicAiFunctions`, and several more) that looked like a real
+regression at first glance. Root cause: `build/emerald-debug/src/
+battle_ai_main.o` was a genuine 0-byte truncated object file, left behind
+by an earlier interrupted/OOM-killed parallel compile - every one of
+those undefined references is defined in that one file. Fixed by deleting
+the truncated `.o` (confirmed no other `.o` files in the tree were
+similarly empty) and relinking - not a code problem at all.
+
+**Both fixes confirmed via real live headless gameplay against a scratch
+copy of Viktor's actual save**, after the DEBUG rebuild above unblocked
+the debug-menu warp tool again:
+- **Crowd dispersal**: on continue-boot, the new `Wasteland_Rustboro_OnFrame`
+  one-shot fired immediately (Viktor's save was already standing inside
+  Rustboro) and `FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED` flipped from
+  `False` to `True`. Confirmed via a direct `SaveBlock1.objectEventTemplates[]`
+  read (not just the flag) that all 4 NPCs' *saved* coordinates now read
+  their real dispersed targets exactly - LittleBoy (9,39), LittleGirl
+  (18,39), Man2 (15,39), Scientist (14,41) - proving `setobjectxyperm`
+  genuinely persisted the correction, not just a live-only sprite nudge.
+- **Reyes party gate**: forced the pre-fight state on the scratch copy only
+  (`FLAG_DEFEATED_CORP_OVERSEER` and the Overseer's own internal
+  `TRAINER_FLAGS` bit both reset to `False` via a memory poke - the 3
+  gauntlet trainers were left alone, already-beaten, so they didn't block
+  the walk up), used `tools/smart_walk.py`'s BFS walker to path from the
+  door to her tile (the gauntlet corridor has real solid NPC bodies at
+  several corners that a naive dead-reckoned walk got stuck on twice
+  before switching to the proper pathfinder), then interacted with her
+  with the real, unmodified party count (4, not 3). Screenshotted the
+  actual result: "OVERSEER REYES: Three POKéMON. That's the Assessment -
+  not si[x]..." - the new wrong-size branch, not a battle - confirmed via
+  `FLAG_DEFEATED_CORP_OVERSEER` staying `False` afterward and the player
+  regaining real movement control immediately (position advanced cleanly
+  on the very next press, no lingering lock). The "exactly 3" success path
+  itself is untouched original `trainerbattle_single` code, so it didn't
+  need separate re-proving - only the new gate branch did.
+
+Confirmed Viktor's real `pokeemerald.sav` was untouched by any of this
+(all testing used scratch copies of both the ROM and the save; the real
+save's on-disk mtime is unchanged from well before this round's testing
+began).
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j1`
+(single-threaded, after clearing the truncated object file) rebuilt
+clean and used for the live testing above.
+
+### Thirty-ninth custom feature: a standalone story bible document
+### (2026-09-16, same day)
+
+Viktor asked whether a saved document of the overall story/planning
+existed separately from CLAUDE.md's scattered feature-log entries. It
+didn't - compiled one from the confirmed, already-shipped story content
+(the Collapse setting, the opening sequence, the 8-territory spine from
+the Thirty-first feature entry, the cast, current position, and the
+explicitly-still-open threads) into `docs/story_bible.md` plus a designed,
+published Artifact version for easier reading
+(https://claude.ai/artifact/4WDmFWQkFBSC5t2Xfj1kf3). Narrative summary
+only - CLAUDE.md stays the source of truth for technical/session history;
+update both when a real story decision changes something the bible
+covers.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

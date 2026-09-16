@@ -6,9 +6,29 @@
 Wasteland_RustboroGym_MapScripts::
 	.byte 0
 
+@ Reyes fields exactly 3 Pokemon - per Viktor's ask (2026-09-16), the
+@ player is held to the same limit rather than being allowed to bring a
+@ full 6-mon team into what's meant to be a real "prepared team" test.
+@ Deliberately a simple party-size gate (check-and-turn-away) rather than
+@ a live in-battle "choose 3 of 6" selection screen - that engine feature
+@ exists (ChoosePartyForBattleFrontier/ReducePlayerPartyToSelectedMons,
+@ used by Battle Frontier facilities) but temporarily rewrites the real
+@ save's party data and only reliably restores it via hooks deep in
+@ Battle Frontier-specific code this project doesn't otherwise touch -
+@ too much real risk to Viktor's actual save for this. This same pattern
+@ (specialvar CalculatePlayerPartyCount, goto_if_ne ..., 3) should be
+@ reused for any future territory boss with a fixed-size team, per the
+@ Thirty-first feature entry's confirmed 8-territory spine.
 Wasteland_RustboroGym_EventScript_Overseer::
+	specialvar VAR_RESULT, CalculatePlayerPartyCount
+	goto_if_ne VAR_RESULT, 3, Wasteland_RustboroGym_EventScript_OverseerWrongPartySize
 	trainerbattle_single TRAINER_CORP_OVERSEER, Wasteland_RustboroGym_Text_OverseerIntro, Wasteland_RustboroGym_Text_OverseerDefeat, Wasteland_RustboroGym_EventScript_OverseerDefeated, NO_MUSIC
 	msgbox Wasteland_RustboroGym_Text_OverseerPostBattle, MSGBOX_DEFAULT
+	release
+	end
+
+Wasteland_RustboroGym_EventScript_OverseerWrongPartySize::
+	msgbox Wasteland_RustboroGym_Text_OverseerWrongPartySize, MSGBOX_DEFAULT
 	release
 	end
 
@@ -60,6 +80,14 @@ Wasteland_RustboroGym_EventScript_LeftStatue::
 Wasteland_RustboroGym_EventScript_RightStatue::
 	msgbox Wasteland_RustboroGym_Text_RightStatue, MSGBOX_SIGN
 	end
+
+Wasteland_RustboroGym_Text_OverseerWrongPartySize::
+	.string "OVERSEER REYES: Three POKéMON.\n"
+	.string "That's the Assessment - not six,\l"
+	.string "not one.\p"
+	.string "Sort your team down to exactly\n"
+	.string "three, then come find me. Your PC's\l"
+	.string "right outside.$"
 
 Wasteland_RustboroGym_Text_OverseerIntro::
 	.string "OVERSEER REYES: A challenger.\p"

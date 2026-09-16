@@ -90,6 +90,14 @@
 #define FLAG_WASTELAND_EAST_ROAD_ITEM_3 0x44 // Wasteland: item ball, reused Route116 data
 #define FLAG_WASTELAND_EAST_ROAD_ITEM_4 0x45 // Wasteland: item ball, reused Route116 data
 #define FLAG_WASTELAND_EAST_ROAD_ITEM_5 0x46 // Wasteland: item ball, reused Route116 data
+// Wasteland: NOT 0x47/0x50/0x56 - confirmed via a direct read of Viktor's
+// real save (2026-09-16) that those specific "unused" flag slots are
+// already True on a real, unmodified save for reasons unrelated to this
+// project (likely part of the base game's own default save-flag byte
+// pattern, not anything this project's own code sets) - the "FLAG_UNUSED"
+// naming in this low range is not reliable proof a slot is actually clear.
+// 0x60 was verified False across Viktor's real save before picking it.
+#define FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED 0x60 // Wasteland: set once the incident crowd (LittleBoy/LittleGirl/Man2/Scientist) has been moved to their dispersed positions, whether via the live cutscene or the OnFrame correction for saves that finished the quest before dispersal existed
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag
