@@ -75,15 +75,21 @@
 #define FLAG_WASTELAND_RUSTBORO_PET_RESOLVED 0x35 // Wasteland: the resident's pet (wild Elgyem) calmed - also gates the gift-mon fallback if not caught in battle
 #define FLAG_WASTELAND_RUSTBORO_FLAT2_GAVE_ITEM 0x36 // Wasteland: the retired Devon worker in Wasteland_Rustboro_Flat2 already gave her one-time item
 #define FLAG_WASTELAND_RUSTBORO_TRADE_COMPLETED 0x37 // Wasteland: the Absol-for-Poochyena trade in Wasteland_Rustboro_Trader is done
-#define FLAG_SEEN_SOUTH_ROAD_ARRIVAL 0x38 // Wasteland: one-shot arrival narration on Wasteland_SouthRoad
-#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_PP_UP 0x39 // Wasteland: item ball, reused Route104 data
-#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_POKE_BALL 0x3A // Wasteland: item ball, reused Route104 data
-#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_X_ACCURACY 0x3B // Wasteland: item ball, reused Route104 data
-#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_POTION 0x3C // Wasteland: item ball, reused Route104 data
+#define FLAG_SEEN_SOUTH_ROAD_ARRIVAL 0x38 // Wasteland: UNUSED as of 2026-09-16 - Wasteland_SouthRoad was retired (its south attachment point collided with the Corp Checkpoint's real exit trigger there); see Wasteland_EastRoad instead
+#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_PP_UP 0x39 // Wasteland: UNUSED as of 2026-09-16, see above
+#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_POKE_BALL 0x3A // Wasteland: UNUSED as of 2026-09-16, see above
+#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_X_ACCURACY 0x3B // Wasteland: UNUSED as of 2026-09-16, see above
+#define FLAG_WASTELAND_SOUTH_ROAD_ITEM_POTION 0x3C // Wasteland: UNUSED as of 2026-09-16, see above
 #define FLAG_SEEN_HAVERBROOK_ARRIVAL 0x3D // Wasteland: one-shot arrival narration on Wasteland_Haverbrook
 #define FLAG_WASTELAND_HAVERBROOK_ITEM_1 0x3E // Wasteland: item ball, reused PetalburgCity data
 #define FLAG_WASTELAND_HAVERBROOK_ITEM_2 0x3F // Wasteland: item ball, reused PetalburgCity data
 #define FLAG_DEFEATED_HAVERBROOK_PROTECTOR 0x40 // Wasteland: Garrick, the Proving Grounds boss - territory 3's boss per the Thirty-first feature entry's 8-territory spine
+#define FLAG_SEEN_EAST_ROAD_ARRIVAL 0x41 // Wasteland: one-shot arrival narration on Wasteland_EastRoad
+#define FLAG_WASTELAND_EAST_ROAD_ITEM_1 0x42 // Wasteland: item ball, reused Route116 data
+#define FLAG_WASTELAND_EAST_ROAD_ITEM_2 0x43 // Wasteland: item ball, reused Route116 data
+#define FLAG_WASTELAND_EAST_ROAD_ITEM_3 0x44 // Wasteland: item ball, reused Route116 data
+#define FLAG_WASTELAND_EAST_ROAD_ITEM_4 0x45 // Wasteland: item ball, reused Route116 data
+#define FLAG_WASTELAND_EAST_ROAD_ITEM_5 0x46 // Wasteland: item ball, reused Route116 data
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
 #define FLAG_UNUSED_0x02C    0x2C // Unused Flag
@@ -692,6 +698,8 @@
 #define FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_4                   (FLAG_HIDDEN_ITEMS_START + 0x73) // Wasteland: hidden item, reused Route104 data
 #define FLAG_WASTELAND_SOUTH_ROAD_HIDDEN_5                   (FLAG_HIDDEN_ITEMS_START + 0x74) // Wasteland: hidden item, reused Route104 data
 #define FLAG_WASTELAND_HAVERBROOK_HIDDEN_1                   (FLAG_HIDDEN_ITEMS_START + 0x75) // Wasteland: hidden item, reused PetalburgCity data
+#define FLAG_WASTELAND_EAST_ROAD_HIDDEN_1                    (FLAG_HIDDEN_ITEMS_START + 0x76) // Wasteland: hidden item, reused Route116 data
+#define FLAG_WASTELAND_EAST_ROAD_HIDDEN_2                    (FLAG_HIDDEN_ITEMS_START + 0x77) // Wasteland: hidden item, reused Route116 data
 
 #define FLAG_UNUSED_0x264  0x264 // Unused Flag
 #define FLAG_UNUSED_0x265  0x265 // Unused Flag

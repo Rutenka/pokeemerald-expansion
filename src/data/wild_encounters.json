@@ -36640,6 +36640,27 @@
               { "min_level": 16, "max_level": 17, "species": "SPECIES_POOCHYENA" }
             ]
           }
+        },
+        {
+          "map": "MAP_WASTELAND_EAST_ROAD",
+          "base_label": "gWastelandEastRoad",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              { "min_level": 14, "max_level": 15, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 14, "max_level": 15, "species": "SPECIES_TAILLOW" },
+              { "min_level": 14, "max_level": 15, "species": "SPECIES_ABRA" },
+              { "min_level": 15, "max_level": 16, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 15, "max_level": 16, "species": "SPECIES_TAILLOW" },
+              { "min_level": 15, "max_level": 16, "species": "SPECIES_ABRA" },
+              { "min_level": 16, "max_level": 17, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 16, "max_level": 17, "species": "SPECIES_TAILLOW" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_TAILLOW" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_TAILLOW" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_POOCHYENA" }
+            ]
+          }
         }
       ]
     },

@@ -1,20 +1,30 @@
 @ Reuses the real, whole vanilla PetalburgCity layout verbatim (per the
-@ standing "no crop-and-stitch, reskin only" rule) - Route104's own real
-@ vanilla connection target, so the seam is proven-safe by construction
-@ (see Wasteland_SouthRoad/scripts.inc). Territory 3 of the confirmed
-@ 8-territory story spine (CLAUDE.md's Thirty-first feature entry): an
-@ independent trading settlement, no warlord, no corporation - the first
-@ "Pokemon partnership is good" beat after two "everyone's compromised"
-@ chapters. Wally's own cutscene pair and Scott were dropped (vanilla-
-@ specific content not relevant here); Wally's House, House1, and House2's
-@ real doors are deliberately left unwired for now, same "closed for now"
-@ trade-off used throughout this project.
+@ standing "no crop-and-stitch, reskin only" rule). Territory 3 of the
+@ confirmed 8-territory story spine (CLAUDE.md's Thirty-first feature
+@ entry): an independent trading settlement, no warlord, no corporation -
+@ the first "Pokemon partnership is good" beat after two "everyone's
+@ compromised" chapters. Wally's own cutscene pair and Scott were dropped
+@ (vanilla-specific content not relevant here); Wally's House, House1, and
+@ House2's real doors are deliberately left unwired for now, same "closed
+@ for now" trade-off used throughout this project.
+@
+@ Reached via Wasteland_EastRoad's real cave-mouth door (not a map
+@ connection - see the Thirty-fifth feature entry in CLAUDE.md for why
+@ the original Wasteland_SouthRoad/connection approach was retired).
+@ warp_events[3] at (17,18) is the landing spot; the return trip is a
+@ coord_event one tile away at (16,18), same "landing != trigger" pattern
+@ used everywhere else in this project.
 Wasteland_Haverbrook_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, Wasteland_Haverbrook_OnTransition
 	.byte 0
 
 Wasteland_Haverbrook_OnTransition:
 	setrespawn HEAL_LOCATION_WASTELAND_HAVERBROOK
+	end
+
+Wasteland_Haverbrook_EventScript_ExitToEastRoad::
+	warp MAP_WASTELAND_EAST_ROAD, 1
+	waitstate
 	end
 
 Wasteland_Haverbrook_EventScript_Arrival::

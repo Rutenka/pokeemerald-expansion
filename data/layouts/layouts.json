@@ -9479,6 +9479,17 @@
       "layout_version": "emerald"
     },
     {
+      "id": "LAYOUT_WASTELAND_EAST_ROAD",
+      "name": "Wasteland_EastRoad_Layout",
+      "width": 100,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Wasteland_EastRoad/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_EastRoad/map.bin",
+      "layout_version": "emerald"
+    },
+    {
       "id": "LAYOUT_WASTELAND_HAVERBROOK_PROVING_GROUNDS",
       "name": "Wasteland_Haverbrook_ProvingGrounds_Layout",
       "width": 12,

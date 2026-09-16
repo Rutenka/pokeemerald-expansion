@@ -4281,6 +4281,92 @@ rebuilt clean. `tools/validate_maps.py` run across every new map - all
 report `[OK]` or only expected "closed for now" door/seam warnings, no
 hard errors.
 
+### Thirty-sixth custom feature: the real bug Viktor found in territory 3 -
+### South Road retired, East Road built to replace it (2026-09-16)
+
+Viktor tested the Thirty-fifth feature entry's build and immediately found
+a real, confirmed bug: crossing from Rustboro into the new road sometimes
+redirected to the Corp Checkpoint instead. He also asked, independently,
+for the new road to run north/northeast from Rustboro rather than south.
+
+**Root cause, confirmed before touching anything**: `Wasteland_Rustboro`'s
+own real exit back to the Corp Checkpoint - a coord_event + `warp` at
+`(15,59)`, dating back to the Thirtieth feature entry - sits exactly on
+the same row as the Thirty-fifth entry's new south `connection` to
+`Wasteland_SouthRoad`. Walking near that column redirected to the
+checkpoint instead of continuing into the new road. This was a real,
+reproducible mistake - the Thirty-fifth entry's own collision check only
+confirmed the *seam* lined up, never cross-referenced the rest of that
+row against Rustboro's *other* existing events, which is exactly the class
+of mistake checklist item 17 already exists to prevent (checked there,
+missed here anyway - worth restating since it's the second time this
+exact class of bug has slipped through despite a written rule against it).
+
+**Fixed by moving the whole road to Rustboro's east side instead of
+south** - resolves the conflict entirely (a completely different edge, no
+shared tiles with the checkpoint's own row) and matches Viktor's own
+direction preference at the same time. Confirmed via `AskUserQuestion`:
+real vanilla RustboroCity has three real neighbors - Route104 (south,
+already spent on the checkpoint), Route115 (north, different tileset -
+`gTileset_Fallarbor`, some risk), and Route116 (east, **same tileset as
+Rustboro** - zero risk). Viktor confirmed he'd noticed the same two real
+openings by eye while playing and was fine with whichever was easier to
+build - Route116 was the clear pick both technically and because he'd
+already independently spotted it as a real opening.
+
+**`Wasteland_SouthRoad` retired** (left in place, orphaned, unreachable -
+same treatment as `Wasteland_EstateGrounds`' own retirement in the Twelfth
+feature entry, not deleted) and replaced by **`Wasteland_EastRoad`**
+(=vanilla Route116 whole). A real, useful discovery while researching the
+replacement: Route116 already has its own real cuttable tree - but a BFS
+reachability check (with the tree treated as passable vs. impassable)
+proved it's a vanilla *shortcut*, not a mandatory gate - the route is
+fully walkable around it either way, matching how Cut is optional
+basically everywhere in real vanilla Hoenn, not mandatory anywhere. Since
+Viktor explicitly wants a real mandatory gate here, one was built
+deliberately: 6 more `OBJ_EVENT_GFX_CUTTABLE_TREE` objects placed side by
+side across every walkable row of the Rustboro seam (local `x=3`,
+`y=8-13`) - the same "physical blockade" technique already proven for the
+Ashband Lookout in `Wasteland_MillersCut` (Twenty-ninth feature entry),
+just built from tree objects instead of guard NPCs. Confirmed via the
+same BFS check that no walkable detour exists around this one. The 5 real
+vanilla trees further down the road were kept as genuine bonus/reward
+trees, unchanged.
+
+**Haverbrook's own entrance changed from a map `connection` to a real
+door** - Route116's real cave-mouth door at `(47,8)` (vanilla: leads to
+Rusturf Tunnel) was repointed straight into `Wasteland_Haverbrook`
+instead, reusing real, already-tagged door art with zero new tiles drawn.
+Haverbrook gained a new `warp_events[3]` landing at `(17,18)` and a
+return-trip coord_event - **a second real placement bug caught by testing,
+not review**: the first attempt put that return trigger at `(16,18)`,
+which turned out to be exactly where the existing "Mara" NPC stands -
+completely open terrain-wise, but permanently blocked by the NPC's own
+solid presence, so the trigger could never actually be walked onto. Moved
+to `(18,18)` (confirmed empty) and reconfirmed via a live headless
+walkthrough: East Road's door -> Haverbrook (landing exactly at
+`(17,18)`) -> the new return trigger -> back to East Road (landing at a
+new dedicated landing-only warp at `(47,9)`, one tile clear of the door
+itself). Also re-confirmed the Cut gate itself end-to-end on the new map
+(blocked without the badge flag, works with it, no party Pokemon needing
+to know Cut - the same mechanism already proven in the Thirty-fifth entry,
+just re-verified here since it's a different tree on a different map).
+
+**New roster addition**: Abra, a wild encounter on `Wasteland_EastRoad`
+(Lv14-16) - reused directly from Route116's own real vanilla wild table
+(which already included it alongside Poochyena/Taillow), picked for a
+genuinely distinct special-sweeper role nothing else on the roster
+currently fills.
+
+**Not independently re-verified this round**: East Road's ~14 reflavored
+NPCs (same proven dialogue pattern as everywhere else, not individually
+clicked through), and the item balls/hidden items carried over from
+Route116's real data (mechanically unchanged from proven vanilla scripts).
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` clean on every touched map (only
+expected "closed for now" door/seam warnings, no hard errors).
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

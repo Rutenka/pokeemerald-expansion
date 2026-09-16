@@ -14,7 +14,7 @@
   "show_map_name": true,
   "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
   "connections": [
-    { "map": "MAP_WASTELAND_SOUTH_ROAD", "offset": 0, "direction": "down" }
+    { "map": "MAP_WASTELAND_EAST_ROAD", "offset": 0, "direction": "right" }
   ],
   "object_events": [
     {

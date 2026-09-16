@@ -1,3 +1,16 @@
+@ RETIRED 2026-09-16 - this map's south attachment point to
+@ Wasteland_Rustboro overlapped the real, pre-existing coord_event exit
+@ back to the Corp Checkpoint at Rustboro's own (15,59), so crossing into
+@ this map from Rustboro would randomly redirect to the checkpoint
+@ instead - a real bug Viktor found by playing it. Replaced by
+@ Wasteland_EastRoad (Rustboro's real east neighbor instead of south,
+@ which also matches Viktor's own explicit direction preference). Left
+@ here, orphaned and unreachable, same treatment as Wasteland_EstateGrounds'
+@ own retirement in the Twelfth feature entry - not deleted, just no
+@ longer attached to anything. See the Thirty-fifth feature entry in
+@ CLAUDE.md for the full story. Everything below this comment is dead
+@ code, kept only so this file still compiles.
+@
 @ Reuses the real, whole vanilla Route104 layout verbatim (per the standing
 @ "no crop-and-stitch, reskin only" rule) - the real vanilla connection
 @ south of RustboroCity, same secondary tileset (Rustboro) as

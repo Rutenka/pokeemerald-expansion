@@ -1085,6 +1085,7 @@ gStdScripts_End::
 	.include "data/maps/Wasteland_Haverbrook_ProvingGrounds/scripts.inc"
 	.include "data/maps/Wasteland_Haverbrook_PokemonCenter/scripts.inc"
 	.include "data/maps/Wasteland_Haverbrook_Mart/scripts.inc"
+	.include "data/maps/Wasteland_EastRoad/scripts.inc"
 
 	.include "data/scripts/std_msgbox.inc"
 	.include "data/scripts/trainer_battle.inc"

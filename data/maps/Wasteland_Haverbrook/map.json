@@ -13,9 +13,7 @@
   "allow_running": true,
   "show_map_name": true,
   "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
-  "connections": [
-    { "map": "MAP_WASTELAND_SOUTH_ROAD", "offset": -50, "direction": "left" }
-  ],
+  "connections": null,
   "object_events": [
     {
       "graphics_id": "OBJ_EVENT_GFX_WOMAN_4",
@@ -63,14 +61,21 @@
   "warp_events": [
     { "x": 15, "y": 8, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_PROVING_GROUNDS", "dest_warp_id": "0" },
     { "x": 20, "y": 16, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_POKEMON_CENTER", "dest_warp_id": "0" },
-    { "x": 25, "y": 12, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_MART", "dest_warp_id": "0" }
+    { "x": 25, "y": 12, "elevation": 0, "dest_map": "MAP_WASTELAND_HAVERBROOK_MART", "dest_warp_id": "0" },
+    { "x": 17, "y": 18, "elevation": 0, "dest_map": "MAP_WASTELAND_EAST_ROAD", "dest_warp_id": "0" }
   ],
   "coord_events": [
     {
       "type": "trigger",
-      "x": 17, "y": 17, "elevation": 0,
+      "x": 17, "y": 19, "elevation": 0,
       "var": "FLAG_SEEN_HAVERBROOK_ARRIVAL", "var_value": "0",
       "script": "Wasteland_Haverbrook_EventScript_Arrival"
+    },
+    {
+      "type": "trigger",
+      "x": 18, "y": 18, "elevation": 0,
+      "var": "FLAG_WASTELAND_UNCONDITIONAL_TRIGGER", "var_value": "FALSE",
+      "script": "Wasteland_Haverbrook_EventScript_ExitToEastRoad"
     }
   ],
   "bg_events": [
