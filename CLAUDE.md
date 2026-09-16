@@ -4607,6 +4607,76 @@ only - CLAUDE.md stays the source of truth for technical/session history;
 update both when a real story decision changes something the bible
 covers.
 
+### Fortieth custom feature: the crowd-dispersal fix's real bug - a one-shot
+### fix that only ever got one chance, permanently undone by the engine's
+### own object-template reset on the very next real transition
+### (2026-09-16, same day as the Thirty-ninth)
+
+Viktor tested the Thirty-eighth entry's crowd-dispersal fix and reported it
+was still stuck even after a genuine full mgba-qt restart - a real,
+reproducible failure the earlier round's testing had missed. Also clarified
+the Reyes "paperwork's already filed" report: not a bug - a direct save
+read confirmed he'd already beaten her before the party-size gate existed,
+so `trainerbattle_single` correctly skips the battle for an already-defeated
+trainer and falls through to that line. The gate itself is fine; there was
+just no fight left on his save for it to protect.
+
+**Root cause, traced directly in `src/overworld.c` rather than
+re-guessing**: `LoadObjEventTemplatesFromHeader()` - which unconditionally
+resets `gSaveBlock1Ptr->objectEventTemplates[]` back to this ROM's own
+compiled `map.json` defaults (the clustered position, since that IS these
+4 NPCs' permanent map.json-defined spot) - runs on **every real map
+transition** (`LoadMapFromWarp`/`LoadMapFromCameraTransition`), *before*
+`MAP_SCRIPT_ON_TRANSITION` even fires. The Thirty-eighth entry's fix used
+`MAP_SCRIPT_ON_FRAME_TABLE` gated by a one-shot var - correct for
+detecting "the quest finished before this fix existed," but it only ever
+got to apply the correction **once, total, for the entire lifetime of the
+save**. The instant any real transition happened afterward (leaving
+Rustboro through the checkpoint and coming back - exactly the kind of
+thing testing this fix requires you to do), the engine silently reset the
+templates back to clustered, and the already-consumed one-shot var never
+fired again to re-correct it. A full mgba-qt restart doesn't fix this
+either, because restarting just replays the same "fix once, then get
+undone by the next real transition" cycle from scratch - which is exactly
+what happened to Viktor twice in a row.
+
+**Confirmed via `CB2_ContinueSavedGame` vs `LoadMapFromWarp`/
+`LoadMapFromCameraTransition`, read side by side**: a plain "Continue"
+calls `LoadSaveblockObjEventScripts()`, not
+`LoadObjEventTemplatesFromHeader()` - it preserves whatever's already
+saved rather than resetting it. This is why the original one-shot fix
+worked the *first* time (Continue doesn't reset anything) but not after
+that (any subsequent real transition does).
+
+**Real fix**: reapply the correction **unconditionally, every single
+transition into Rustboro**, not just once - added to the already-existing
+`Wasteland_Rustboro_OnTransition` (proven safe for plain data-writing
+commands in this exact map already, via its existing
+`FLAG_WASTELAND_REYES_HIDDEN` setflag). Since `OnTransition` runs *after*
+the engine's own reset, on every real transition, our correction always
+wins, permanently, regardless of how many times the player crosses in and
+out. Gated only on `FLAG_HAS_GYM_SPONSORSHIP` (not a "did I already do
+this" check) since it needs to keep re-asserting itself, not run once.
+The original `MAP_SCRIPT_ON_FRAME_TABLE` one-shot (Thirty-eighth entry) is
+kept alongside it, unchanged - it's still needed for the one case
+`OnTransition` can't cover: a plain Continue landing the player directly
+inside Rustboro with stale, never-corrected saved templates (no
+transition event occurs there at all, so `OnTransition` never fires, but
+that path also doesn't suffer the reset problem either).
+
+**Confirmed via real headless gameplay, against the actual scenario that
+was broken, not just a repeat of the original test**: booted a scratch
+copy of Viktor's real save (Continue - confirmed dispersed via the
+existing one-shot, as before), then used the debug-menu warp tool to
+perform a **real transition out of Rustboro** (into the Pokemon Center)
+**and back in** - the exact class of event that resets templates - and
+re-read `SaveBlock1.objectEventTemplates[]` afterward: all 4 NPCs are
+still correctly at their dispersed coordinates. This is the first test in
+this whole saga that actually exercised the failure mode Viktor reported,
+rather than only re-confirming the original one-shot fix on a fresh boot.
+
+**Build state**: `make -j1` (normal, resting) rebuilt clean.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

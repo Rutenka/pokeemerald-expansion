@@ -18,6 +18,36 @@ Wasteland_Rustboro_OnTransition:
 	@ from the passive per-map spawn check on every load; she only ever
 	@ appears via the explicit `addobject` in her cutscene below.
 	setflag FLAG_WASTELAND_REYES_HIDDEN
+	@ 2026-09-16 (round 2): the real, actual root cause of the crowd never
+	@ staying dispersed, found after Viktor confirmed it was STILL stuck
+	@ even after a full mgba-qt restart. Traced src/overworld.c directly:
+	@ LoadObjEventTemplatesFromHeader() - which unconditionally resets
+	@ gSaveBlock1Ptr->objectEventTemplates[] back to this ROM's own
+	@ compiled map.json defaults (the CLUSTERED position, since that's
+	@ where these 4 NPCs' own map.json entries permanently live) - runs
+	@ on EVERY real map transition (LoadMapFromWarp/LoadMapFromCameraTransition),
+	@ *before* this OnTransition script, in both functions. So the old
+	@ one-shot-forever fix below (still kept, for the "Continue lands you
+	@ directly in Rustboro with stale saved templates" case, which this
+	@ reset does NOT affect) only ever got one real chance per save file:
+	@ the instant ANY subsequent real transition happened (leaving through
+	@ the checkpoint and coming back, even just testing it), the engine
+	@ silently reset the templates back to clustered, and the one-shot
+	@ var (already consumed) never fired again to re-correct it - exactly
+	@ matching what Viktor saw. Real fix: reapply the correction here,
+	@ unconditionally, on every single transition into this map - this
+	@ runs AFTER the reset above, so it always wins, every time, forever,
+	@ immune to whatever the engine does to the templates beforehand.
+	@ Gated only on FLAG_HAS_GYM_SPONSORSHIP (not a "did I already do
+	@ this" check) since that's the only real precondition and this needs
+	@ to unconditionally re-assert the position every entry, not just once.
+	goto_if_unset FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_OnTransitionDone
+	setobjectxyperm 6, 9, 39
+	setobjectxyperm 7, 18, 39
+	setobjectxyperm 12, 14, 41
+	setobjectxyperm 11, 15, 39
+	setflag FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED
+Wasteland_Rustboro_OnTransitionDone:
 	end
 
 Wasteland_Rustboro_OnFrame:
@@ -34,7 +64,12 @@ Wasteland_Rustboro_OnFrame:
 @ the moment the flag says the quest is already done but they haven't
 @ been moved yet - harmless no-op for anyone who experiences the real
 @ animated dispersal instead, since FLAG_WASTELAND_RUSTBORO_CROWD_DISPERSED
-@ gets set either way.
+@ gets set either way. Kept as the *first-boot* fixer (a plain "Continue"
+@ landing you directly in Rustboro doesn't go through the OnTransition
+@ reset-then-reapply cycle above at all - LoadSaveblockObjEventScripts,
+@ not LoadObjEventTemplatesFromHeader, runs on Continue, preserving
+@ whatever's already saved) - the OnTransition fix above is what makes
+@ this durable against every transition *after* that first boot.
 Wasteland_Rustboro_EventScript_FixCrowdDispersal::
 	setvar VAR_WASTELAND_RUSTBORO_CROWD_STATE, 1
 	goto_if_unset FLAG_HAS_GYM_SPONSORSHIP, Wasteland_Rustboro_EventScript_FixCrowdDispersalDone
