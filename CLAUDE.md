@@ -4367,6 +4367,81 @@ Route116's real data (mechanically unchanged from proven vanilla scripts).
 rebuilt clean. `tools/validate_maps.py` clean on every touched map (only
 expected "closed for now" door/seam warnings, no hard errors).
 
+### Thirty-seventh custom feature: the tree gate could be walked around, and
+### a real, game-wide obedience/sleep bug found and fixed (2026-09-16, same
+### day as the Thirty-sixth)
+
+Viktor tested the East Road rebuild and found two more real, separate
+problems: the tree gate was walkable-around (not a real block), and his
+Absol/Elgyem were both "falling asleep" mid-battle for no apparent reason,
+consistently, despite not being over-leveled.
+
+**The gate fix**: the original 6-tree placement (local `x=3`, rows 8-13)
+only sealed the *narrowest* part of the row range it happened to be
+placed at - a real collision flood-fill (not a spot-check) showed the
+actual Rustboro seam is only 6 tiles wide (`x=0-1`, rows 8-13), but the
+map opens up to 10+ open rows just two columns further in, letting a
+player walk around the gate entirely by drifting up or down before
+crossing it. Fixed properly this time using the same rigorous technique
+as the Twenty-ninth feature entry's Lookout blockade: flood-filled the
+*entire* map from the entrance to find the true narrowest crossing (column
+0/1, exactly 6 rows - confirmed this is the global minimum, not just a
+local guess) and moved the 6 gate trees there instead - fewer trees needed
+*and* a mathematically guaranteed complete seal, closer to Rustboro too
+(matching part of what Viktor asked for). The arrival narration coord_event
+moved from `(5,9)` to `(0,10)` to match - it needs to fire in the sliver of
+space before the gate, not past it. Confirmed via real headless gameplay,
+both extreme rows (8 and 13) independently tested with no way through
+either, then confirmed Cut still opens it correctly.
+
+**The "falling asleep" bug was real and far bigger than just Absol and
+Elgyem - a project-wide, story-breaking bug, now fixed.** Traced to
+`GetAttackerObedienceForAction` in `src/battle_util.c`: this engine's
+obedience system gates a Pokemon's obedience level on **gym badge flags**
+(`FLAG_BADGE01_GET` through `FLAG_BADGE08_GET`), and this project's
+`B_OBEDIENCE_MECHANICS` config is set to `GEN_LATEST` (>= GEN_8), which
+means obedience checks apply based on **met level**, to *every* Pokemon
+regardless of trade status - not just traded ones, which is what the
+project's mostly-Gen-3-vanilla battle mechanics elsewhere would have led
+anyone to assume. Since this story deliberately has no gym-badge system
+(replaced by the 8-territory structure, Thirty-first feature entry) and
+only ever sets `FLAG_BADGE01_GET` once (post-Overseer, purely to unlock HM
+Cut - Thirty-eighth feature entry from 2026-09-15), the real obedience cap
+is permanently stuck at level 10 or 20 for the rest of the game. Any
+Pokemon met above that level - which is nearly everything past the first
+couple of hours - becomes randomly disobedient on its own turns, and one
+of the real vanilla disobedience outcomes is the Pokemon falling asleep
+instead of acting (`CanBeSlept` check in the same function) - exactly
+matching what Viktor described, and exactly why it looked random and
+unexplainable (nothing in this story ever surfaces a badge count to the
+player, so there was no visible cause). This wasn't isolated to Absol and
+Elgyem - every Pokemon in the game was silently exposed to this, and would
+only have gotten worse as the player's team leveled up further from here.
+**Fixed with a single early `return OBEYS;`** at the top of
+`GetAttackerObedienceForAction`, disabling the entire obedience system
+project-wide - the cleanest fix given there's no badge system for it to
+meaningfully key off of, matching the same "delete the mechanic, don't
+patch around it" philosophy already used for the HM-teaching requirement.
+Confirmed the build compiles clean (the now-unreachable code below the
+early return is harmless - all the "unused variable" warnings it produces
+are already downgraded to non-fatal by this project's existing build
+flags).
+
+**The trade-requiring-PC-box report was investigated and is not a bug** -
+`ingame_trade`'s underlying `chooseboxmon SELECT_PC_MON_TRADE` call
+already respects this project's `OW_CHOOSE_FROM_PC_AND_PARTY` config
+(`include/config/overworld.h`), which is already `TRUE` - the real vanilla
+PC selection screen it opens lets the player browse to "Party" the same as
+any numbered Box, so a partied Poochyena should already be selectable
+without depositing it first. Not independently re-verified live this
+round (time was spent on the two confirmed bugs above instead) - worth a
+real playtest check next, since this is the one item in this message that
+might turn out to be a UI-discoverability question rather than a genuine
+code issue.
+
+**Build state**: both `make -j2` (normal, resting) and `make DEBUG=1 -j2`
+rebuilt clean. `tools/validate_maps.py` clean on `Wasteland_EastRoad`.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

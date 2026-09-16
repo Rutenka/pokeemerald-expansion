@@ -5626,6 +5626,15 @@ enum Obedience GetAttackerObedienceForAction(void)
     u8 obedienceLevel = 0;
     u8 levelReferenced;
 
+    // Wasteland: this story has no gym-badge system (see CLAUDE.md's
+    // Thirty-first feature entry - badges are replaced by the 8-territory
+    // structure), so the obedience cap below would otherwise be stuck at
+    // level 10-20 forever, making every Pokemon in the game randomly
+    // disobedient (including falling asleep mid-turn) as soon as it
+    // leveled past that - a real bug Viktor found in live play, not a
+    // deliberate design choice. Disabled entirely, project-wide.
+    return OBEYS;
+
     if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))
         return OBEYS;
     if (BattlerHasAi(gBattlerAttacker))
