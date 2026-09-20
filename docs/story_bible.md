@@ -110,7 +110,7 @@ massacre at the estate, and corporate guilt does not excuse it. How the network 
 the region are left at the end is open — nothing here decides which faction the player
 ends up with.
 
-### Territory 4 — decided 2026-09-20
+### Territory 4 — decided 2026-09-20, built 2026-09-20 (playable, unreviewed)
 
 A warlord-controlled **smuggler port**: loud, crowded, colorful, with the Ashband taxing
 everything that moves. The warlord (the Harbormaster, working title) is a **meticulous
@@ -129,7 +129,7 @@ cannot finish without him, so freeing him at the base restarts the clock.
 ### Proposals not yet confirmed
 
 - **Territory map (draft):** 1 Miller's Cut/checkpoint (built), 2 Rustboro (built),
-  3 Haverbrook (built), 4 a warlord town — a regional Ashband stronghold, higher rank
+  3 Haverbrook (built), 4 the port (built, unreviewed) — a regional Ashband stronghold, higher rank
   than the checkpoint, 5 Pokémon-reclaimed ruin, 6 militarized holdout, 7 fanatic
   settlement, 8 the Ashband's main base. Each stop yields a biased, partial piece of
   where the base is.

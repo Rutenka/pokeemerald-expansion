@@ -1198,6 +1198,15 @@
     "Wasteland_Haverbrook_ProvingGrounds",
     "Wasteland_Haverbrook_PokemonCenter",
     "Wasteland_Haverbrook_Mart",
-    "Wasteland_EastRoad"
+    "Wasteland_EastRoad",
+    "Wasteland_TollRoad",
+    "Wasteland_Crossing",
+    "Wasteland_ShoreRoad",
+    "Wasteland_HarborRoad",
+    "Wasteland_Port",
+    "Wasteland_Port_PokemonCenter",
+    "Wasteland_Port_Mart",
+    "Wasteland_Port_Registrar",
+    "Wasteland_Port_Hall"
   ]
 }

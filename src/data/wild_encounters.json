@@ -36661,6 +36661,69 @@
               { "min_level": 18, "max_level": 19, "species": "SPECIES_POOCHYENA" }
             ]
           }
+        },
+        {
+          "map": "MAP_WASTELAND_TOLL_ROAD",
+          "base_label": "gWastelandTollRoad",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_SEEDOT" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_SEEDOT" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_SEEDOT" },
+              { "min_level": 17, "max_level": 18, "species": "SPECIES_LOTAD" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_LOTAD" }
+            ]
+          }
+        },
+        {
+          "map": "MAP_WASTELAND_SHORE_ROAD",
+          "base_label": "gWastelandShoreRoad",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 19, "max_level": 20, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 19, "max_level": 20, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_ZIGZAGOON" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_WINGULL" },
+              { "min_level": 19, "max_level": 20, "species": "SPECIES_WINGULL" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_WINGULL" },
+              { "min_level": 19, "max_level": 20, "species": "SPECIES_WINGULL" },
+              { "min_level": 18, "max_level": 19, "species": "SPECIES_KRABBY" },
+              { "min_level": 19, "max_level": 20, "species": "SPECIES_KRABBY" }
+            ]
+          }
+        },
+        {
+          "map": "MAP_WASTELAND_HARBOR_ROAD",
+          "base_label": "gWastelandHarborRoad",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_ELECTRIKE" },
+              { "min_level": 21, "max_level": 22, "species": "SPECIES_ELECTRIKE" },
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_ELECTRIKE" },
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_GULPIN" },
+              { "min_level": 21, "max_level": 22, "species": "SPECIES_GULPIN" },
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_GULPIN" },
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_ODDISH" },
+              { "min_level": 21, "max_level": 22, "species": "SPECIES_ODDISH" },
+              { "min_level": 20, "max_level": 21, "species": "SPECIES_WINGULL" },
+              { "min_level": 21, "max_level": 22, "species": "SPECIES_WINGULL" },
+              { "min_level": 21, "max_level": 22, "species": "SPECIES_POOCHYENA" },
+              { "min_level": 22, "max_level": 23, "species": "SPECIES_POOCHYENA" }
+            ]
+          }
         }
       ]
     },

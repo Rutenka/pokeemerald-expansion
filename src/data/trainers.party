@@ -17017,3 +17017,121 @@ Level: 20
 - Bulldoze
 - Double Kick
 - Iron Defense
+
+=== TRAINER_TOLL_WARDEN_1 ===
+Name: WARDEN
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Poochyena
+Level: 17
+
+Zigzagoon
+Level: 18
+
+=== TRAINER_TOLL_WARDEN_2 ===
+Name: WARDEN
+Class: Ashband
+Pic: Aqua Grunt F
+Gender: Female
+Double Battle: No
+
+Zigzagoon
+Level: 19
+
+=== TRAINER_SHORE_PATROL_1 ===
+Name: PATROL
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Mightyena
+Level: 20
+
+=== TRAINER_SHORE_PATROL_2 ===
+Name: PATROL
+Class: Ashband
+Pic: Aqua Grunt F
+Gender: Female
+Double Battle: No
+
+Stunky
+Level: 20
+
+=== TRAINER_SHORE_SCAVENGER ===
+Name: SCAVENGER
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Grimer
+Level: 20
+
+=== TRAINER_HARBOR_DOCKHAND ===
+Name: DOCKHAND
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Double Battle: No
+
+Machop
+Level: 20
+
+Wingull
+Level: 20
+
+=== TRAINER_HARBOR_ANGLER ===
+Name: ANGLER
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Double Battle: No
+
+Tentacool
+Level: 20
+
+Corphish
+Level: 21
+
+=== TRAINER_HARBOR_PATROL ===
+Name: PATROL
+Class: Ashband
+Pic: Aqua Grunt M
+Gender: Male
+Double Battle: No
+
+Linoone
+Level: 22
+
+=== TRAINER_HARBORMASTER ===
+Name: TALLY
+Class: Ashband
+Pic: Expert F
+Gender: Female
+Double Battle: No
+AI: Basic Trainer / Check Bad Move / Try To Faint / Smart Switching
+
+Pelipper
+Level: 25
+- Wing Attack
+- Water Pulse
+- Supersonic
+- Protect
+
+Qwilfish
+Level: 26
+- Poison Sting
+- Water Pulse
+- Minimize
+- Spikes
+
+Sableye
+Level: 27
+- Shadow Sneak
+- Night Shade
+- Confuse Ray
+- Foul Play

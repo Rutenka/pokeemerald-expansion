@@ -872,6 +872,17 @@
 
 #define TRAINER_HAVERBROOK_PROTECTOR          863 // Wasteland: Haverbrook's boss, guards the Proving Grounds - the last of the 9 available custom trainer slots (see note below)
 
+// Wasteland territory 4: the road to the port (ids 864+ use the extended trainer flag block)
+#define TRAINER_TOLL_WARDEN_1               864
+#define TRAINER_TOLL_WARDEN_2               865
+#define TRAINER_SHORE_PATROL_1              866
+#define TRAINER_SHORE_PATROL_2              867
+#define TRAINER_SHORE_SCAVENGER             868
+#define TRAINER_HARBOR_DOCKHAND             869
+#define TRAINER_HARBOR_ANGLER               870
+#define TRAINER_HARBOR_PATROL               871
+#define TRAINER_HARBORMASTER                872 // Wasteland: Tally, the port's warlord, territory 4 boss
+
 // NOTE: Each Trainer uses a flag to track defeat. Wasteland: ids 855-863 use the standard flag range;
 //       ids 864-927 (64 more) use a spare flag block via TRAINER_FLAG_ID() in constants/flags.h,
 //       so the save layout is unchanged. To go past 927, extend that spare block first.

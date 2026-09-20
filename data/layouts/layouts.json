@@ -9479,6 +9479,83 @@
       "layout_version": "emerald"
     },
     {
+      "id": "LAYOUT_WASTELAND_TOLL_ROAD",
+      "name": "Wasteland_TollRoad_Layout",
+      "width": 50,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Wasteland_TollRoad/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_TollRoad/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_CROSSING",
+      "name": "Wasteland_Crossing_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Wasteland_Crossing/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Crossing/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_SHORE_ROAD",
+      "name": "Wasteland_ShoreRoad_Layout",
+      "width": 80,
+      "height": 22,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Wasteland_ShoreRoad/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_ShoreRoad/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_HARBOR_ROAD",
+      "name": "Wasteland_HarborRoad_Layout",
+      "width": 40,
+      "height": 100,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/Wasteland_HarborRoad/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_HarborRoad/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_PORT",
+      "name": "Wasteland_Port_Layout",
+      "width": 40,
+      "height": 60,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Slateport",
+      "border_filepath": "data/layouts/Wasteland_Port/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Port/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_PORT_REGISTRAR",
+      "name": "Wasteland_Port_Registrar_Layout",
+      "width": 10,
+      "height": 8,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_GenericBuilding",
+      "border_filepath": "data/layouts/Wasteland_Port_Registrar/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Port_Registrar/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_WASTELAND_PORT_HALL",
+      "name": "Wasteland_Port_Hall_Layout",
+      "width": 20,
+      "height": 9,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_OceanicMuseum",
+      "border_filepath": "data/layouts/Wasteland_Port_Hall/border.bin",
+      "blockdata_filepath": "data/layouts/Wasteland_Port_Hall/map.bin",
+      "layout_version": "emerald"
+    },
+    {
       "id": "LAYOUT_WASTELAND_EAST_ROAD",
       "name": "Wasteland_EastRoad_Layout",
       "width": 100,

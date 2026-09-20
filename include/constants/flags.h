@@ -709,8 +709,8 @@
 #define FLAG_WASTELAND_EAST_ROAD_HIDDEN_1                    (FLAG_HIDDEN_ITEMS_START + 0x76) // Wasteland: hidden item, reused Route116 data
 #define FLAG_WASTELAND_EAST_ROAD_HIDDEN_2                    (FLAG_HIDDEN_ITEMS_START + 0x77) // Wasteland: hidden item, reused Route116 data
 
-#define FLAG_UNUSED_0x264  0x264 // Unused Flag
-#define FLAG_UNUSED_0x265  0x265 // Unused Flag
+#define FLAG_DEFEATED_HARBORMASTER 0x264 // Wasteland: Tally, territory 4 boss (the port)
+#define FLAG_WASTELAND_PORT_REGISTERED 0x265 // Wasteland: registered at the port; hides the hall guards
 #define FLAG_UNUSED_0x266  0x266 // Unused Flag
 #define FLAG_UNUSED_0x267  0x267 // Unused Flag
 #define FLAG_UNUSED_0x268  0x268 // Unused Flag

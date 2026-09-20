@@ -4797,6 +4797,73 @@ OPEN: (1) how Devon's leadership, the father and the Ashband relate, since Devon
 the Ashband; (2) whether the port took Devon's supplies in exchange for not asking where the
 people went.
 
+### Forty-fourth: territory 4 built - the road to the port, and the port itself
+### (2026-09-20, autonomous build after Viktor's go-ahead)
+
+Built the plan from the Forty-third entry. Every map is a whole real vanilla map reused
+as-is (checklist item 11), created with a small cloning helper (kept out of the repo, in
+the scratchpad): it copies the vanilla layout, registers it in `layouts.json`,
+`map_groups.json` (appended at the end, indices 36-45) and `event_scripts.s`.
+
+**Maps**: `Wasteland_TollRoad` (Route102, index 36), `Wasteland_Crossing` (Oldale, 37),
+`Wasteland_ShoreRoad` (Route103, 38), `Wasteland_HarborRoad` (Route110, 39),
+`Wasteland_Port` (Slateport City, 40), `Wasteland_Port_PokemonCenter` (41),
+`Wasteland_Port_Mart` (42), `Wasteland_Port_Registrar` (Name Rater's House layout, 43),
+`Wasteland_Port_Hall` (Oceanic Museum 1F layout, 44). Haverbrook's east edge is now a real
+connection (offset 10) to Toll Road, which is Petalburg's own real connection to Route102.
+Every join in the chain is a real vanilla connection, and same-tileset where it matters.
+
+**A real mistake caught before it shipped, worth remembering**: the vanilla Route103 cannot
+be walked end to end - water splits it, and the vanilla game needs Surf. I committed to the
+chain before running a reachability check, and only found it because the headless walker
+got stuck at the water. A BFS over collision + elevation (water is elevation 1) showed two
+separate land masses (238 tiles west, 217 east, ~20 tiles of sea between them). **Fixed
+with a ferry**: two Ashband ferrymen (`OBJ_EVENT_GFX_SAILOR`) at (23,12) west and (49,10)
+east; talking to one and answering Yes fades out and `warpsilent`s to the other shore
+(landing (50,10) / (22,12)), facing the ferryman. It is a visible NPC, not an invisible
+trigger, so it avoids the checklist item 16 problem. **Standing rule**: before committing to
+any chain of whole vanilla maps, run a walkability BFS across every join (collision AND
+elevation), not just an edge-cell collision check - the edge audit passed here and the
+route was still unwalkable.
+
+**Trainers** (ids 864-872, first use of the extended flag block): Toll Wardens x2 (Lv17-19),
+Shore Patrol x2 and Scavenger (Lv19-20), Harbor Dockhand, Angler and Patrol (Lv20-22), and
+the boss **Tally**, the Harbormaster (`TRAINER_HARBORMASTER`, class Ashband, "Expert F" pic +
+`OBJ_EVENT_GFX_WOMAN_5`, Pelipper Lv25 / Qwilfish Lv26 / Sableye Lv27). Name and gender are
+**placeholders** - Viktor has not chosen them. Overworld sprites match battle pics
+(Hiker/Aqua Grunt M, Picnicker/Aqua Grunt F, Sailor, Fisherman, WOMAN_5/Expert F). New
+wild tables on Toll/Shore/Harbor Road (Lv17-22, land only).
+
+**The port's story beats, as built**: locals' rumors escalate (the trucks, the register, the
+missing, one person who owes the father a debt, and hostile talk about "the deployment man's
+family" the player overhears); the Registrar (flag `FLAG_WASTELAND_PORT_REGISTERED`, 0x265)
+files the player under "Smith" automatically, which hides the two hall guards; Tally's
+fight is a "three against three" gate like Reyes's; after winning (`FLAG_DEFEATED_
+HARBORMASTER`, 0x264) she recognizes the Houndour as the father's dog, reveals the real
+name, tells of fifty-one people and their Pokemon taken in the last year by company trucks,
+and points to "the overgrown ruins down the coast" (territory 5). Level cap 30 until she
+is beaten, then 36 (placeholder). `HEAL_LOCATION_WASTELAND_PORT` respawns outside the Center.
+
+**Verified headlessly** (scratch copies only; Viktor's real save untouched - its mtime is
+still 2026-09-16): the whole chain walked Haverbrook -> Toll Road -> Crossing -> Shore Road
+-> ferry -> Harbor Road -> Port; a warden's sight-trigger and intro; the ferry both ways;
+the guard's block, the Registrar, the guards disappearing afterward, the hall, the
+wrong-party-size message, the full boss fight (won with a boosted 3-mon test party) and the
+whole reveal text. `make -j2` and `make DEBUG=1 -j2` clean, `tools/validate_maps.py` no
+errors across all maps (only the usual closed-door and vanilla elevation-0 warnings).
+
+**Not built / open**: the Shipyard "ledger" (door unwired), the Battle Tent/Arena, the hall's
+second floor, the Harbor doors and Slateport's other buildings, and Oldale's four doors are
+all left closed; the road's north end (Mauville) and the port's south beach are unconnected
+open-looking edges, softened by a "road closed" sign on Harbor Road only; the Registrar's
+room is the real Name Rater's bedroom, so it reads like a bedroom; the alias is automatic
+("Smith"), not chosen by the player; wild encounters are land-only. The transient
+top-left noise patch appears after every map load in this build (about 2 seconds) - it is
+the same unresolved issue documented in the Eleventh and Eighteenth entries, NOT the map
+name popup (disabling the popup on Toll Road did not remove it, disproving that theory).
+The Toll Road's tall grass starts right at the Haverbrook seam, so wild fights start
+immediately on crossing.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

@@ -373,6 +373,12 @@
       "map": "MAP_WASTELAND_HAVERBROOK",
       "x": 20,
       "y": 16
+    },
+    {
+      "id": "HEAL_LOCATION_WASTELAND_PORT",
+      "map": "MAP_WASTELAND_PORT",
+      "x": 19,
+      "y": 20
     }
   ]
 }

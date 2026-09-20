@@ -36,8 +36,23 @@ Tera are disabled project-wide), progressive reveal tied to exploration.
 | Miltank | Catchable (trainer-only for now) | `Wasteland_Haverbrook_ProvingGrounds`, Garrick's team (Lv18) | Bulky Normal-type support/attacker | First pick for territory 3's "sturdy, reliable working-partner Pokemon" theme (Thirty-first feature entry) - a real farm/community-provider Pokemon, not a weapon |
 | Mudbray | Catchable (trainer-only for now) | `Wasteland_Haverbrook_ProvingGrounds`, Garrick's ace (Lv20) | Physical Ground-type workhorse, Strength/Bulldoze/Iron Defense | Its own real Pokedex identity is literally a plow/draft-animal Pokemon - the single best-fitting species for the "sturdy workhorse" territory-3 theme, deliberately left unevolved (Mudsdale needs Lv30) to match this story point's level range |
 | Abra | Catchable | `Wasteland_EastRoad`, wild encounter (levels 14-16) | Early Psychic special sweeper (evolves into Kadabra/Alakazam later) | Added 2026-09-16 when South Road was rebuilt as East Road (reused Route116's real vanilla table, which already included it) - fills a distinct special-sweeper role nothing else on the roster covers yet |
+| Seedot | Catchable | `Wasteland_TollRoad`, wild encounter (levels 17-19) | Early physical Grass, evolves into Nuzleaf/Shiftry | Reused from Route102's real vanilla table, levels raised to fit territory 4's road (2026-09-20) |
+| Lotad | Catchable | `Wasteland_TollRoad`, wild encounter (levels 17-19) | Water/Grass special utility | Same source as Seedot |
+| Krabby | Catchable | `Wasteland_ShoreRoad`, wild encounter (levels 18-20) | Physical Water attacker, high Attack | New for the coast: the Shore Road runs along a sound, and a crab is a scrappy shoreline scavenger |
+| Wingull | Catchable | `Wasteland_ShoreRoad`, `Wasteland_HarborRoad`, wild encounter (levels 18-22); also on the Dockhand's team | Fast Water/Flying, evolves into Pelipper at 25 | Reused from Route103/110's real vanilla tables |
+| Electrike | Catchable | `Wasteland_HarborRoad`, wild encounter (levels 20-22) | Fast special Electric | Reused from Route110's real table, levels raised |
+| Gulpin | Catchable | `Wasteland_HarborRoad`, wild encounter (levels 20-22) | Bulky Poison stall/sweeper | Reused from Route110's real table; fits the junk/toxic theme |
+| Oddish | Catchable | `Wasteland_HarborRoad`, wild encounter (levels 20-22) | Grass/Poison special | Reused from Route110's real table |
+| Stunky | Catchable (trainer-only for now) | `Wasteland_ShoreRoad`, Ashband Patrol's team (Lv20) | Poison/Dark physical attacker | Scrappy urban-decay pick per selection principle 2; a Skuntank line member |
+| Grimer | Catchable (trainer-only for now) | `Wasteland_ShoreRoad`, Ashband Scavenger's team (Lv20) | Bulky Poison attacker | Junk/sludge theme, matches the Ashband's scavenger identity |
+| Tentacool | Catchable (trainer-only for now) | `Wasteland_HarborRoad`, Angler's team (Lv20) | Bulky Water/Poison support | Harbor fauna |
+| Corphish | Catchable (trainer-only for now) | `Wasteland_HarborRoad`, Angler's team (Lv21) | Physical Water | Harbor fauna; its Crawdaunt evolution is at 30 |
+| Linoone | Catchable (evolution only) | Evolves from Zigzagoon at 20; also on the Harbor Patrol's team (Lv22) | Fast physical Normal | Plain vanilla evolution |
+| Pelipper | Catchable (trainer-only for now) | `Wasteland_Port_Hall`, Tally's lead (Lv25) | Water/Flying utility, the "courier" | Carries things in the real games, so it is the port's logistics mascot |
+| Qwilfish | Catchable (trainer-only for now) | `Wasteland_Port_Hall`, Tally's second (Lv26) | Water/Poison, Spikes/Minimize utility | Toxic harbor fauna with no evolution to worry about at this level |
+| Sableye | Catchable (trainer-only for now) | `Wasteland_Port_Hall`, Tally's ace (Lv27) | Ghost/Dark disruptor | A creature that sees what others miss, which suits a bureaucrat who keeps the register |
 
-**Trainer roster so far**: the Ashband (all `TRAINER_CLASS_ASHBAND`, reusing the
+**Trainer roster so far** (territory 4, added 2026-09-20: Toll Wardens x2, Shore Patrol x2, Shore Scavenger, Harbor Dockhand/Angler/Patrol, and Tally the Harbormaster - ids 864-872; see CLAUDE.md's Forty-fourth feature entry): the Ashband (all `TRAINER_CLASS_ASHBAND`, reusing the
 vanilla Aqua Grunt battle sprite purely as art - see the Twentieth feature entry in
 CLAUDE.md): Scout (`Wasteland_Road`, Poochyena Lv7), Lookout (`Wasteland_MillersCut`,
 Zigzagoon Lv9), Checkpoint Grunt (`Wasteland_AshbandCheckpoint`, Poochyena Lv11),
