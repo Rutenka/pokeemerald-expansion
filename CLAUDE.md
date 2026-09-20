@@ -4677,6 +4677,33 @@ rather than only re-confirming the original one-shot fix on a fresh boot.
 
 **Build state**: `make -j1` (normal, resting) rebuilt clean.
 
+### Forty-first custom feature: the 9-trainer limit lifted, 64 more slots
+### (2026-09-20)
+
+All 9 custom trainer slots (855-863) were spent, blocking any new boss or trainer.
+`SYSTEM_FLAGS` (and every flag after it) was computed from `MAX_TRAINERS_COUNT`, so
+just raising the count would have shifted every system/daily flag and grown
+`SaveBlock1` - breaking every existing save (Viktor's included) and the hardcoded
+offsets in `tools/mgba_probe.py`.
+
+**Fix, no save-layout change**: `TRAINER_FLAGS_END`/`SYSTEM_FLAGS` are now pinned to
+864 trainers (`WASTELAND_TRAINER_FLAG_SPLIT`), and trainer ids >= 864 map through
+`TRAINER_FLAG_ID()` (`include/constants/flags.h`) into a spare block of 64 flags at
+0x493-0x4D2 (verified unused, and clear on Viktor's real save). `MAX_TRAINERS_COUNT`
+is now 928, so ids 864-927 are usable. All trainer flag reads/writes in
+`src/battle_setup.c` and `src/debug.c` go through the macro. **Never write
+`TRAINER_FLAGS_START + id` directly again.** Beyond 927, extend the spare block
+first. Note `TRAINER_PARTNER()` ids shift up with the count; they are always used via
+the macro, so this is harmless.
+
+**Verified**: `test/wasteland_trainer_flags.c` (3 tests pass, including compile-time
+`STATIC_ASSERT`s that `SYSTEM_FLAGS == 0x860`, `FLAG_BADGE01_GET == 0x867`, and the
+spare block doesn't overlap anything); `make -j2` and `make DEBUG=1 -j2` both clean;
+a scratch copy of the real save booted on the new ROM reads identical flags/position
+and moves normally. Real save untouched. Not yet exercised: an actual trainer with
+id >= 864 in a live battle (none exists yet) - the first one added should be checked
+for its defeat flag persisting.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

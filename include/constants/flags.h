@@ -1386,7 +1386,18 @@
 // See constants/opponents.h. The values there + FLAG_TRAINER_FLAG_START are the flag IDs
 
 #define TRAINER_FLAGS_START                                         0x500
-#define TRAINER_FLAGS_END                                           (TRAINER_FLAGS_START + MAX_TRAINERS_COUNT - 1) // 0x85F
+// Wasteland: the standard trainer flag range is FIXED at 864 trainers (0x500 - 0x85F) so that
+// SYSTEM_FLAGS and everything after it - and therefore the SaveBlock1 layout and every existing
+// save - never shifts when MAX_TRAINERS_COUNT grows. Trainer ids >= WASTELAND_TRAINER_FLAG_SPLIT
+// use the spare block below instead (0x493 - 0x4D2, verified unused, room for 64 more trainers).
+// Always go through TRAINER_FLAG_ID(), never TRAINER_FLAGS_START + id directly.
+#define WASTELAND_TRAINER_FLAG_SPLIT                                864
+#define WASTELAND_EXTRA_TRAINER_FLAGS_START                         0x493
+#define WASTELAND_EXTRA_TRAINER_FLAGS_COUNT                         64
+#define TRAINER_FLAGS_END                                           (TRAINER_FLAGS_START + WASTELAND_TRAINER_FLAG_SPLIT - 1) // 0x85F
+#define TRAINER_FLAG_ID(trainerId) ((trainerId) < WASTELAND_TRAINER_FLAG_SPLIT ? \
+    TRAINER_FLAGS_START + (trainerId) : \
+    WASTELAND_EXTRA_TRAINER_FLAGS_START + (trainerId) - WASTELAND_TRAINER_FLAG_SPLIT)
 
 // System Flags
 

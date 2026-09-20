@@ -872,13 +872,13 @@
 
 #define TRAINER_HAVERBROOK_PROTECTOR          863 // Wasteland: Haverbrook's boss, guards the Proving Grounds - the last of the 9 available custom trainer slots (see note below)
 
-// NOTE: Because each Trainer uses a flag to determine when they are defeated, there is only space for 9 additional trainers before trainer flag space overflows
-//       More space can be made by shifting flags around in constants/flags.h or changing how trainer flags are handled
-//       MAX_TRAINERS_COUNT can be increased but will take up additional saveblock space
-//       Wasteland: all 9 slots (855-863) are now used - see docs/roster.md for the full list
+// NOTE: Each Trainer uses a flag to track defeat. Wasteland: ids 855-863 use the standard flag range;
+//       ids 864-927 (64 more) use a spare flag block via TRAINER_FLAG_ID() in constants/flags.h,
+//       so the save layout is unchanged. To go past 927, extend that spare block first.
+//       See docs/roster.md for the full custom trainer list
 
-#define TRAINERS_COUNT_EMERALD     864
-#define MAX_TRAINERS_COUNT_EMERALD 864
+#define TRAINERS_COUNT_EMERALD     928
+#define MAX_TRAINERS_COUNT_EMERALD 928
 
 #if IS_FRLG
 #define TRAINERS_COUNT                      TRAINERS_COUNT_FRLG

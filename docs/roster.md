@@ -53,8 +53,10 @@ a settlement protector): Garrick (`Wasteland_Haverbrook_ProvingGrounds`, Miltank
 + Mudbray Lv20). **This is now genuinely the 9th and last of the 9 total custom
 trainer slots** (this doc previously said all 9 were already spent before Garrick was
 added - that was a real counting error, corrected 2026-09-15; only 8 were actually
-used at the time) - see `include/constants/opponents.h`'s own comment for how to free
-more space if a 10th is ever needed.
+used at the time). **Update 2026-09-20: the limit is lifted** - ids 864-927 (64 more
+custom trainers) now work via `TRAINER_FLAG_ID()` in `include/constants/flags.h`, which
+keeps the save layout unchanged. Add new trainers starting at id 864; see
+`test/wasteland_trainer_flags.c` for the guard tests.
 
 **Open**: Brightwell's own non-service buildings and Grayford are still
 unconnected/undeveloped. Devon Corp specifically is still deliberately left closed (a
