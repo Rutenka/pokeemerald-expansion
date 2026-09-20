@@ -110,6 +110,22 @@ massacre at the estate, and corporate guilt does not excuse it. How the network 
 the region are left at the end is open — nothing here decides which faction the player
 ends up with.
 
+### Territory 4 — decided 2026-09-20
+
+A warlord-controlled **smuggler port**: loud, crowded, colorful, with the Ashband taxing
+everything that moves. The warlord (the Harbormaster, working title) is a **meticulous
+bureaucrat with a grieving provider underneath** — they run raiding like a logistics
+office, cheerful and full of forms, learned from dealing with Devon. They are so
+meticulous because disorganization killed people they loved after the collapse. Funny
+and tragic at once.
+
+The port's grievance: the father took people and Pokémon from here to experiment on.
+They never came back, and only rumors survive. The Harbormaster keeps a meticulous
+register of everyone taken — the paperwork is the grief. The takings are ongoing, and
+the father is at the **end stage of his grand plan**. The last part of the game is
+stopping that plan from being executed. The rebels took him to delay it: the plan
+cannot finish without him, so freeing him at the base restarts the clock.
+
 ### Proposals not yet confirmed
 
 - **Territory map (draft):** 1 Miller's Cut/checkpoint (built), 2 Rustboro (built),

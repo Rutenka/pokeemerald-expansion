@@ -4746,6 +4746,57 @@ free-him choice.
 in separate sections there). No game content was changed. The level-cap table in
 `src/caps.c` still ends with a placeholder ceiling for whatever the next boss beat is.
 
+### Forty-third: territory 4 planned - the Ashband's port town (decided by Viktor,
+### 2026-09-20; nothing built yet)
+
+DECIDED by Viktor:
+- Territory 4 is a warlord-controlled **smuggler port** (a loud, crowded, colorful
+  trading town where the Ashband tax everything that moves), chosen over a casino hub
+  (Mauville) and a treetop fortress (Fortree).
+- The warlord is **the meticulous bureaucrat, with the grieving provider underneath**:
+  they run raiding like a logistics office - cheerful, forms for everything, learned
+  from dealing with Devon - and are so meticulous because disorganization killed
+  people they loved after the collapse. Funny and tragic at once. Referred to as the
+  Harbormaster (working title), no gender chosen yet.
+
+PROPOSED (assistant), pending Viktor: use whole vanilla **SlateportCity** (40x60,
+`gTileset_General`+`gTileset_Slateport`, 35 object events, 11 warps). Roles: the plaza
+in front of the Oceanic Museum is the guard line (vanilla already has 16 grunts there);
+Oceanic Museum (2 floors, 2-tile door at (30,26)/(31,26)) is the Harbormaster's hall and
+boss; Name Rater's House is the Registrar where arrivals are logged and the surname gets
+a reaction (keep the rename-Pokemon mechanic); Stern's Shipyard holds the ledger with the
+location clue; Battle Tent is an optional Arena; Pokemon Center and Mart work. 13 of the
+35 NPCs are Team Aqua story props to delete, then trim to the 16-object cap. The road
+there is the real vanilla chain Petalburg -> Route102 -> Oldale -> Route103 -> Route110
+-> Slateport (every join is a real vanilla connection, tilesets checked; Haverbrook's
+unused east edge is Petalburg's real connection to Route102), with the routes' trainers
+(4, 9 and 14) heavily trimmed. Boss theme direction: dockside Water/Dark with logistics
+flavor; avoid Mightyena and Koffing/Weezing, which the Enforcer already used.
+
+DECIDED (later the same day):
+- **The port's grievance:** the father took people and Pokemon from the port to experiment
+  on. They never came back, and only rumors exist about what happened. The Harbormaster
+  keeps a meticulous register of everyone taken - the paperwork is the grief.
+- **The takings are ongoing**, right up to the recent past, not an old collapse-era wound.
+- **The father is at the end stage of his "grand plan."** The final part of the game is
+  stopping that plan from being executed (the League / Devon HQ assault).
+
+PROPOSED, not objected to by Viktor but not explicitly confirmed: the player uses a fake
+name at the Registrar (it is accepted without a check, a bureaucracy joke); because of the
+alias the player overhears honest gossip about the father's family - mostly hostile, one
+person who owes him; the Harbormaster sees through the alias by recognizing the starter
+Houndour, which is the father's own Pokemon, and reveals the real name after the boss
+fight; the rumors stay unresolved until territory 5, proposed as the original test site.
+The Houndour's slow evolution must stay a natural trait, never linked to the experiments.
+
+DECIDED (same day): **the rebels took him to delay the plan.** The plan cannot finish without
+him, so his capture is what delays it, and the player freeing him at the base restarts the
+clock. The rebels were right about him and still murdered innocent staff.
+
+OPEN: (1) how Devon's leadership, the father and the Ashband relate, since Devon supplies
+the Ashband; (2) whether the port took Devon's supplies in exchange for not asking where the
+people went.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed
