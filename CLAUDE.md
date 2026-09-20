@@ -4704,6 +4704,48 @@ and moves normally. Real save untouched. Not yet exercised: an actual trainer wi
 id >= 864 in a live battle (none exists yet) - the first one added should be checked
 for its defeat flag persisting.
 
+### Forty-second: the story spine rewritten - a chase to the raider base, then the
+### League as the assault on the father (decided by Viktor, 2026-09-20)
+
+Viktor rejected the thematic eight-territory spine (Thirty-first feature entry) in favor
+of a structure built around one chase. **This supersedes that entry's territories 4-8,
+its finale, and the planned rival corporate city.** Everything below marked
+DECIDED is Viktor's own call; everything marked PROPOSED is the assistant's suggestion
+awaiting his answer.
+
+DECIDED:
+- The eight territories (the "badges") are one chase: the Ashband raiders took the father
+  to their main base, and each stop is about first finding out where the base is, then
+  getting there.
+- At the base, the picture turns over: the father is the real villain, motivated by "the
+  greater good." He escapes or is freed, tries to bring the player to his side, and the
+  player refuses. He escapes to the evil corporate HQ.
+- The Pokemon League is the final test - the assault on the father and his empire. The
+  game ends there.
+- The rival corporate city is dropped; territory 4 is a warlord-controlled town.
+- **What the mother knew (decided later the same day):** she knew about the raid but not
+  the killing. She expected the Ashband to take the father and leave the household alone.
+- **The mother is at the raider base**, high-ranking and active in the rebellion but not
+  its leader. She joined because of what the father grew into; she wanted to take the
+  child and he refused. The existing "missing, presumed dead" is the father's version
+  of events, which is consistent with what is already written in the game.
+
+Still binding from the design brief: the Ashband are responsible for the estate
+massacre, no corporate false-flag retcon, and the ending's faction alignment is
+undecided. The Houndour line is a natural late-developer trait, not an experiment -
+do not write it as one.
+
+PROPOSED, not yet confirmed: the territory map (4 warlord town / Ashband regional
+stronghold, 5 reclaimed ruin, 6 militarized holdout, 7 fanatic settlement, 8 the
+Ashband main base); the player frees the father at the base; his argument is a full
+stable reactivation of the network at the cost of free will; the Elite Four are his
+inner circle, with him as Champion; a short flashback after each territory; and the
+free-him choice.
+
+`docs/story_bible.md` was updated to match (confirmed and proposed material are kept
+in separate sections there). No game content was changed. The level-cap table in
+`src/caps.c` still ends with a placeholder ceiling for whatever the next boss beat is.
+
 ## Design brief (from Viktor's "Astra" conversation, v0.10, 2026-09-06)
 
 Confirmed direction: real Gen 3 ROM hack, original region/story/characters, a fixed

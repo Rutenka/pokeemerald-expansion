@@ -40,8 +40,8 @@ explain further, "I can't lose you the same way I lost your mother." Then he goe
 meet whoever's coming, and doesn't come back.
 
 Your mother has been missing, presumed dead, since **before** any of this — not killed
-tonight. What actually happened to her, and a hint that she may be connected to the
-Ashband herself, is a thread this story is deliberately holding, not forgetting.
+tonight. That is what you were told. *(Decided 2026-09-20: it was a lie of omission —
+she is alive, and she left. See "The Shape of the Story".)*
 
 The household is gone when you come out — staff, guards, everyone, inside the house
 and out on the grounds. No bodies are shown. Your father is alive, taken — he's the
@@ -70,8 +70,8 @@ You're meant to notice.
 
 | Name | Role | Notes |
 |---|---|---|
-| Father | Deployed the network | Genuinely loving, genuinely convinced his work prevented worse suffering than it caused. Taken alive because he can disable what he built. |
-| Mother | Missing, pre-dates night one | Gone before the story starts. Her fate, and a possible tie to the Ashband, is deliberately unresolved. |
+| Father | Deployed the network — the story's real villain | Genuinely loving, genuinely convinced he is acting for the greater good. Kept his child sheltered and refused to let the mother take them. Taken by the raiders, but he is not the victim he appears to be. |
+| Mother | High-ranking Ashband rebel (*decided 2026-09-20*) | Left the father because of what he grew into and wanted to take you with her; he refused. Active in the rebellion and high in rank, but **not** its leader. You were told she was missing or dead. |
 | Rourke | Brightwell survivor | First person to say "the Ashband" and "Miller's Cut" out loud to you. Doesn't editorialize about whether they're freedom fighters or opportunists. |
 | The Enforcer | Ashband checkpoint boss | Mightyena and Koffing. Scrappy, toxic, feral. |
 | Overseer Reyes | Devon Corp, Rustboro | Runs Assessment for the company's regional seat. Earned, not defeated — the incident arc lets you prove yourself first. Magneton, Solrock, Porygon. |
@@ -80,27 +80,58 @@ You're meant to notice.
 
 Note: "Selin" also names the Rustboro incident NPC (Elgyem's owner) — same name, different character/map; worth a rename pass if it causes confusion later.
 
-## The Eight Territories
+## The Shape of the Story
 
-1. **Miller's Cut & the Ashband Checkpoint** — *Built.* Raider warlord territory. Boss:
-   the Enforcer. Your father was held here; a torn coat and a supply ledger are what's
-   left to find — Devon Corporation's own logistics ledger, arming the raiders.
-2. **Rustboro** — *In progress.* Devon Corp's regional seat. Boss: Overseer Reyes.
-   Clean streets, real services — and the same company supplying the people who burned
-   your home.
-3. **Haverbrook, an independent settlement** — *In progress.* No warlord, no company.
-   Boss: Garrick. The tonal exhale after two chapters of everyone being compromised.
-4. **A rival corporate city** — *Planned.* Predatory, profit-first. Theme:
-   Poison/Dark. First sign the conspiracy has real cracks in it.
-5. **A Pokémon-reclaimed ruin** — *Planned.* Theme: Grass/Bug. Only genuine respect
-   for Pokémon gets you through, not just a stronger team.
-6. **A militarized holdout** — *Planned.* Theme: Steel/Fighting. Widens the blame for
-   the collapse past the company alone.
-7. **A fanatic settlement** — *Planned.* Theme: Ghost/Psychic. A cult built around the
-   network itself — the region's real dark comedy.
-8. **Devon Corp's true regional HQ** — *Planned.* The deepest, most guarded stop, run
-   by whoever actually authorized what happened to your father. Direct lead-in to the
-   finale.
+*Decided by Viktor, 2026-09-20 — supersedes the earlier eight-territory spine.*
+
+The game is a Pokémon game with the classic frame, told as a chase:
+
+1. **The eight territories are the chase.** The Ashband raiders took your father to
+   their main base. Everything on the way is about first working out where that base
+   is, and then getting there — with a different challenge and a different local power
+   at each stop. Beating the ground's holder earns standing, the same currency as
+   before. These are the eight "badges."
+2. **The raider base is the pivot.** Arriving there, the picture turns over: your
+   father is the real villain, driven by "the greater good." He escapes or is freed.
+   He tries to bring you to his side. You refuse. He escapes and heads for the
+   corporate headquarters.
+3. **The Pokémon League is the final test.** It is the assault on your father and his
+   empire, and the game ends there.
+
+**Your mother is at the base.** She is a high-ranking, active member of the rebellion
+— not its leader. She joined because of what your father grew into. She wanted to take
+you with her, and he would not allow it. What you were told — missing, presumed dead —
+was his version.
+
+**The rival corporate city is dropped.** The warlord's territory replaces it.
+
+**Fixed by the design brief and still binding:** the Ashband are responsible for the
+massacre at the estate, and corporate guilt does not excuse it. How the network and
+the region are left at the end is open — nothing here decides which faction the player
+ends up with.
+
+### Proposals not yet confirmed
+
+- **Territory map (draft):** 1 Miller's Cut/checkpoint (built), 2 Rustboro (built),
+  3 Haverbrook (built), 4 a warlord town — a regional Ashband stronghold, higher rank
+  than the checkpoint, 5 Pokémon-reclaimed ruin, 6 militarized holdout, 7 fanatic
+  settlement, 8 the Ashband's main base. Each stop yields a biased, partial piece of
+  where the base is.
+- **You free him.** Rather than him escaping on his own, the player chooses to free
+  him at the base — so the payoff of "save Dad" is the worst thing you could do, and
+  Act 2 is driven by responsibility rather than revenge.
+- **His argument has to be good:** a full, stable reactivation of the network, so
+  Pokémon never hurt anyone again, at the cost of free will and deepening dependence.
+- **The League:** the Elite Four are his inner circle (some of them people you met in
+  the eight territories), and he is the Champion. The eight standings you earned
+  translate into help on the way in.
+- **Flashbacks:** a short scene after each territory showing the father before the
+  collapse, moving forward in time, so the player sees him deciding things before the
+  protagonist does.
+
+*Decided 2026-09-20:* your mother **knew about the raid but not the killing.** She
+expected the Ashband to take your father and leave the household alone. She is neither
+innocent nor a monster.
 
 ## Current Position (as of 2026-09-16)
 
@@ -111,9 +142,11 @@ still being built out.
 
 ## Threads Still Open
 
-- **The ending** — rebel-aligned, independent, or something else. Explicitly
-  undecided by design.
-- **The mother** — what happened to her, and whether the Ashband connection is real.
+- **The ending** — how the network and the region are left. Explicitly undecided by
+  design.
+- **What your mother does when you arrive at the base** — now that we know she knew
+  about the raid but not the killing.
 - **"The company office"** — a clue dropped in Brightwell early on, never followed up.
 - **Selin & Grayford** — built, cast, and currently homeless in the route order.
-- **Territories 4 through 8** — theme and role only, nothing else decided yet.
+- **Territories 4 through 8** — the draft map above is a proposal only; nothing
+  is built or confirmed.
